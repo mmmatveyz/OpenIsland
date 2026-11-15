@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, MemoryStick, Sparkles } from 'lucide-react';
+import { Cpu, MemoryStick, Terminal, Loader2 } from 'lucide-react';
 import { useIslandStore } from '../../stores/useIslandStore';
 
 interface CompactIslandProps {
@@ -7,23 +7,18 @@ interface CompactIslandProps {
 }
 
 export const CompactIsland: React.FC<CompactIslandProps> = ({ onExpand }) => {
-  const { stats, selectedProvider } = useIslandStore();
+  const { stats, isOpenCodeConnected, agentStatus } = useIslandStore();
 
   const cpuUsage = stats?.cpu.usage ?? 0;
   const ramUsage = stats?.memory.usagePercentage ?? 0;
 
-  // Цвет индикатора CPU
   const getCpuColor = (usage: number) => {
     if (usage > 80) return 'text-red-400 bg-red-400/20';
     if (usage > 50) return 'text-amber-400 bg-amber-400/20';
     return 'text-emerald-400 bg-emerald-400/20';
   };
 
-  const providerNames: Record<string, string> = {
-    claude: 'Claude Pro',
-    chatgpt: 'ChatGPT Plus',
-    gemini: 'Gemini Adv'
-  };
+  const isBusy = agentStatus.status === 'busy';
 
   return (
     <div
@@ -32,7 +27,7 @@ export const CompactIsland: React.FC<CompactIslandProps> = ({ onExpand }) => {
     >
       {/* Левая секция: CPU */}
       <div className="flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full animate-pulse ${getCpuColor(cpuUsage).split(' ')[1]}`}>
+        <span className={`w-2 h-2 rounded-full ${getCpuColor(cpuUsage).split(' ')[1]}`}>
           <span className={`block w-2 h-2 rounded-full ${getCpuColor(cpuUsage).split(' ')[0]} bg-current`} />
         </span>
         <div className="flex items-center gap-1 text-white/70">
@@ -41,11 +36,21 @@ export const CompactIsland: React.FC<CompactIslandProps> = ({ onExpand }) => {
         </div>
       </div>
 
-      {/* Центральная секция: ИИ статус */}
-      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/80 hover:bg-white/10 transition-colors">
-        <Sparkles className="w-3 h-3 text-blue-400" />
-        <span className="font-semibold tracking-wide text-[11px] text-blue-200">
-          {providerNames[selectedProvider] || 'OpenIsland'}
+      {/* Центральная секция: OpenCode статус */}
+      <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border transition-all ${
+        isBusy
+          ? 'bg-blue-600/30 border-blue-400/50 text-blue-200'
+          : isOpenCodeConnected
+            ? 'bg-white/5 border-white/10 text-white/90 hover:bg-white/10'
+            : 'bg-amber-500/10 border-amber-500/20 text-amber-200'
+      }`}>
+        {isBusy ? (
+          <Loader2 className="w-3 h-3 text-blue-400 animate-spin" />
+        ) : (
+          <Terminal className="w-3 h-3 text-emerald-400" />
+        )}
+        <span className="font-semibold tracking-wide text-[11px]">
+          {isBusy ? 'OpenCode: В работе...' : isOpenCodeConnected ? 'OpenCode' : 'OpenCode (Оффлайн)'}
         </span>
       </div>
 

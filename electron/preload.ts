@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { OpenCodeServerInfo, OpenCodeSession, OpenCodeModel } from './ipc/opencode';
 
 export interface SystemStats {
   cpu: {
@@ -35,12 +36,11 @@ const electronAPI = {
     ipcRenderer.send('window:set-ignore-mouse-events', ignore);
   },
 
-  // Запрос разовых метрик системы
+  // Метрики системы
   getSystemStats: (): Promise<SystemStats> => {
     return ipcRenderer.invoke('system:get-stats');
   },
 
-  // Подписка на обновление метрик в реальном времени
   onSystemStats: (callback: (stats: SystemStats) => void) => {
     const handler = (_event: any, stats: SystemStats) => callback(stats);
     ipcRenderer.on('system:stats-updated', handler);
@@ -49,14 +49,37 @@ const electronAPI = {
     };
   },
 
-  // Управление режимом опроса (ускорение при развернутом острове)
   setMonitoringActive: (active: boolean) => {
     ipcRenderer.send('system:set-monitoring-active', active);
   },
 
-  // Открытие окна входа в аккаунт с подпиской
-  openAISession: (provider: 'claude' | 'chatgpt' | 'gemini') => {
-    return ipcRenderer.invoke('ai:open-session', provider);
+  // OpenCode API интеграция
+  getOpenCodeInfo: (): Promise<OpenCodeServerInfo | null> => {
+    return ipcRenderer.invoke('opencode:get-info');
+  },
+
+  getOpenCodeSessions: (): Promise<OpenCodeSession[]> => {
+    return ipcRenderer.invoke('opencode:get-sessions');
+  },
+
+  getOpenCodeModels: (): Promise<OpenCodeModel[]> => {
+    return ipcRenderer.invoke('opencode:get-models');
+  },
+
+  createOpenCodeSession: (directory: string, title?: string): Promise<OpenCodeSession> => {
+    return ipcRenderer.invoke('opencode:create-session', directory, title);
+  },
+
+  sendOpenCodePrompt: (sessionId: string, prompt: string, modelId?: string): Promise<any> => {
+    return ipcRenderer.invoke('opencode:send-prompt', sessionId, prompt, modelId);
+  },
+
+  onOpenCodeStatus: (callback: (status: { status: string; message: string }) => void) => {
+    const handler = (_event: any, status: any) => callback(status);
+    ipcRenderer.on('opencode:status-change', handler);
+    return () => {
+      ipcRenderer.removeListener('opencode:status-change', handler);
+    };
   },
 
   // Свернуть / Закрыть приложение

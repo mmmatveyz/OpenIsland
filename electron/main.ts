@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } from 'electron';
 import path from 'path';
 import { systemMonitor } from './ipc/system-monitor';
-import { AISessionManager } from './ipc/ai-session';
+import { openCodeBridge } from './ipc/opencode';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -35,28 +35,31 @@ function createWindow() {
     }
   });
 
-  // На старте включаем сквозной клик (ignoreMouseEvents), 
-  // чтобы пользователь мог кликать сквозь прозрачные зоны окна
+  // На старте включаем сквозной клик
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   systemMonitor.setWindow(mainWindow);
   systemMonitor.start();
 
+  openCodeBridge.setWindow(mainWindow);
+  openCodeBridge.start();
+
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    // mainWindow.webContents.openDevTools({ mode: 'detach' });
+    mainWindow.loadURL('http://localhost:5173').catch(() => {
+      mainWindow?.loadFile(path.join(__dirname, '../dist/index.html'));
+    });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }
 
   mainWindow.on('closed', () => {
     systemMonitor.stop();
+    openCodeBridge.stop();
     mainWindow = null;
   });
 }
 
 function createTray() {
-  // Простая SVG/иконка трея
   const icon = nativeImage.createEmpty();
   tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
@@ -86,7 +89,6 @@ function createTray() {
   tray.setContextMenu(contextMenu);
 }
 
-// Регистрация IPC обработчиков
 function setupIPC() {
   ipcMain.on('window:set-ignore-mouse-events', (event, ignore: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -95,6 +97,7 @@ function setupIPC() {
     }
   });
 
+  // Системные метрики
   ipcMain.handle('system:get-stats', async () => {
     return await systemMonitor.getStats();
   });
@@ -103,8 +106,26 @@ function setupIPC() {
     systemMonitor.setHighFrequency(active);
   });
 
-  ipcMain.handle('ai:open-session', async (_event, provider: 'claude' | 'chatgpt' | 'gemini') => {
-    return await AISessionManager.openAuthWindow(provider, mainWindow || undefined);
+  // OpenCode API
+  ipcMain.handle('opencode:get-info', async () => {
+    const alive = await openCodeBridge.checkHealth();
+    return alive ? { connected: true } : null;
+  });
+
+  ipcMain.handle('opencode:get-sessions', async () => {
+    return await openCodeBridge.getSessions();
+  });
+
+  ipcMain.handle('opencode:get-models', async () => {
+    return await openCodeBridge.getModels();
+  });
+
+  ipcMain.handle('opencode:create-session', async (_event, directory: string, title?: string) => {
+    return await openCodeBridge.createSession(directory, title);
+  });
+
+  ipcMain.handle('opencode:send-prompt', async (_event, sessionId: string, prompt: string, modelId?: string) => {
+    return await openCodeBridge.sendPrompt(sessionId, prompt, modelId);
   });
 
   ipcMain.on('window:minimize', () => {
