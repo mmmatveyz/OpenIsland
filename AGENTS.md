@@ -58,7 +58,7 @@ OpenIsland/
 │   ├── SpectrumService.cs         # Захват системного звука (WASAPI loopback)
 │   ├── Updater.cs                 # Обновления (выключено: репозиторий пока приватный)
 │   ├── Autostart.cs               # Автозапуск с Windows
-│   ├── Fonts/                     # SF Pro (встроенные ресурсы)
+│   ├── Fonts/                     # Inter + Phosphor Fill (встроенные ресурсы)
 │   ├── Gadgets/                   # PNG-графика виджетов
 │   ├── Assets/                    # Иконка приложения и звук завершения задачи
 │   └── OpenIsland.csproj

@@ -150,7 +150,7 @@ dotnet publish desktop\OpenIsland\OpenIsland.csproj -c Release -r win-x64 --self
 
 ## Шрифты, графика и звук
 
-- **Шрифт.** Остров рисуется шрифтом SF Pro: файлы лежат в [Fonts](Fonts/) и встраиваются в exe при сборке. Из него же берутся иконки — символы SF Symbols, как в iOS. Шрифт и символы принадлежат Apple и распространяются на условиях её лицензии. Без этих файлов текст рисуется Segoe UI, а иконок не будет.
+- **Шрифт.** Текст — **Inter** (свободная лицензия [OFL](https://github.com/rsms/inter)), иконки — **Phosphor Fill** (лицензия [MIT](https://github.com/phosphor-icons/web)). Файлы лежат в [Fonts](Fonts/) и встраиваются в exe при сборке; Inter задан в `MainWindow.xaml`, глифы Phosphor — в `Icon.cs`. Волны громкости и wifi рисуются собственными контурами в коде. Без этих файлов текст рисуется `Segoe UI Variable`, а иконок не будет.
 - **Модели наушников.** Кадры поворота готовых 3D-моделей с [Sketchfab](https://sketchfab.com), отрендеренные в Blender: по 81 кадру через 2° в [Gadgets](Gadgets/), они тоже встраиваются в exe. Модели распространяются по лицензии [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/):
   - вкладыши — [«AirPods (3ᵉ génération)»](https://sketchfab.com/3d-models/airpods-3e-generation-ed331e742ab944e683dcddd59ab0713e), автор [polyman](https://sketchfab.com/Polyman_3D); кейс убран;
   - накладные — [«Airpods max sky blue»](https://sketchfab.com/3d-models/airpods-max-sky-blue-3d0643db08fc4ef89bda55a74077ece4), автор [polyman](https://sketchfab.com/ely.haddad); перекрашены в серебро;

@@ -7,7 +7,7 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" ShowActivated="False"
         Focusable="False" UseLayoutRounding="True"
-        FontFamily="./Fonts/#SF Pro Text, SF Pro Text, Segoe UI Variable Display, Segoe UI" Foreground="White">
+        FontFamily="./Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI" Foreground="White">
 
     <Window.Resources>
         <SolidColorBrush x:Key="Dim" Color="#99FFFFFF"/>
@@ -17,7 +17,7 @@
         <SolidColorBrush x:Key="Indigo" Color="#7D7AFF"/>
         <SolidColorBrush x:Key="Faint" Color="#66FFFFFF"/>
 
-        <FontFamily x:Key="Display">./Fonts/#SF Pro Display, SF Pro Display, Segoe UI Variable Display, Segoe UI</FontFamily>
+        <FontFamily x:Key="Display">./Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
 
         <LinearGradientBrush x:Key="ArtPlaceholder" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#48484A" Offset="0"/>

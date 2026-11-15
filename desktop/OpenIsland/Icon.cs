@@ -22,9 +22,9 @@ public sealed class Icon : FrameworkElement
     const double PieceStagger = 0.06;
     const double Absent = 0.001, Complete = 0.999;
     const double SweepReach = GridSize * 4;
-    const string SymbolFont = "./Fonts/#SF Pro Text";
-    static readonly FontWeight SymbolWeight = FontWeights.Medium;
-    static readonly Vector Slant = new(1, 1), Across = new(1, 0);
+    const string SymbolFont = "./Fonts/#Phosphor-Fill";
+    static readonly FontWeight SymbolWeight = FontWeights.Normal;
+    static readonly Vector Across = new(1, 0);
 
     readonly record struct Symbol(string Name, int Code);
 
@@ -40,12 +40,22 @@ public sealed class Icon : FrameworkElement
 
     static readonly GlyphTypeface? Face = LoadFace();
 
-    static readonly Symbol SpeakerWaves = new("speaker.wave.3.fill", 0x1002A9);
-    static readonly Symbol SpeakerSlash = new("speaker.slash.fill", 0x1002A3);
-    static readonly Symbol WifiArcs = new("wifi", 0x100647);
-    static readonly Symbol WifiSlash = new("wifi.slash", 0x100648);
-    static readonly Symbol Shield = new("shield.fill", 0x100667);
-    static readonly Symbol CheckedShield = new("checkmark.shield.fill", 0x10079C);
+    static readonly Symbol SpeakerWaves = new("speaker waves", 0);
+    static readonly Symbol SpeakerSlash = new("speaker slash", 0);
+    static readonly Symbol WifiArcs = new("wifi arcs", 0);
+    static readonly Symbol WifiSlash = new("wifi slash", 0);
+    static readonly Symbol Shield = new("shield", 0xE40A);
+    static readonly Symbol CheckedShield = new("shield-check", 0xE40C);
+
+    // Волны громкости и wifi рисуются собственными контурами (не из шрифта): так сохраняется
+    // пошаговая анимация волн и не остаётся зависимости от конкретного шрифта-иконника.
+    static readonly Dictionary<Symbol, Geometry> Custom = new()
+    {
+        [SpeakerWaves] = SpeakerWaveGeometry(),
+        [SpeakerSlash] = Stroke(new Point(4, 2.8), new Point(24, 21.2), 1.8),
+        [WifiArcs] = WifiArcGeometry(),
+        [WifiSlash] = Stroke(new Point(4.5, 4.5), new Point(19.5, 19.5), 1.7),
+    };
 
     static readonly Piece[] SoundPieces = BuildSoundPieces();
     static readonly Piece[] NetworkPieces = BuildNetworkPieces();
@@ -65,56 +75,56 @@ public sealed class Icon : FrameworkElement
 
     static readonly Dictionary<Glyph, Symbol> Symbols = new()
     {
-        [Glyph.Headphones] = new("headphones", 0x100448),
-        [Glyph.Speaker] = new("hifispeaker.fill", 0x10074F),
-        [Glyph.Wired] = new("cable.connector", 0x100EA6),
-        [Glyph.Bell] = new("bell.fill", 0x1002DA),
-        [Glyph.Note] = new("music.note", 0x10046A),
-        [Glyph.Battery] = new("battery.100", 0x1006E8),
-        [Glyph.Minus] = new("minus", 0x10017D),
-        [Glyph.Plus] = new("plus", 0x10017C),
-        [Glyph.Chevron] = new("chevron.right", 0x10018A),
-        [Glyph.Back] = new("chevron.left", 0x100189),
-        [Glyph.Timer] = new("timer", 0x100431),
-        [Glyph.Gear] = new("gearshape.fill", 0x1008CC),
-        [Glyph.Lines] = new("text.alignleft", 0x100300),
-        [Glyph.Quote] = new("quote.bubble", 0x10032E),
-        [Glyph.Sparkle] = new("sparkle", 0x100AF8),
-        [Glyph.Rim] = new("capsule.inset.filled", 0x100F9A),
-        [Glyph.Expand] = new("viewfinder", 0x1003B9),
-        [Glyph.Windows] = new("square.grid.2x2.fill", 0x1006E7),
-        [Glyph.Update] = new("arrow.down.to.line", 0x100140),
-        [Glyph.Power] = new("power", 0x1001A8),
-        [Glyph.Look] = new("circle.righthalf.filled", 0x100003),
-        [Glyph.Size] = new("arrow.up.left.and.arrow.down.right", 0x10014A),
-        [Glyph.Gap] = new("arrow.up.to.line", 0x10013F),
-        [Glyph.Drop] = new("drop.fill", 0x100812),
-        [Glyph.Moon] = new("moon.fill", 0x1001BA),
-        [Glyph.Tray] = new("tray.fill", 0x100224),
-        [Glyph.Cross] = new("xmark", 0x100184),
-        [Glyph.Bolt] = new("bolt.fill", 0x1002E6),
-        [Glyph.Bars] = new("waveform", 0x10066B),
-        [Glyph.Segments] = new("rectangle.bottomthird.inset.filled", 0x100A28),
-        [Glyph.Stars] = new("sparkles", 0x1001BF),
-        [Glyph.Pointer] = new("cursorarrow", 0x100ACC),
-        [Glyph.PointerText] = new("contextualmenu.and.cursorarrow", 0x100C63),
-        [Glyph.Parting] = new("character.cursor.ibeam", 0x10016B),
-        [Glyph.Bulge] = new("cursorarrow.motionlines", 0x1008E0),
-        [Glyph.Record] = new("record.circle", 0x100899),
-        [Glyph.Folder] = new("folder.fill", 0x100216),
-        [Glyph.Sun] = new("sun.max.fill", 0x1001AE),
-        [Glyph.Cloud] = new("cloud.fill", 0x1001C3),
-        [Glyph.CloudSun] = new("cloud.sun.fill", 0x1001D5),
-        [Glyph.CloudMoon] = new("cloud.moon.fill", 0x1001DB),
-        [Glyph.Rain] = new("cloud.rain.fill", 0x1001C7),
-        [Glyph.Snow] = new("cloud.snow.fill", 0x1001CF),
-        [Glyph.Storm] = new("cloud.bolt.fill", 0x1001D3),
-        [Glyph.Fog] = new("cloud.fog.fill", 0x1001CB),
-        [Glyph.Qr] = new("qrcode", 0x100582),
-        [Glyph.Pin] = new("mappin.and.ellipse", 0x1003AB),
-        [Glyph.Location] = new("location.fill", 0x1002D2),
-        [Glyph.Search] = new("magnifyingglass", 0x1002AB),
-        [Glyph.Check] = new("checkmark", 0x100185),
+        [Glyph.Headphones] = new("headphones", 0xE2A6),
+        [Glyph.Speaker] = new("speaker-hifi", 0xEA08),
+        [Glyph.Wired] = new("plug", 0xE946),
+        [Glyph.Bell] = new("bell", 0xE0CE),
+        [Glyph.Note] = new("music-note", 0xE33C),
+        [Glyph.Battery] = new("battery-full", 0xE0C0),
+        [Glyph.Minus] = new("minus", 0xE32A),
+        [Glyph.Plus] = new("plus", 0xE3D4),
+        [Glyph.Chevron] = new("caret-right", 0xE13A),
+        [Glyph.Back] = new("caret-left", 0xE138),
+        [Glyph.Timer] = new("timer", 0xE492),
+        [Glyph.Gear] = new("gear-six", 0xE272),
+        [Glyph.Lines] = new("text-align-left", 0xE484),
+        [Glyph.Quote] = new("quotes", 0xE660),
+        [Glyph.Sparkle] = new("sparkle", 0xE6A2),
+        [Glyph.Rim] = new("pill", 0xE700),
+        [Glyph.Expand] = new("corners-out", 0xE1D0),
+        [Glyph.Windows] = new("squares-four", 0xE464),
+        [Glyph.Update] = new("download-simple", 0xE20C),
+        [Glyph.Power] = new("power", 0xE3DA),
+        [Glyph.Look] = new("circle-half", 0xE18C),
+        [Glyph.Size] = new("arrows-out", 0xE0A2),
+        [Glyph.Gap] = new("arrows-out-line-vertical", 0xE536),
+        [Glyph.Drop] = new("drop", 0xE210),
+        [Glyph.Moon] = new("moon", 0xE330),
+        [Glyph.Tray] = new("tray", 0xE4AA),
+        [Glyph.Cross] = new("x", 0xE4F6),
+        [Glyph.Bolt] = new("lightning", 0xE2DE),
+        [Glyph.Bars] = new("waveform", 0xE802),
+        [Glyph.Segments] = new("rows", 0xE5A2),
+        [Glyph.Stars] = new("star-four", 0xE6A4),
+        [Glyph.Pointer] = new("cursor", 0xE1DC),
+        [Glyph.PointerText] = new("cursor-text", 0xE7D8),
+        [Glyph.Parting] = new("text-t", 0xE48A),
+        [Glyph.Bulge] = new("cursor-click", 0xE7C8),
+        [Glyph.Record] = new("record", 0xE3EE),
+        [Glyph.Folder] = new("folder", 0xE24A),
+        [Glyph.Sun] = new("sun", 0xE472),
+        [Glyph.Cloud] = new("cloud", 0xE1AA),
+        [Glyph.CloudSun] = new("cloud-sun", 0xE540),
+        [Glyph.CloudMoon] = new("cloud-moon", 0xE53E),
+        [Glyph.Rain] = new("cloud-rain", 0xE1B4),
+        [Glyph.Snow] = new("cloud-snow", 0xE1B8),
+        [Glyph.Storm] = new("cloud-lightning", 0xE1B2),
+        [Glyph.Fog] = new("cloud-fog", 0xE53C),
+        [Glyph.Qr] = new("qr-code", 0xE3E6),
+        [Glyph.Pin] = new("map-pin", 0xE316),
+        [Glyph.Location] = new("map-pin-area", 0xEE3A),
+        [Glyph.Search] = new("magnifying-glass", 0xE30C),
+        [Glyph.Check] = new("check", 0xE182),
     };
 
     static readonly Dictionary<Glyph, Geometry> Outlines = [];
@@ -281,10 +291,11 @@ public sealed class Icon : FrameworkElement
 
     static Geometry Outline(Symbol symbol)
     {
+        if (Custom.TryGetValue(symbol, out Geometry? custom)) return custom;
         if (Face == null) return Geometry.Empty;
         if (Face.CharacterToGlyphMap.TryGetValue(symbol.Code, out ushort index)) return Face.GetGlyphOutline(index, SymbolEm, SymbolEm);
 
-        App.Log(new KeyNotFoundException($"SF Symbol {symbol.Name} is missing from {SymbolFont}"));
+        App.Log(new KeyNotFoundException($"Icon glyph {symbol.Name} is missing from {SymbolFont}"));
         return Geometry.Empty;
     }
 
@@ -308,17 +319,75 @@ public sealed class Icon : FrameworkElement
         return shape;
     }
 
+    static Geometry SpeakerWaveGeometry()
+    {
+        var group = new GeometryGroup { FillRule = FillRule.Nonzero };
+        group.Children.Add(Cone());
+        for (int i = 0; i < 3; i++) group.Children.Add(Arc(new Point(14.5, 12), 4 + i * 3, -58, 58, 1.6));
+        group.Freeze();
+        return group;
+    }
+
+    static Geometry WifiArcGeometry()
+    {
+        var group = new GeometryGroup { FillRule = FillRule.Nonzero };
+        for (int i = 0; i < 3; i++) group.Children.Add(Arc(new Point(12, 19.5), 4.5 + i * 3, -122, -58, 1.6));
+        group.Freeze();
+        return group;
+    }
+
+    static Geometry Cone()
+    {
+        var geometry = new StreamGeometry();
+        using (StreamGeometryContext path = geometry.Open())
+        {
+            path.BeginFigure(new Point(3, 9.5), true, true);
+            path.LineTo(new Point(8.5, 9.5), true, false);
+            path.LineTo(new Point(15, 3.5), true, false);
+            path.LineTo(new Point(15, 20.5), true, false);
+            path.LineTo(new Point(8.5, 14.5), true, false);
+            path.LineTo(new Point(3, 14.5), true, false);
+        }
+        geometry.Freeze();
+        return geometry;
+    }
+
+    static Geometry Stroke(Point from, Point to, double thickness)
+    {
+        var figure = new PathFigure { StartPoint = from, IsClosed = false, IsFilled = false };
+        figure.Segments.Add(new LineSegment(to, true));
+        var path = new PathGeometry();
+        path.Figures.Add(figure);
+        return path.GetWidenedPathGeometry(RoundPen(thickness));
+    }
+
+    static Geometry Arc(Point center, double radius, double fromDeg, double toDeg, double thickness)
+    {
+        var figure = new PathFigure { StartPoint = OnCircle(center, radius, fromDeg), IsClosed = false, IsFilled = false };
+        figure.Segments.Add(new ArcSegment(OnCircle(center, radius, toDeg), new Size(radius, radius), 0,
+            Math.Abs(toDeg - fromDeg) > 180, SweepDirection.Clockwise, true));
+        var path = new PathGeometry();
+        path.Figures.Add(figure);
+        return path.GetWidenedPathGeometry(RoundPen(thickness));
+    }
+
+    static Point OnCircle(Point center, double radius, double degrees) =>
+        new(center.X + radius * Math.Cos(degrees * Math.PI / 180), center.Y + radius * Math.Sin(degrees * Math.PI / 180));
+
+    static Pen RoundPen(double thickness) =>
+        new(Brushes.Black, thickness) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round };
+
     static Piece[] BuildSoundPieces()
     {
         Geometry[] parts = Contours(Outline(SpeakerWaves), 4, bounds => bounds.Left);
-        return Placed([Fading(parts[0]), Fading(parts[1]), Fading(parts[2]), Fading(parts[3]), Drawn(Outline(SpeakerSlash), parts[0], Slant)]);
+        return Placed([Fading(parts[0]), Fading(parts[1]), Fading(parts[2]), Fading(parts[3]), Fading(Outline(SpeakerSlash))]);
     }
 
     static Piece[] BuildNetworkPieces()
     {
         Geometry arcs = Outline(WifiArcs);
         Geometry[] parts = Contours(arcs, 3, bounds => -bounds.Bottom);
-        return Placed([Fading(parts[0]), Fading(parts[1]), Fading(parts[2]), Drawn(Outline(WifiSlash), arcs, Slant)]);
+        return Placed([Fading(parts[0]), Fading(parts[1]), Fading(parts[2]), Fading(Outline(WifiSlash))]);
     }
 
     static Piece[] BuildShieldPieces()
