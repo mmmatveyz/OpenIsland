@@ -1,14 +1,15 @@
+using System.IO;
 using System.Windows.Media;
 
 namespace DynamicIsland;
 
 /// <summary>
-/// Короткий звук завершения задачи. Источник — встроенный ресурс
-/// <c>Assets/staplebops-01.mp3</c> (OpenCode, лицензия MIT).
+/// Короткий звук завершения задачи. Источник — <c>Assets/staplebops-01.mp3</c>
+/// (звук OpenCode, лицензия MIT), копируется рядом с исполняемым файлом.
 /// </summary>
 sealed class Chime
 {
-    static readonly Uri Source = new("pack://application:,,,/Assets/staplebops-01.mp3", UriKind.Absolute);
+    static readonly string Source = Path.Combine(AppContext.BaseDirectory, "Assets", "staplebops-01.mp3");
 
     readonly MediaPlayer _player = new() { Volume = 0.8 };
     bool _opened;
@@ -35,10 +36,10 @@ sealed class Chime
 
     void Preload()
     {
-        if (_opened) return;
+        if (_opened || !File.Exists(Source)) return;
         try
         {
-            _player.Open(Source);
+            _player.Open(new Uri(Source, UriKind.Absolute));
             _opened = true;
         }
         catch (Exception ex)
