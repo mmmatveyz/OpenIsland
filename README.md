@@ -26,7 +26,6 @@
    - Отправка задачи агенту и живой стриминг ответа (SSE).
    - Звук завершения задачи — тот же `staplebops-01`, что играет сам OpenCode (MIT), прямо из островка.
    - Запросы разрешений агента (`allow` / `deny`) без переключения в OpenCode Desktop.
-   - Быстрые роли-персоны из каталога `tools/agency-agents` (Desktop App Engineer, Frontend Developer, Code Reviewer, Bug Fixer).
    - Глобальный хоткей **Ctrl+Alt+O** — мгновенно открыть или свернуть карточку OpenCode из любого приложения.
 
 ---
@@ -63,7 +62,6 @@ OpenIsland/
 ├── scripts/build.ps1           # Сборка, запуск и self-test
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
 ├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации
-├── tools/agency-agents/        # 380+ ролей-персон для промптов
 └── Запуск_OpenIsland.bat       # Запуск в один клик (собирает при необходимости)
 ```
 
@@ -132,4 +130,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 
 ## 📄 Лицензия
 
-MIT License. Open-source проект.
+MIT License — см. [LICENSE](./LICENSE). Copyright (c) 2026 OpenIsland.

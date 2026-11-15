@@ -13,9 +13,9 @@ sealed class Updater
 
     public const string RestartedFlag = "--updated";
 
-    // Репозиторий наших релизов в формате "owner/repo". Пока пусто — обновление
-    // выключено, чтобы кнопка не подменяла exe чужим бинарником.
-    const string Repository = "";
+    // Репозиторий наших релизов в формате "owner/repo". Апдейтер читает
+    // /releases/latest, качает ассет OpenIsland.exe и сверяет sha256-дайджест.
+    const string Repository = "mmmatveyz/OpenIsland";
     const string AssetName = "OpenIsland.exe";
     static string LatestReleaseUrl => Repository.Length > 0
         ? $"https://api.github.com/repos/{Repository}/releases/latest" : "";

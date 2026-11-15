@@ -11,22 +11,11 @@ public partial class MainWindow
 {
     const string PromptPlaceholder = "Дать задачу агенту...";
 
-    static readonly Brush PersonaSelectedBrush = Frozen(Color.FromArgb(0x66, 0x3B, 0x82, 0xF6));
-    static readonly Brush PersonaIdleBrush = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
-
     readonly OpenCodeService _openCode = new();
     readonly Chime _chime = new();
-    string _selectedPersona = "";
     string _openCodeUiSignature = "";
     bool _openCodeReady;
     bool _openCodeBusy;
-
-    static Brush Frozen(Color color)
-    {
-        SolidColorBrush brush = new(color);
-        brush.Freeze();
-        return brush;
-    }
 
     void InitOpenCode()
     {
@@ -111,8 +100,6 @@ public partial class MainWindow
                 : _dim;
         }
 
-        ApplyPersonaSelection();
-
         string signature = string.Join('|',
             _openCode.SelectedSessionId,
             _openCode.IsBusy,
@@ -124,16 +111,6 @@ public partial class MainWindow
         _openCodeUiSignature = signature;
         UpdateTargets();
         UpdateView();
-    }
-
-    void ApplyPersonaSelection()
-    {
-        Button[] buttons = [OpenCodePersonaCode, OpenCodePersonaUi, OpenCodePersonaReview, OpenCodePersonaFix];
-        foreach (Button button in buttons)
-        {
-            bool selected = button.Tag is string tag && tag == _selectedPersona;
-            button.Background = selected ? PersonaSelectedBrush : PersonaIdleBrush;
-        }
     }
 
     static string Shorten(string value, int maxLength)
@@ -231,15 +208,6 @@ public partial class MainWindow
         _openCode.OpenApp();
     }
 
-    void OpenCodePersona_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button || button.Tag is not string persona) return;
-
-        _selectedPersona = _selectedPersona == persona ? "" : persona;
-        ApplyPersonaSelection();
-        OpenCodePromptBox.Focus();
-    }
-
     async void OpenCodeSend_Click(object sender, RoutedEventArgs e)
     {
         if (OpenCodePromptBox == null) return;
@@ -247,19 +215,13 @@ public partial class MainWindow
         string text = OpenCodePromptBox.Text.Trim();
         if (string.IsNullOrEmpty(text) || text == PromptPlaceholder) return;
 
-        string persona = _selectedPersona;
         OpenCodePromptBox.IsEnabled = false;
         OpenCodePromptBox.Text = "Отправка...";
 
         try
         {
-            bool sent = await _openCode.SendPromptAsync(text, persona);
+            bool sent = await _openCode.SendPromptAsync(text);
             OpenCodePromptBox.Text = sent ? "" : text;
-            if (sent)
-            {
-                _selectedPersona = "";
-                ApplyPersonaSelection();
-            }
         }
         finally
         {

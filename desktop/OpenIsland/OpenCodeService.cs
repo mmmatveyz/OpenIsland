@@ -808,7 +808,7 @@ public sealed partial class OpenCodeService : IDisposable
 
     // ---------------------------------------------------------------- commands
 
-    public async Task<bool> SendPromptAsync(string text, string? persona = null)
+    public async Task<bool> SendPromptAsync(string text)
     {
         string prompt = text.Trim();
         if (prompt.Length == 0) return false;
@@ -821,11 +821,7 @@ public sealed partial class OpenCodeService : IDisposable
             if (sessionId == null) return false;
         }
 
-        string finalPrompt = string.IsNullOrWhiteSpace(persona)
-            ? prompt
-            : $"{BuildPersonaInstruction(persona)}\n\nЗадача:\n{prompt}";
-
-        string payload = JsonSerializer.Serialize(new { text = finalPrompt });
+        string payload = JsonSerializer.Serialize(new { text = prompt });
         (int status, string body) = await SendAsync(
             HttpMethod.Post, $"/api/session/{Esc(sessionId)}/prompt", payload);
 
@@ -1408,51 +1404,6 @@ public sealed partial class OpenCodeService : IDisposable
         value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
     static string Esc(string value) => Uri.EscapeDataString(value);
-
-    static string BuildPersonaInstruction(string persona)
-    {
-        const int maxExcerpt = 1600;
-        string? relative = persona switch
-        {
-            "Desktop App Engineer" => @"engineering\engineering-desktop-app-engineer.md",
-            "Frontend Developer" => @"engineering\engineering-frontend-developer.md",
-            "Code Reviewer" => @"engineering\engineering-code-reviewer.md",
-            "Bug Fixer" => @"engineering\engineering-minimal-change-engineer.md",
-            _ => null
-        };
-
-        string instruction = $"Действуй как специалист по роли «{persona}».";
-        if (relative == null) return instruction;
-
-        string? file = FindAgencyFile(relative);
-        if (file == null) return instruction;
-
-        try
-        {
-            string content = File.ReadAllText(file).Trim();
-            if (content.Length > maxExcerpt) content = content[..maxExcerpt] + "\n...";
-            return $"Действуй строго по инструкции роли «{persona}»:\n\n{content}";
-        }
-        catch
-        {
-            return instruction;
-        }
-    }
-
-    static string? FindAgencyFile(string relativePath)
-    {
-        string current = AppContext.BaseDirectory;
-        for (int depth = 0; depth < 6; depth++)
-        {
-            string candidate = Path.Combine(current, "tools", "agency-agents", relativePath);
-            if (File.Exists(candidate)) return candidate;
-
-            DirectoryInfo? parent = Directory.GetParent(current);
-            if (parent == null) break;
-            current = parent.FullName;
-        }
-        return null;
-    }
 
     static string DescribeFailure(string prefix, int status, string body)
     {

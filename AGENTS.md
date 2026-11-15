@@ -22,7 +22,7 @@
 | **Интеграция с ИИ** | **OpenCodeService (REST + SSE)** | Сессии, модели, промпты, статусы, события `session.execution.*`, `session.text.*`, `permission.*` в реальном времени. |
 | **Авторизация в OpenCode** | **Автоматический пейринг (`opencode pair`)** + DPAPI | Токен получается без ручного ввода и хранится зашифрованным для текущего пользователя. |
 | **Настройки** | Реестр `HKCU\Software\OpenIsland` (со старым ключом `Software\DynamicIsland` — авто-миграция при первом чтении) | Простое персистентное хранение без внешних файлов; автозапуск — `HKCU\...\CurrentVersion\Run` (значение `OpenIsland`). |
-| **Каталог персон** | **Agency Agents (`tools/agency-agents`)** | 380+ специализированных ролей для контекстных задач агенту прямо из карточки островка. |
+| **Обновления** | GitHub Releases (`mmmatveyz/OpenIsland`) | Проверка `releases/latest`, скачивание ассета `OpenIsland.exe` и сверка `sha256`-дайджеста. |
 
 ---
 
@@ -56,7 +56,7 @@ OpenIsland/
 │   ├── MediaService.cs            # Интеграция с системным медиаплеером (GSMTC)
 │   ├── AudioService.cs            # Громкость и пик вывода (IAudioMeterInformation)
 │   ├── SpectrumService.cs         # Захват системного звука (WASAPI loopback)
-│   ├── Updater.cs                 # Обновления (выключено: репозиторий пока приватный)
+│   ├── Updater.cs                 # Обновления через GitHub Releases (mmmatveyz/OpenIsland)
 │   ├── Autostart.cs               # Автозапуск с Windows
 │   ├── Fonts/                     # Inter + Phosphor Fill (встроенные ресурсы)
 │   ├── Gadgets/                   # PNG-графика виджетов
@@ -64,7 +64,6 @@ OpenIsland/
 │   └── OpenIsland.csproj
 ├── scripts/build.ps1              # Сборка, запуск и self-test
 ├── bin/OpenIsland/                # Результат сборки (OpenIsland.exe)
-├── tools/agency-agents/           # Каталог ролей-персон для промптов
 ├── Запуск_OpenIsland.bat          # Запуск в один клик (собирает при необходимости)
 └── .dotnet/                       # Локально установленный SDK (в git не попадает)
 ```
@@ -73,11 +72,10 @@ OpenIsland/
 
 ## 4. Правила и соглашения для ИИ-агентов (Guidelines)
 
-### 4.0. Специализированные роли из Agency Agents (`tools/agency-agents`)
-При работе над кодом проекта агенты руководствуются стандартами из каталога `tools/agency-agents`:
-- **Desktop App Engineer** (`tools/agency-agents/engineering/engineering-desktop-app-engineer.md`): надёжный Win32-трекинг окна и мыши, дисциплина по потреблению RAM и размеру сборки, отсутствие блокировок UI-потока.
-- **Frontend Developer** (`tools/agency-agents/engineering/engineering-frontend-developer.md`): плавная пружинная физика, отсутствие дёрганий макета при трансформации капсулы, аккуратная типографика и отступы.
-- **Code Reviewer** (`tools/agency-agents/engineering/engineering-code-reviewer.md`): проверка nullable-контрактов, обработка edge cases (демон OpenCode недоступен, порт сменился, сессия удалена, токен истёк).
+### 4.0. Дисциплина разработки
+- **Надёжный Win32-трекинг окна и мыши**: островок должен корректно переживать смену DPI, полноэкранные приложения и перезапуск Explorer; дисциплина по потреблению RAM и размеру сборки, отсутствие блокировок UI-потока.
+- **Плавная пружинная физика**: никаких дёрганий макета при трансформации капсулы, аккуратная типографика и отступы.
+- **Проверка nullable-контрактов** и обработка edge cases (демон OpenCode недоступен, порт сменился, сессия удалена, токен истёк).
 
 ### 4.1. Безопасность и хранение данных
 - **Никаких открытых токенов и паролей в кодовой базе и логах.** Токен OpenCode хранится только через Windows DPAPI: `%LOCALAPPDATA%\OpenIsland\opencode-token.bin` (`ProtectedData`, `CurrentUser`).

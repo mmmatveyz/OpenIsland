@@ -42,7 +42,7 @@ public partial class MainWindow : Window
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(246, 34, 17),
-        [View.OpenCodeBig] = new(380, 440, 36),
+        [View.OpenCodeBig] = new(380, 406, 36),
     };
 
     readonly record struct MediaSpot(
