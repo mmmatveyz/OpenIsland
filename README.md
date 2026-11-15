@@ -64,7 +64,6 @@ OpenIsland/
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
 ├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации
 ├── tools/agency-agents/        # 380+ ролей-персон для промптов
-├── electron/ src/              # Легаси-прототип на Electron + React
 └── Запуск_OpenIsland.bat       # Запуск в один клик (собирает при необходимости)
 ```
 
@@ -121,12 +120,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 - [**docs/PRODUCT.md**](./docs/PRODUCT.md) — карта функций: что пришло из апстрима, что наше, что осталось «чужим» в идентичности и план дальнейших работ.
 - [**docs/AI_SESSION_AUTH.md**](./docs/AI_SESSION_AUTH.md) — отложенный дизайн авторизации по подпискам (Claude Pro / ChatGPT Plus / Gemini Advanced).
 - [**AGENTS.md**](./AGENTS.md) — правила и контекст для ИИ-агентов, работающих с репозиторием.
-
----
-
-## 🧪 Легаси-прототип
-
-Каталоги `electron/`, `src/`, `index.html`, `package.json` содержат ранний прототип на Electron + React + Vite. Он сохранён для экспериментов с браузерными сессиями платных подписок и не является основной сборкой. Запуск прототипа: `npm install` → `npm run dev`.
 
 ---
 

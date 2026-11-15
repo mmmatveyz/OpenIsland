@@ -219,9 +219,3 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
 - Вывод: `bin/OpenIsland/OpenIsland.exe`.
 - Если .NET 8 SDK не найден, `scripts/build.ps1` устанавливает его в `.dotnet/`.
 - Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--selftest` (диагностика).
-
----
-
-## 8. Легаси-прототип Electron
-
-Каталоги `electron/` и `src/` содержат первоначальный прототип (Electron main + React renderer, `systeminformation`, Zustand, Framer Motion). Он не входит в основную сборку и сохранён как площадка для экспериментов с браузерными сессиями платных подписок (см. `docs/AI_SESSION_AUTH.md`). Все продуктовые изменения вносятся в WPF-приложение.

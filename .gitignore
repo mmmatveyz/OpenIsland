@@ -1,8 +1,9 @@
-node_modules/
-dist/
-dist-electron/
+# IDE
 .vscode/
 .idea/
+.claude/
+
+# Logs
 *.log
 
 # .NET
@@ -16,8 +17,6 @@ desktop/OpenIsland/publish/
 *.user
 *.suo
 
-# Vendored reference binaries and scratch assets
+# Vendored reference binaries
 tools/**/*.exe
 tools/reference-dynamic-island/
-top_screen.png
-.claude/
