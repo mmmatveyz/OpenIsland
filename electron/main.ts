@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, screen, Tray, Menu, nativeImage } from 'electron';
 import path from 'path';
+import http from 'http';
 import { systemMonitor } from './ipc/system-monitor';
 import { openCodeBridge } from './ipc/opencode';
 
@@ -7,7 +8,6 @@ let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let mousePollTimer: NodeJS.Timeout | null = null;
 
-// Текущие границы активного островка (для идеального сквозного клика)
 let currentIslandBounds = {
   width: 300,
   height: 44,
@@ -15,16 +15,44 @@ let currentIslandBounds = {
 };
 let isHoveredState = false;
 
-const isDev = !app.isPackaged || process.env.NODE_ENV === 'development';
+function checkUrlLive(urlStr: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    try {
+      const u = new URL(urlStr);
+      const req = http.request(
+        {
+          hostname: u.hostname,
+          port: u.port,
+          path: '/',
+          method: 'GET',
+          timeout: 800
+        },
+        (res) => {
+          resolve(true);
+        }
+      );
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(false);
+      });
+      req.end();
+    } catch {
+      resolve(false);
+    }
+  });
+}
 
-function createWindow() {
+async function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { width: screenWidth } = primaryDisplay.workAreaSize;
+  const { x: displayX, y: displayY, width: displayWidth } = primaryDisplay.bounds;
 
   const winWidth = 720;
   const winHeight = 480;
-  const posX = Math.round((screenWidth - winWidth) / 2);
-  const posY = 0;
+  const posX = displayX + Math.round((displayWidth - winWidth) / 2);
+  const posY = displayY;
+
+  console.log(`[OpenIsland] Screen: ${displayWidth}x${primaryDisplay.bounds.height}, Window pos: (${posX}, ${posY})`);
 
   mainWindow = new BrowserWindow({
     width: winWidth,
@@ -32,11 +60,13 @@ function createWindow() {
     x: posX,
     y: posY,
     transparent: true,
+    backgroundColor: '#00000000',
     frame: false,
     alwaysOnTop: true,
     resizable: false,
     hasShadow: false,
     skipTaskbar: false,
+    show: false, // Покажем сразу после загрузки контента
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -44,7 +74,10 @@ function createWindow() {
     }
   });
 
-  // На старте включаем сквозной клик
+  // Поверх всех окон на Windows
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+
+  // Сквозной клик
   mainWindow.setIgnoreMouseEvents(true, { forward: true });
 
   systemMonitor.setWindow(mainWindow);
@@ -53,16 +86,21 @@ function createWindow() {
   openCodeBridge.setWindow(mainWindow);
   openCodeBridge.start();
 
-  // Запуск аппаратного трекинга мыши для идеального Click-Through на Windows
   startMouseTracking(posX, posY, winWidth);
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173').catch(() => {
-      mainWindow?.loadFile(path.join(__dirname, '../dist/index.html'));
-    });
+  // Проверяем: запущен ли Vite сервер (http://localhost:5173)
+  const isViteReady = await checkUrlLive('http://localhost:5173');
+  if (isViteReady) {
+    console.log('[OpenIsland] Загрузка через Vite HMR: http://localhost:5173');
+    await mainWindow.loadURL('http://localhost:5173');
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const distPath = path.join(__dirname, '../dist/index.html');
+    console.log('[OpenIsland] Vite не запущен, загрузка продакшн сборки:', distPath);
+    await mainWindow.loadFile(distPath);
   }
+
+  mainWindow.show();
+  mainWindow.focus();
 
   mainWindow.on('closed', () => {
     stopMouseTracking();
@@ -72,7 +110,6 @@ function createWindow() {
   });
 }
 
-// Надежный Win32-трекинг мыши: опрашиваем положение курсора каждые 50мс
 function startMouseTracking(winX: number, winY: number, winWidth: number) {
   if (mousePollTimer) clearInterval(mousePollTimer);
 
@@ -81,7 +118,6 @@ function startMouseTracking(winX: number, winY: number, winWidth: number) {
 
     const cursor = screen.getCursorScreenPoint();
 
-    // Границы активного островка относительно экрана
     const islandLeft = winX + (winWidth - currentIslandBounds.width) / 2;
     const islandRight = islandLeft + currentIslandBounds.width;
     const islandTop = winY + currentIslandBounds.y;
@@ -139,7 +175,6 @@ function createTray() {
 }
 
 function setupIPC() {
-  // Renderer сообщает текущие размеры островка (в свернутом или развернутом виде)
   ipcMain.on('window:update-island-bounds', (_event, bounds: { width: number; height: number; y?: number }) => {
     currentIslandBounds = {
       width: bounds.width,
@@ -155,7 +190,6 @@ function setupIPC() {
     }
   });
 
-  // Системные метрики
   ipcMain.handle('system:get-stats', async () => {
     return await systemMonitor.getStats();
   });
@@ -164,7 +198,6 @@ function setupIPC() {
     systemMonitor.setHighFrequency(active);
   });
 
-  // OpenCode API
   ipcMain.handle('opencode:get-info', async () => {
     const alive = await openCodeBridge.checkHealth();
     return alive ? { connected: true } : null;
@@ -203,13 +236,14 @@ if (!gotTheLock) {
   app.on('second-instance', () => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
       mainWindow.focus();
     }
   });
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     setupIPC();
-    createWindow();
+    await createWindow();
     createTray();
 
     app.on('activate', () => {

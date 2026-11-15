@@ -7,23 +7,22 @@
     box-sizing: border-box;
   }
 
-  body {
+  html, body {
+    background: transparent !important;
     background-color: transparent !important;
     overflow: hidden;
   }
 }
 
-/* Glassmorphism utility */
+/* Настоящий, четкий контрастный фон островка (защита от бага прозрачности Chromium на Windows) */
 .island-glass {
-  background: rgba(15, 17, 21, 0.85);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #0d0f12 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
 .island-glass-inner {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Custom minimal scrollbar */
@@ -34,9 +33,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.35);
 }
