@@ -14,9 +14,9 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Shelf, Weather, Place, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Shelf, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Shelf, Weather, Place, Update, Lyrics, OpenCode }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Shelf, Update, Lyrics, OpenCode }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -39,8 +39,6 @@ public partial class MainWindow : Window
         [View.Settings] = new(320, 374, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Shelf] = new(380, 136, 34),
-        [View.Weather] = new(340, 190, 34),
-        [View.Place] = new(320, 200, 34),
         [View.Update] = new(320, 150, 34),
         [View.Lyrics] = new(352, 312, 34),
         [View.Loading] = new(118, 34, 17),
@@ -62,11 +60,9 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.Shelf, View.Weather, View.OpenCodeBig];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.Shelf, View.OpenCodeBig];
 
     static readonly View[] SettingsPages = [View.Update, View.Lyrics];
-
-    static readonly View[] WeatherPages = [View.Place];
 
     const double HostWidth = 620, HostHeight = 592;
     const double CompactMaxHeight = 40;
@@ -98,6 +94,7 @@ public partial class MainWindow : Window
     Panel _panel;
     bool _hovered, _pressed, _hiddenByFullscreen, _sentAway;
     bool _activatable;
+    IntPtr _typedAfter;
     IntPtr _hwnd;
     int _ticks;
 
@@ -136,8 +133,6 @@ public partial class MainWindow : Window
             [View.Settings] = SettingsView,
             [View.Look] = LookView,
             [View.Shelf] = ShelfView,
-            [View.Weather] = WeatherView,
-            [View.Place] = PlaceView,
             [View.Update] = UpdatePage,
             [View.Lyrics] = LyricsPage,
             [View.Loading] = LoadingView,
@@ -167,7 +162,6 @@ public partial class MainWindow : Window
         _awayTimeout = new DelayedAction(ReturnFromAway);
         _overshootTimeout = new DelayedAction(ReleaseVolumeOvershoot);
         _dragLeaveTimeout = new DelayedAction(OnDragLeft);
-        _placeSearch = new DelayedAction(SearchPlaces);
 
         _media = new MediaService(Dispatcher);
         _media.Changed += OnMediaChanged;
@@ -178,11 +172,9 @@ public partial class MainWindow : Window
         _shelf = new Shelf(Dispatcher);
         _shelf.Changed += SyncShelf;
         _shelf.PictureLoaded += OnShelfPictureLoaded;
-        _weather.Changed += SyncWeather;
 
         PrepareViews();
         InitOpenCode();
-        PrepareWeatherHours();
         ApplyTimerTint();
         TuneDragSprings(false);
         _ticker.Tick += (_, _) => OnTick();
@@ -324,7 +316,6 @@ public partial class MainWindow : Window
         RefreshUpdatePage();
         SyncAccent(false);
         SyncShelf();
-        SyncWeather();
         SyncGlass(false);
         PlayIntro();
         InitTray();
@@ -403,7 +394,6 @@ public partial class MainWindow : Window
         {
             Safely(UpdateClock);
             Safely(PollPower);
-            _ = _weather.RefreshAsync();
             Safely(StayOnTop);
             if (_media.IsPlaying) _lastPlayedAt = DateTime.UtcNow;
             Safely(UpdateView);
@@ -420,8 +410,6 @@ public partial class MainWindow : Window
             Panel.Update => View.Update,
             Panel.Lyrics => View.Lyrics,
             Panel.Shelf => View.Shelf,
-            Panel.Weather => View.Weather,
-            Panel.Place => View.Place,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
@@ -463,8 +451,6 @@ public partial class MainWindow : Window
 
         _morphing = true;
         SwitchView(_views[target], MenuDirection(previous, target));
-        if (target == View.Place) BeginTyping();
-        else if (previous == View.Place) EndTyping();
         MoveMediaSpot(previous, target, to);
         UpdateTargets();
     }
@@ -496,16 +482,13 @@ public partial class MainWindow : Window
         IsPageOf(from, to) ? 1 : IsPageOf(to, from) ? -1 : 0;
 
     static bool IsPageOf(View parent, View page) =>
-        parent == View.Menu && MenuPages.Contains(page) || parent == View.Settings && SettingsPages.Contains(page)
-        || parent == View.Weather && WeatherPages.Contains(page);
+        parent == View.Menu && MenuPages.Contains(page) || parent == View.Settings && SettingsPages.Contains(page);
 
     PillShape ShapeOf(View view) => view switch
     {
         View.Media => PillShapes[view] with { Width = _compactMediaWidth },
         View.MediaBig when _playerHasLyricRoom => PillShapes[view] with { Height = PlayerHeight + PlayerLyricsHeight },
         View.Update => PillShapes[view] with { Height = UpdatePage.Height },
-        View.Weather => PillShapes[view] with { Height = WeatherView.Height },
-        View.Place => PillShapes[view] with { Height = PlaceView.Height },
         View.Look => PillShapes[view] with { Height = LookView.Height },
         _ => PillShapes[view],
     };
@@ -578,13 +561,19 @@ public partial class MainWindow : Window
     void Collapse()
     {
         if (_pickingFiles || _hovered) return;
-        if (IsTyping)
+        if (_activatable)
         {
-            // Пользователь набирает место — не мешаем.
+            // Пользователь набирает текст — не мешаем.
             _collapseTimeout.Start(CollapseDelay);
             return;
         }
         ShowPanel(Panel.None);
+    }
+
+    /// <summary>Сворачивает островок, когда окно теряет активацию (клик в другое приложение).</summary>
+    void OnDeactivated(object? sender, EventArgs e)
+    {
+        if (_panel != Panel.None && !_hovered) CollapseNow();
     }
 
     /// <summary>Немедленно вернуть островок в компактную таблетку (клик вне окна, горячая клавиша).</summary>
