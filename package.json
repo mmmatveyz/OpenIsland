@@ -1,0 +1,41 @@
+{
+  "name": "open-island",
+  "version": "0.1.0",
+  "description": "Dynamic Island + OpenCode for Windows",
+  "main": "dist-electron/main.js",
+  "author": "OpenIsland Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k -s first \"npm:dev:vite\" \"npm:dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on tcp:5173 && npm run build:electron && electron .",
+    "build:electron": "esbuild electron/main.ts --bundle --platform=node --outfile=dist-electron/main.js --external:electron --external:systeminformation && esbuild electron/preload.ts --bundle --platform=node --outfile=dist-electron/preload.js --external:electron",
+    "build": "tsc && vite build && npm run build:electron"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.13.1",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "systeminformation": "^5.23.5",
+    "tailwind-merge": "^2.5.5",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.13",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "esbuild": "^0.24.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1",
+    "wait-on": "^8.0.1"
+  }
+}
