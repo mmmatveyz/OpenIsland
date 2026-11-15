@@ -119,7 +119,7 @@
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
 | Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
 | OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: сессии, модели, промпты, разрешения, стриминг, звук завершения задачи |
-| Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка и установка обновлений (выключено до появления нашего репозитория) |
+| Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка и установка обновлений (выключено: репозиторий [`mmmatveyz/OpenIsland`](https://github.com/mmmatveyz/OpenIsland) пока приватный) |
 
 > Апстрим-модули «Тексты песен», «Запись OBS», «Полка файлов», «Погода» и «QR-код» вырезаны из проекта (см. `docs/PRODUCT.md` §2.5).
 

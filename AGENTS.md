@@ -59,7 +59,7 @@ OpenIsland/
 │   ├── MediaService.cs            # Интеграция с системным медиаплеером (GSMTC)
 │   ├── AudioService.cs            # Громкость и пик вывода (IAudioMeterInformation)
 │   ├── SpectrumService.cs         # Захват системного звука (WASAPI loopback)
-│   ├── Updater.cs                 # Обновления (выключено до появления нашего репозитория)
+│   ├── Updater.cs                 # Обновления (выключено: репозиторий пока приватный)
 │   ├── Autostart.cs               # Автозапуск с Windows
 │   ├── Fonts/                     # SF Pro (встроенные ресурсы)
 │   ├── Gadgets/                   # PNG-графика виджетов
