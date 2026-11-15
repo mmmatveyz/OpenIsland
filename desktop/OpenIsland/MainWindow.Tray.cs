@@ -90,11 +90,14 @@ public partial class MainWindow
         if (shown)
         {
             Show();
+            SyncGlass(false);
             StayOnTop();
         }
         else
         {
             CollapseNow();
+            // Стекло — отдельное окно-подложка; его нужно убрать вместе с основным.
+            _glass.Hide();
             Hide();
         }
     }
