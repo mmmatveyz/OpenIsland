@@ -25,6 +25,7 @@
     <Resource Include="Fonts\*.otf;Fonts\*.ttf" />
     <Resource Include="Gadgets\*.png" />
     <Resource Include="Assets\*.ico" />
+    <Resource Include="Assets\*.mp3" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,9 +15,11 @@ public partial class MainWindow
     static readonly Brush PersonaIdleBrush = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
 
     readonly OpenCodeService _openCode = new();
+    readonly Chime _chime = new();
     string _selectedPersona = "";
     string _openCodeUiSignature = "";
     bool _openCodeReady;
+    bool _openCodeBusy;
 
     static Brush Frozen(Color color)
     {
@@ -49,6 +51,10 @@ public partial class MainWindow
     void SyncOpenCodeUI()
     {
         if (!_openCodeReady) return;
+
+        bool busy = _openCode.IsBusy;
+        if (_openCodeBusy && !busy && _openCode.IsConnected) _chime.Play();
+        _openCodeBusy = busy;
 
         OpenCodeCompactText.Text = _openCode.StatusText;
 
