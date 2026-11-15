@@ -12,32 +12,6 @@ enum Backdrop
     MatrixAndStars = Matrix | Stars,
 }
 
-enum LyricChange
-{
-    Smooth,
-    Wave,
-    Drum,
-}
-
-[Flags]
-enum LyricSource
-{
-    Lrclib = 1,
-    Deezer = 2,
-    NetEase = 4,
-    QqMusic = 8,
-    Kugou = 16,
-    Paxsenix = 32,
-    Usual = Lrclib | Deezer | NetEase | QqMusic | Kugou,
-    All = Usual | Paxsenix,
-}
-
-enum PointerLyricShape
-{
-    Column,
-    Line,
-}
-
 enum Hover
 {
     Disc,
@@ -48,7 +22,6 @@ enum Hover
 enum SeekHover
 {
     Magnifier,
-    Lift,
     Wave,
 }
 
@@ -61,18 +34,11 @@ static class Settings
 
     static bool _migrated;
 
-    static bool _lyrics = ReadSwitch(nameof(Lyrics)), _lyricEffects = ReadSwitch(nameof(LyricEffects));
     static bool _network = ReadSwitch(nameof(Network)), _hideFullscreen = ReadSwitch(nameof(HideFullscreen));
     static bool _rim = ReadSwitch(nameof(Rim)), _appVolume = ReadSwitch(nameof(AppVolume));
-    static bool _pointerLyric = ReadSwitch(nameof(PointerLyric), false);
-    static bool _lyricParting = ReadSwitch(nameof(LyricParting));
-    static PointerLyricShape _pointerLyricShape = (PointerLyricShape)Math.Clamp(Read(nameof(PointerLyricShape), 0), 0, (int)PointerLyricShape.Line);
     static bool _dots = ReadSwitch(nameof(Dots), false);
-    static bool _lineBar = ReadSwitch(nameof(LineBar));
     static bool _glass = ReadSwitch(nameof(Glass), false);
     static Backdrop _backdrop = (Backdrop)Math.Clamp(Read(nameof(Backdrop), 0), 0, (int)Backdrop.MatrixAndStars);
-    static LyricChange _lyricChange = (LyricChange)Math.Clamp(Read(nameof(LyricChange), (int)LyricChange.Wave), 0, (int)LyricChange.Drum);
-    static LyricSource _lyricSources = Known((LyricSource)Read(nameof(LyricSources), (int)LyricSource.Usual));
     static Hover _hover = (Hover)Math.Clamp(Read(nameof(Hover), 0), 0, (int)Hover.Flow);
     static SeekHover _seekHover = (SeekHover)Math.Clamp(Read(nameof(SeekHover), 0), 0, (int)SeekHover.Wave);
     static int _scale = Math.Clamp(Read(nameof(Scale), DefaultScale), MinScale, MaxScale);
@@ -83,12 +49,6 @@ static class Settings
     {
         get => _dots;
         set => Write(nameof(Dots), _dots = value);
-    }
-
-    public static bool LineBar
-    {
-        get => _lineBar;
-        set => Write(nameof(LineBar), _lineBar = value);
     }
 
     public static bool Glass
@@ -103,18 +63,6 @@ static class Settings
         set => Write(nameof(Backdrop), (int)(_backdrop = value));
     }
 
-    public static LyricChange LyricChange
-    {
-        get => _lyricChange;
-        set => Write(nameof(LyricChange), (int)(_lyricChange = value));
-    }
-
-    public static LyricSource LyricSources
-    {
-        get => _lyricSources;
-        set => Write(nameof(LyricSources), (int)(_lyricSources = Known(value)));
-    }
-
     public static Hover Hover
     {
         get => _hover;
@@ -125,36 +73,6 @@ static class Settings
     {
         get => _seekHover;
         set => Write(nameof(SeekHover), (int)(_seekHover = value));
-    }
-
-    public static bool Lyrics
-    {
-        get => _lyrics;
-        set => Write(nameof(Lyrics), _lyrics = value);
-    }
-
-    public static bool LyricEffects
-    {
-        get => _lyricEffects;
-        set => Write(nameof(LyricEffects), _lyricEffects = value);
-    }
-
-    public static bool PointerLyric
-    {
-        get => _pointerLyric;
-        set => Write(nameof(PointerLyric), _pointerLyric = value);
-    }
-
-    public static PointerLyricShape PointerLyricShape
-    {
-        get => _pointerLyricShape;
-        set => Write(nameof(PointerLyricShape), (int)(_pointerLyricShape = value));
-    }
-
-    public static bool LyricParting
-    {
-        get => _lyricParting;
-        set => Write(nameof(LyricParting), _lyricParting = value);
     }
 
     public static bool Rim
@@ -198,8 +116,6 @@ static class Settings
         get => _accent == 0 ? null : Color.FromRgb((byte)(_accent >> 16), (byte)(_accent >> 8), (byte)_accent);
         set => Write(nameof(Accent), _accent = value is { } c ? c.R << 16 | c.G << 8 | c.B : 0);
     }
-
-    static LyricSource Known(LyricSource sources) => (sources & LyricSource.All) == 0 ? LyricSource.Usual : sources & LyricSource.All;
 
     static bool ReadSwitch(string name, bool fallback = true) => Read(name, fallback ? 1 : 0) != 0;
 

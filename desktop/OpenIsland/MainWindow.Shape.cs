@@ -19,7 +19,6 @@ public partial class MainWindow
     const double MinViewScale = 0.5, MaxViewScale = 1.15;
     const double MotionBlurSpeed = 650;
     const double MaxMotionBlur = 4, MinMotionBlur = 0.1;
-    const double CacheScaleTolerance = 0.001;
     const double ShadowReach = 100;
     static readonly TimeSpan GlassTime = TimeSpan.FromMilliseconds(300);
 
@@ -27,7 +26,6 @@ public partial class MainWindow
     readonly Spring _scale = new(1, 320, 20), _offsetY = new(0, 260, 26), _leanX = new(0);
     readonly Spring _userScale = new(Settings.Scale / 100.0, 240, 26), _topGap = new(Settings.Gap, 240, 26);
     readonly Spring _bubbleSplit = new(0), _bubbleScale = new(1, 320, 20);
-    readonly Spring _lyricSnapX = new(0, 200, 28), _lyricSnapY = new(0, 200, 28);
     readonly Spring _bubbleTimer = new(0, 260, 24);
     readonly BlurEffect _motionBlur = new() { Radius = 0, RenderingBias = RenderingBias.Performance };
     readonly FrameLoop _shapeLoop;
@@ -96,7 +94,7 @@ public partial class MainWindow
         foreach (Spring spring in _springs) moving |= spring.Advance(dt);
         ApplyShape();
         if (!moving) EndMorph();
-        return moving || IsLyricSettling;
+        return moving;
     }
 
     void ApplyShape()
@@ -130,35 +128,10 @@ public partial class MainWindow
         RootSize.ScaleX = RootSize.ScaleY = size;
         RootMove.Y = _offsetY.Value + _topGap.Value / size;
         RootLean.X = Math.Round(_leanX.Value * size * dpi) / (size * dpi);
-        SharpenLyricCache(dpi);
 
         PlaceCoverAndBars(pill);
         PlaceBubble(pill, r, scale);
         CutGlass(dpi);
-    }
-
-    void SharpenLyricCache(double dpi)
-    {
-        double sharp = Math.Max(_userScale.Target, MinScale) * dpi;
-        if (Math.Abs(_lyricCache.RenderAtScale - sharp) > CacheScaleTolerance) _lyricCache.RenderAtScale = sharp;
-        AimLyricAtWholePixels(dpi);
-    }
-
-    bool IsLyricSettling => _lyricSnapX.Value != _lyricSnapX.Target || _lyricSnapY.Value != _lyricSnapY.Target;
-
-    void AimLyricAtWholePixels(double dpi)
-    {
-        if (_view == View.Media && LyricBox.IsVisible && Root.TransformToAncestor(this) is Transform place)
-        {
-            Point inIsland = LyricBox.TranslatePoint(new Point(-LyricSnap.X, -LyricSnap.Y), Island);
-            Matrix toWindow = place.Value;
-            Point unscaled = toWindow.Transform(inIsland + VisualTreeHelper.GetOffset(Island));
-            double pixelsPerUnit = Math.Max(toWindow.M11, MinScale) * dpi;
-            _lyricSnapX.Target = (Math.Round(unscaled.X * dpi) - unscaled.X * dpi) / pixelsPerUnit;
-            _lyricSnapY.Target = (Math.Round(unscaled.Y * dpi) - unscaled.Y * dpi) / pixelsPerUnit;
-        }
-        LyricSnap.X = _lyricSnapX.Value;
-        LyricSnap.Y = _lyricSnapY.Value;
     }
 
     static Geometry Around(Geometry hole)
@@ -192,6 +165,12 @@ public partial class MainWindow
         if (Settings.Glass || !_glass.IsOn) return;
         _glass.Hide();
         Reshape();
+    }
+
+    void StayOnTop()
+    {
+        Native.KeepOnTop(_hwnd);
+        _glass.Place();
     }
 
     void Reshape()

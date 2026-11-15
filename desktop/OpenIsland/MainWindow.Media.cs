@@ -10,6 +10,7 @@ namespace DynamicIsland;
 public partial class MainWindow
 {
     const double FullCoverSize = 64, CoverRadius = 16;
+    const double PlayerHeight = 176;
     const double PausedCoverScale = 0.85;
     const double SkipMemorySeconds = 3;
     const double SourceSwitchCooldown = 0.25;
@@ -77,9 +78,7 @@ public partial class MainWindow
         if (_media.IsPlaying || turned) _lastPlayedAt = DateTime.UtcNow;
 
         if (turned || (newTrack && _media.IsPlaying)) ShowTransient(View.Toast, ToastSeconds);
-        TrackLyrics();
         UpdateView();
-        UpdateLyric();
     }
 
     static void SwapIcons(FrameworkElement leave, FrameworkElement enter, bool animate)
@@ -141,7 +140,6 @@ public partial class MainWindow
         Color[] palette = Settings.Accent is { } own ? CoverPalette.Around(own) : _media.Palette;
         Glow.Tint(palette, time);
         PlayerMatrix.Tint(palette, time);
-        PlayerLyricWait.Tint(palette, time);
         foreach (RadioButton tile in BackdropStrip.Children) ((BackdropPreview)tile.Content).Tint(palette);
     }
 
@@ -188,15 +186,10 @@ public partial class MainWindow
 
     void FitMediaViews(double w, double h)
     {
-        if (_view == View.Media)
-        {
-            MediaView.Width = w;
-            CentreLyrics();
-        }
+        if (_view == View.Media) MediaView.Width = w;
         if (_view != View.MediaBig) return;
 
         MediaBigView.Height = Math.Max(h, PlayerHeight);
-        PlayerLyricBox.Opacity = Math.Clamp((h - PlayerHeight) / PlayerLyricsHeight * 2 - 1, 0, 1);
     }
 
     void AimCoverAtWholePixels(MediaSpot rest, double restWidth)

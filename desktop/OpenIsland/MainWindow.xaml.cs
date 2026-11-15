@@ -14,9 +14,9 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, Lyrics, OpenCode }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -39,7 +39,6 @@ public partial class MainWindow : Window
         [View.Settings] = new(320, 374, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
-        [View.Lyrics] = new(352, 312, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(210, 34, 17),
         [View.OpenCodeBig] = new(380, 440, 36),
@@ -61,7 +60,7 @@ public partial class MainWindow : Window
 
     static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig];
 
-    static readonly View[] SettingsPages = [View.Update, View.Lyrics];
+    static readonly View[] SettingsPages = [View.Update];
 
     const double HostWidth = 620, HostHeight = 592;
     const double CompactMaxHeight = 40;
@@ -78,7 +77,6 @@ public partial class MainWindow : Window
     readonly SolidColorBrush _dim, _orange, _green, _red, _indigo;
     readonly AudioService _audio = new();
     readonly MediaService _media;
-    readonly LyricsService _lyrics = new();
     readonly NetworkService _network;
     readonly Updater _updater = new();
     readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -132,7 +130,6 @@ public partial class MainWindow : Window
             [View.Settings] = SettingsView,
             [View.Look] = LookView,
             [View.Update] = UpdatePage,
-            [View.Lyrics] = LyricsPage,
             [View.Loading] = LoadingView,
             [View.OpenCode] = OpenCodeView,
             [View.OpenCodeBig] = OpenCodeBigView,
@@ -141,10 +138,9 @@ public partial class MainWindow : Window
         _springs =
         [
             _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleTimer,
-            _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY, .. _spotSprings,
+            _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, .. _spotSprings,
         ];
         _timerTint = new SolidColorBrush(_orange.Color);
-        _lyricBlock = LyricA;
 
         _forcedView = Enum.TryParse(Argument("--view"), true, out View forced) ? forced : null;
         _forcedTimerSeconds = double.TryParse(Argument("--timer"), NumberStyles.Float, CultureInfo.InvariantCulture, out double seconds) ? seconds : 0;
@@ -154,7 +150,6 @@ public partial class MainWindow : Window
         _glass = new Glass(this);
         _eqLoop = new FrameLoop(AdvanceEq, EqFrameSeconds);
         _seekLoop = new FrameLoop(AdvanceSeek);
-        _partLoop = new FrameLoop(AdvanceLyricParting);
         _transientTimeout = new DelayedAction(EndTransient);
         _collapseTimeout = new DelayedAction(Collapse);
         _awayTimeout = new DelayedAction(ReturnFromAway);
@@ -162,7 +157,6 @@ public partial class MainWindow : Window
 
         _media = new MediaService(Dispatcher);
         _media.Changed += OnMediaChanged;
-        _lyrics.Changed += OnLyricsChanged;
         _network = new NetworkService(Dispatcher);
         _network.Changed += OnNetworkChanged;
         _updater.Changed += RefreshUpdatePage;
@@ -190,10 +184,8 @@ public partial class MainWindow : Window
 
         Shared.RenderTransform = CreateViewTransforms();
         ArtSpot.Clip = Squircle.Of(new Rect(0, 0, FullCoverSize, FullCoverSize), CoverRadius);
-        LyricBox.CacheMode = _lyricCache;
         Eq.Fill = _accentBrush;
         Eq.Dots = Settings.Dots;
-        SeekLines.Accent = _accentBrush;
         PlayerMatrix.Rounding = PillShapes[View.MediaBig].Radius;
         SyncBackdrop();
         foreach (FrameworkElement icon in new FrameworkElement[] { PlayIcon, PauseIcon, TimerPlayIcon, TimerPauseIcon })
@@ -347,7 +339,6 @@ public partial class MainWindow : Window
         App.LogDebug("MainWindow.Exit() called! StackTrace: " + Environment.StackTrace);
         _ticker.Stop();
         _alarm.Stop();
-        _pointerLyric?.ShowLine("", 0, 0);
         _glass.Hide();
         var fade = new DoubleAnimation(0, Ms(220));
         fade.Completed += (_, _) => Application.Current.Shutdown();
@@ -374,8 +365,6 @@ public partial class MainWindow : Window
         Safely(PollVolume);
         if (_ticks % 2 == 0) Safely(RefreshHover);
         if (_ticks % HeadsetReadTicks == 1) Safely(() => ReadHeadset(_audio.Device));
-        Safely(() => UpdateLyric());
-        Safely(UpdatePointerLyric);
         Safely(UpdateTimer);
         if (_panel == Panel.OpenCode || _view == View.OpenCode) Safely(UpdateOpenCodeTimer);
         if (_ticks % FullscreenCheckTicks == 0)
@@ -401,7 +390,6 @@ public partial class MainWindow : Window
             Panel.Settings => View.Settings,
             Panel.Look => View.Look,
             Panel.Update => View.Update,
-            Panel.Lyrics => View.Lyrics,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
@@ -425,7 +413,6 @@ public partial class MainWindow : Window
         SyncCover();
         if (!changed) return;
         if (target == View.MediaBig) StartSeekLoop();
-        if (target == View.Media) UpdateLyric(true);
     }
 
     void MorphTo(View target)
@@ -433,8 +420,6 @@ public partial class MainWindow : Window
         View previous = _view;
         PillShape from = ShapeOf(previous);
         _view = target;
-        if (target == View.MediaBig) UpdatePlayerLyrics(true);
-        else ShowLyricsPlaceholder(false);
         PillShape to = ShapeOf(target);
         bool growing = to.Width * to.Height >= from.Width * from.Height;
         _width.Tune(growing ? 330 : 260, growing ? 22 : 27);
@@ -478,8 +463,6 @@ public partial class MainWindow : Window
 
     PillShape ShapeOf(View view) => view switch
     {
-        View.Media => PillShapes[view] with { Width = _compactMediaWidth },
-        View.MediaBig when _playerHasLyricRoom => PillShapes[view] with { Height = PlayerHeight + PlayerLyricsHeight },
         View.Update => PillShapes[view] with { Height = UpdatePage.Height },
         View.Look => PillShapes[view] with { Height = LookView.Height },
         _ => PillShapes[view],

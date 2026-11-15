@@ -20,9 +20,6 @@ public partial class MainWindow
     bool _scrubbing;
     double _scrubFraction, _scrubHeldUntil;
     (int At, int Left) _seekLabel = (NoSeconds, NoSeconds);
-    LyricsService.Line[] _seekLinesFrom = [];
-    TimeSpan _seekLinesSpan;
-    bool _seekLined;
 
     void StartSeekLoop()
     {
@@ -48,14 +45,10 @@ public partial class MainWindow
         _seekFill.Advance(dt);
         _seekHeight.Advance(dt);
 
-        SeekPlain.Thickness = SeekLines.Thickness = Math.Max(_seekHeight.Value, MinSeekHeight);
-        SeekPlain.Fill = SeekLines.Fill = Math.Clamp(_seekFill.Value, 0, track);
-        double? pointer = SeekArea.IsMouseOver || _scrubbing ? Mouse.GetPosition(SeekLines).X : null;
+        SeekPlain.Thickness = Math.Max(_seekHeight.Value, MinSeekHeight);
+        SeekPlain.Fill = Math.Clamp(_seekFill.Value, 0, track);
+        double? pointer = SeekArea.IsMouseOver || _scrubbing ? Mouse.GetPosition(SeekPlain).X : null;
         SeekPlain.Advance(dt, pointer, Settings.SeekHover);
-        SeekLines.Advance(dt, pointer, Settings.SeekHover);
-        MarkLineStarts(duration);
-        FillSungLine();
-        AdvancePlayerLyrics(now, dt);
 
         TimeSpan at = known ? duration * shown : _media.Position;
         var label = counted ? ((int)at.TotalSeconds, known ? (int)(duration - at).TotalSeconds : NoSeconds) : (NoSeconds, NoSeconds);
@@ -67,38 +60,10 @@ public partial class MainWindow
         return true;
     }
 
-    void MarkLineStarts(TimeSpan duration)
-    {
-        if (ReferenceEquals(_playerLines, _seekLinesFrom) && duration == _seekLinesSpan) return;
-
-        _seekLinesFrom = _playerLines;
-        _seekLinesSpan = duration;
-        double seconds = duration.TotalSeconds;
-        SeekLines.SetLines(seconds < 1 ? [] : _playerLines.Select(line => line.Time.TotalSeconds / seconds).ToArray(),
-            _playerLines.Select(line => line.Text).ToArray());
-        SyncSeekStyle(true);
-    }
-
-    void SyncSeekStyle(bool animate)
-    {
-        bool lined = Settings.LineBar && SeekLines.HasMarks;
-        if (lined == _seekLined) return;
-
-        _seekLined = lined;
-        Duration time = Ms(animate ? 260 : 0);
-        SeekLines.BeginAnimation(OpacityProperty, new DoubleAnimation(lined ? 1 : 0, time));
-        SeekPlain.BeginAnimation(OpacityProperty, new DoubleAnimation(lined ? 0 : 1, time));
-    }
-
     static string FormatTime(TimeSpan t) =>
         t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
 
-    double SeekFraction(MouseEventArgs e)
-    {
-        double x = e.GetPosition(SeekArea).X;
-        if (_seekLined) x = SeekLines.Snap(x);
-        return Math.Clamp(x / SeekArea.ActualWidth, 0, 1);
-    }
+    double SeekFraction(MouseEventArgs e) => Math.Clamp(e.GetPosition(SeekArea).X / SeekArea.ActualWidth, 0, 1);
 
     void Seek_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

@@ -17,8 +17,6 @@ public partial class MainWindow
     const int LargestScale = 130, ScaleStep = 5;
     const int LargestGap = 24, GapStep = 2;
 
-    const int PointerLyricOff = 0, FirstPointerLyricShape = 1;
-
     Border? _openLookTiles;
     readonly Spring _lookScroll = new(0, 260, 30);
     readonly Spring _updateNotesScroll = new(0, 260, 30);
@@ -52,43 +50,6 @@ public partial class MainWindow
         UpdateSwitches(true);
     }
 
-    void Lyrics_Click(object sender, RoutedEventArgs e)
-    {
-        Settings.Lyrics = !Settings.Lyrics;
-        UpdateSwitches(true);
-        TrackLyrics();
-    }
-
-    void LyricsRow_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Lyrics);
-
-    void LyricsBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Settings);
-
-    void Source_Click(object sender, RoutedEventArgs e)
-    {
-        var picked = (LyricSource)(1 << SourceChips.Children.IndexOf((UIElement)sender));
-        LyricSource left = Settings.LyricSources ^ picked;
-        if (left != 0)
-        {
-            Settings.LyricSources = left;
-            TrackLyrics();
-        }
-        UpdateSwitches(true);
-    }
-
-    void LyricEffects_Click(object sender, RoutedEventArgs e)
-    {
-        Settings.LyricEffects = !Settings.LyricEffects;
-        UpdateSwitches(true);
-        RebuildPlayerLyrics();
-    }
-
-    void LyricParting_Click(object sender, RoutedEventArgs e)
-    {
-        Settings.LyricParting = !Settings.LyricParting;
-        UpdateSwitches(true);
-        StirLyrics();
-    }
-
     void Rim_Click(object sender, RoutedEventArgs e)
     {
         Settings.Rim = !Settings.Rim;
@@ -117,19 +78,11 @@ public partial class MainWindow
 
     void UpdateSwitches(bool animate)
     {
-        LyricsState.Text = Settings.Lyrics ? "Вкл" : "Выкл";
-        LyricsSwitch.Set(Settings.Lyrics, animate);
-        LyricEffectsSwitch.Set(Settings.LyricEffects, animate);
-        PointerLyricSegments.Set(Settings.PointerLyric ? FirstPointerLyricShape + (int)Settings.PointerLyricShape : PointerLyricOff, animate);
-        LyricPartingSwitch.Set(Settings.LyricParting, animate);
         RimSwitch.Set(Settings.Rim, animate);
         AppVolumeSwitch.Set(Settings.AppVolume, animate);
         NetworkSwitch.Set(Settings.Network, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
-
-        for (int i = 0; i < SourceChips.Children.Count; i++)
-            ((ToggleButton)SourceChips.Children[i]).IsChecked = Settings.LyricSources.HasFlag((LyricSource)(1 << i));
     }
 
     async void Update_Click(object sender, RoutedEventArgs e)
@@ -251,13 +204,6 @@ public partial class MainWindow
         SyncGlass(true);
     }
 
-    void SeekStyle_Click(object sender, RoutedEventArgs e)
-    {
-        Settings.LineBar = SeekStyleSegments.PickUnderPointer() == 1;
-        RefreshLookPage();
-        SyncSeekStyle(true);
-    }
-
     void SeekHover_Click(object sender, RoutedEventArgs e)
     {
         Settings.SeekHover = (SeekHover)SeekHoverSegments.PickUnderPointer();
@@ -266,8 +212,6 @@ public partial class MainWindow
 
     void BackdropRow_Click(object sender, RoutedEventArgs e) => ToggleLookTiles(BackdropTiles);
 
-    void LyricChangeRow_Click(object sender, RoutedEventArgs e) => ToggleLookTiles(LyricChangeTiles);
-
     void HoverRow_Click(object sender, RoutedEventArgs e) => ToggleLookTiles(HoverTiles);
 
     void BackdropTile_Click(object sender, RoutedEventArgs e)
@@ -275,12 +219,6 @@ public partial class MainWindow
         Settings.Backdrop = (Backdrop)BackdropStrip.Children.IndexOf((UIElement)sender);
         RefreshLookPage();
         SyncBackdrop();
-    }
-
-    void LyricChangeTile_Click(object sender, RoutedEventArgs e)
-    {
-        Settings.LyricChange = (LyricChange)LyricChangeStrip.Children.IndexOf((UIElement)sender);
-        RefreshLookPage();
     }
 
     void HoverTile_Click(object sender, RoutedEventArgs e)
@@ -293,7 +231,6 @@ public partial class MainWindow
     {
         _openLookTiles = tiles == _openLookTiles ? null : tiles;
         SlideLookTiles(BackdropTiles, BackdropChevron);
-        SlideLookTiles(LyricChangeTiles, LyricChangeChevron);
         SlideLookTiles(HoverTiles, HoverChevron);
     }
 
@@ -377,11 +314,9 @@ public partial class MainWindow
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
-        SeekStyleSegments.Set(Settings.LineBar ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
         ((RadioButton)BackdropStrip.Children[(int)Settings.Backdrop]).IsChecked = true;
-        ((RadioButton)LyricChangeStrip.Children[(int)Settings.LyricChange]).IsChecked = true;
         ((RadioButton)HoverStrip.Children[(int)Settings.Hover]).IsChecked = true;
         BackdropText.Text = Settings.Backdrop switch
         {
@@ -389,12 +324,6 @@ public partial class MainWindow
             Backdrop.Stars => "Звёзды",
             Backdrop.MatrixAndStars => "Матрица и звёзды",
             _ => "Свечение",
-        };
-        LyricChangeText.Text = Settings.LyricChange switch
-        {
-            LyricChange.Wave => "Волна по буквам",
-            LyricChange.Drum => "Барабан по словам",
-            _ => "Плавно",
         };
         HoverText.Text = Settings.Hover switch
         {
