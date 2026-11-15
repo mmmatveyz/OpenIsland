@@ -154,14 +154,24 @@ public partial class MainWindow
 
     void SyncEq()
     {
-        _spectrum.Active = IsEqVisible && _media.IsPlaying;
+        _spectrum.Active = IsEqVisible;
         if (IsEqVisible) _eqLoop.Start();
+    }
+
+    void PollSound()
+    {
+        double now = _clock.Elapsed.TotalSeconds;
+        if (_audio.Peak() >= SoundPeak) _soundingUntil = now + SoundHoldSeconds;
+        bool sounding = now < _soundingUntil;
+        if (sounding == _sounding) return;
+        _sounding = sounding;
+        UpdateView();
     }
 
     bool AdvanceEq(double dt)
     {
         double now = _clock.Elapsed.TotalSeconds;
-        bool playing = _media.IsPlaying;
+        bool sounding = _sounding || _media.IsPlaying;
         float[]? bands = _spectrum.Read(_bands) ? _bands : null;
         double level = 0;
         if (bands == null)
@@ -170,9 +180,9 @@ public partial class MainWindow
             level = peak < 0 ? PeakFallback : peak;
         }
 
-        bool moving = Eq.Tick(bands, level, playing, now, dt);
-        moving |= Settings.Backdrop == Backdrop.Glow ? Glow.Tick(Eq, now, dt) : AdvanceBackdrop(bands, playing, now, dt);
-        return IsEqVisible && (playing || moving);
+        bool moving = Eq.Tick(bands, level, sounding, now, dt);
+        moving |= Settings.Backdrop == Backdrop.Glow ? Glow.Tick(Eq, now, dt) : AdvanceBackdrop(bands, sounding, now, dt);
+        return IsEqVisible && (sounding || moving);
     }
 
     bool AdvanceBackdrop(float[]? bands, bool playing, double now, double dt)

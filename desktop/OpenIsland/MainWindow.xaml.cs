@@ -14,7 +14,7 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig }
 
     enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode }
 
@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     static readonly Dictionary<View, PillShape> PillShapes = new()
     {
         [View.Idle] = new(118, 34, 17),
+        [View.Sound] = new(110, 34, 17),
         [View.Media] = new(210, 34, 17),
         [View.Timer] = new(132, 34, 17),
         [View.Volume] = new(250, 34, 17),
@@ -46,16 +47,17 @@ public partial class MainWindow : Window
 
     readonly record struct MediaSpot(
         double CoverLeft, double CoverTop, double CoverSize,
-        double BarsRight, double BarsCenterY, double BarsWidth, double BarsHeight, double BarsOpen)
+        double BarsRight, double BarsCenterY, double BarsWidth, double BarsHeight, double BarsOpen, bool Cover)
     {
         public double[] Values => [CoverLeft, CoverTop, CoverSize, BarsRight, BarsCenterY, BarsWidth, BarsHeight, BarsOpen];
     }
 
     static readonly Dictionary<View, MediaSpot> MediaSpots = new()
     {
-        [View.Media] = new(7, 6, 22, 13, 17, 21, 16, 0),
-        [View.Toast] = new(12, 12, 44, 20, 34, 23, 20, 0),
-        [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1),
+        [View.Sound] = new(0, 0, 0, 38, 17, 34, 18, 1, false),
+        [View.Media] = new(7, 6, 22, 13, 17, 21, 16, 0, true),
+        [View.Toast] = new(12, 12, 44, 20, 34, 23, 20, 0, true),
+        [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };
 
     static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig];
@@ -65,6 +67,7 @@ public partial class MainWindow : Window
     const double HostWidth = 620, HostHeight = 592;
     const double CompactMaxHeight = 40;
     const double BarelyVisible = 0.05;
+    const double SoundPeak = 0.004, SoundHoldSeconds = 2.2;
     const double IntroScale = 0.3, IntroOffset = -50;
     const int FullscreenCheckTicks = 5, ClockUpdateTicks = 10, HeadsetReadTicks = 300;
     static readonly TimeSpan TickInterval = TimeSpan.FromMilliseconds(100);
@@ -91,6 +94,8 @@ public partial class MainWindow : Window
     Panel _panel;
     bool _hovered, _pressed, _hiddenByFullscreen, _sentAway;
     bool _activatable;
+    bool _sounding;
+    double _soundingUntil;
     IntPtr _typedAfter;
     IntPtr _hwnd;
     int _ticks;
@@ -114,6 +119,7 @@ public partial class MainWindow : Window
         _views = new()
         {
             [View.Idle] = IdleView,
+            [View.Sound] = SoundView,
             [View.Media] = MediaView,
             [View.Timer] = TimerView,
             [View.Volume] = VolumeView,
@@ -363,6 +369,7 @@ public partial class MainWindow : Window
     {
         _ticks++;
         Safely(PollVolume);
+        Safely(PollSound);
         if (_ticks % 2 == 0) Safely(RefreshHover);
         if (_ticks % HeadsetReadTicks == 1) Safely(() => ReadHeadset(_audio.Device));
         Safely(UpdateTimer);
@@ -397,7 +404,8 @@ public partial class MainWindow : Window
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
                 : _countdown.IsActive ? View.Timer
                 : _openCode.IsBusy ? View.OpenCode
-                : IsMediaActive ? View.Media : View.Idle),
+                : IsMediaActive ? View.Media
+                : _sounding ? View.Sound : View.Idle),
         };
         return target == View.Toast && !_media.HasTrack ? View.Idle : target;
     }
@@ -444,6 +452,8 @@ public partial class MainWindow : Window
                 if (fresh) _spotSprings[i].Snap(places[i]);
                 else _spotSprings[i].Target = places[i];
             }
+            if (fresh) ArtSpot.Opacity = spot.Cover ? 1 : 0;
+            else ArtSpot.BeginAnimation(OpacityProperty, new DoubleAnimation(spot.Cover ? 1 : 0, Ms(200)));
         }
         ArtSpot.Cursor = to == View.MediaBig ? Cursors.Hand : null;
         if (has == had) return;
