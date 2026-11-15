@@ -36,6 +36,18 @@ const electronAPI = {
     ipcRenderer.send('window:set-ignore-mouse-events', ignore);
   },
 
+  updateIslandBounds: (bounds: { width: number; height: number; y?: number }) => {
+    ipcRenderer.send('window:update-island-bounds', bounds);
+  },
+
+  onHoverChange: (callback: (isHovered: boolean) => void) => {
+    const handler = (_event: any, hovered: boolean) => callback(hovered);
+    ipcRenderer.on('window:hover-changed', handler);
+    return () => {
+      ipcRenderer.removeListener('window:hover-changed', handler);
+    };
+  },
+
   // Метрики системы
   getSystemStats: (): Promise<SystemStats> => {
     return ipcRenderer.invoke('system:get-stats');

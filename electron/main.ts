@@ -5,6 +5,15 @@ import { openCodeBridge } from './ipc/opencode';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let mousePollTimer: NodeJS.Timeout | null = null;
+
+// Текущие границы активного островка (для идеального сквозного клика)
+let currentIslandBounds = {
+  width: 300,
+  height: 44,
+  y: 8
+};
+let isHoveredState = false;
 
 const isDev = !app.isPackaged || process.env.NODE_ENV === 'development';
 
@@ -13,7 +22,7 @@ function createWindow() {
   const { width: screenWidth } = primaryDisplay.workAreaSize;
 
   const winWidth = 720;
-  const winHeight = 500;
+  const winHeight = 480;
   const posX = Math.round((screenWidth - winWidth) / 2);
   const posY = 0;
 
@@ -44,6 +53,9 @@ function createWindow() {
   openCodeBridge.setWindow(mainWindow);
   openCodeBridge.start();
 
+  // Запуск аппаратного трекинга мыши для идеального Click-Through на Windows
+  startMouseTracking(posX, posY, winWidth);
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173').catch(() => {
       mainWindow?.loadFile(path.join(__dirname, '../dist/index.html'));
@@ -53,10 +65,47 @@ function createWindow() {
   }
 
   mainWindow.on('closed', () => {
+    stopMouseTracking();
     systemMonitor.stop();
     openCodeBridge.stop();
     mainWindow = null;
   });
+}
+
+// Надежный Win32-трекинг мыши: опрашиваем положение курсора каждые 50мс
+function startMouseTracking(winX: number, winY: number, winWidth: number) {
+  if (mousePollTimer) clearInterval(mousePollTimer);
+
+  mousePollTimer = setInterval(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    const cursor = screen.getCursorScreenPoint();
+
+    // Границы активного островка относительно экрана
+    const islandLeft = winX + (winWidth - currentIslandBounds.width) / 2;
+    const islandRight = islandLeft + currentIslandBounds.width;
+    const islandTop = winY + currentIslandBounds.y;
+    const islandBottom = islandTop + currentIslandBounds.height;
+
+    const inside =
+      cursor.x >= islandLeft &&
+      cursor.x <= islandRight &&
+      cursor.y >= islandTop &&
+      cursor.y <= islandBottom;
+
+    if (inside !== isHoveredState) {
+      isHoveredState = inside;
+      mainWindow.setIgnoreMouseEvents(!inside, { forward: true });
+      mainWindow.webContents.send('window:hover-changed', inside);
+    }
+  }, 50);
+}
+
+function stopMouseTracking() {
+  if (mousePollTimer) {
+    clearInterval(mousePollTimer);
+    mousePollTimer = null;
+  }
 }
 
 function createTray() {
@@ -90,6 +139,15 @@ function createTray() {
 }
 
 function setupIPC() {
+  // Renderer сообщает текущие размеры островка (в свернутом или развернутом виде)
+  ipcMain.on('window:update-island-bounds', (_event, bounds: { width: number; height: number; y?: number }) => {
+    currentIslandBounds = {
+      width: bounds.width,
+      height: bounds.height,
+      y: bounds.y ?? 8
+    };
+  });
+
   ipcMain.on('window:set-ignore-mouse-events', (event, ignore: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     if (win && !win.isDestroyed()) {
