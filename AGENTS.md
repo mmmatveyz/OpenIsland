@@ -61,6 +61,12 @@ OpenIsland/
 
 ## 4. Правила и соглашения для ИИ-агентов (Guidelines)
 
+### 4.0. Специализированные роли из Agency Agents (`tools/agency-agents`)
+При работе над кодом проекта агенты руководствуются стандартами из каталога `tools/agency-agents`:
+- **Desktop App Engineer** (`tools/agency-agents/engineering/engineering-desktop-app-engineer.md`): строгая изоляция renderer процесса (`contextIsolation: true`, `nodeIntegration: false`), надежный Win32-трекинг мыши, дисциплина по потреблению RAM и размера сборки.
+- **Frontend Developer** (`tools/agency-agents/engineering/engineering-frontend-developer.md`): модульные React-компоненты, плавная пружинная физика Framer Motion, отсутствие дерганий макета при трансформации капсулы.
+- **Code Reviewer** (`tools/agency-agents/engineering/engineering-code-reviewer.md`): обязательная проверка чистоты типов TypeScript и обработка edge cases (например, недоступность демона OpenCode или смена порта).
+
 ### 4.1. Безопасность и хранение данных
 - **Никаких открытых токенов и паролей в кодовой базе**: сессии и cookies пользователей должны сохраняться в изолированных зашифрованных хранилищах Chromium (`safeStorage` Electron).
 - В `Renderer` процессе **всегда** включена изоляция контекста (`contextIsolation: true`, `nodeIntegration: false`). Все общение с системой происходит строго через `contextBridge` в `preload.ts`.

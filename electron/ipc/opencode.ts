@@ -1,4 +1,6 @@
 import http from 'http';
+import path from 'path';
+import { execFile } from 'child_process';
 import { BrowserWindow } from 'electron';
 
 export interface OpenCodeServerInfo {
@@ -46,10 +48,59 @@ class OpenCodeBridgeService {
     this.mainWindow = win;
   }
 
-  public start() {
+  public setCustomUrl(url: string) {
+    this.serverUrl = url;
     this.checkHealth();
+  }
+
+  public getActiveUrl(): string {
+    return this.serverUrl;
+  }
+
+  // Динамическое обнаружение порта OpenCode
+  public async discoverServerUrl(): Promise<string> {
+    const cliPaths = [
+      path.join(process.env.LOCALAPPDATA || '', 'Programs/@opencode-aidesktop/resources/opencode-cli.exe'),
+      'opencode-cli',
+      'opencode'
+    ];
+
+    for (const cli of cliPaths) {
+      try {
+        const detected = await new Promise<string>((resolve, reject) => {
+          execFile(cli, ['service', 'status'], { timeout: 2000 }, (err, stdout) => {
+            if (err) return reject(err);
+            const trimmed = (stdout || '').trim();
+            if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+              resolve(trimmed);
+            } else {
+              reject(new Error('Invalid URL'));
+            }
+          });
+        });
+
+        if (detected) {
+          this.serverUrl = detected;
+          return detected;
+        }
+      } catch {
+        // Проверяем следующий путь
+      }
+    }
+    return this.serverUrl;
+  }
+
+  public async start() {
+    await this.discoverServerUrl();
+    await this.checkHealth();
+
     if (this.pollTimer) clearInterval(this.pollTimer);
-    this.pollTimer = setInterval(() => this.checkHealth(), 3000);
+    this.pollTimer = setInterval(async () => {
+      if (!this.isConnected) {
+        await this.discoverServerUrl();
+      }
+      await this.checkHealth();
+    }, 3000);
   }
 
   public stop() {
@@ -111,7 +162,7 @@ class OpenCodeBridgeService {
       this.isConnected = !!info?.version;
 
       if (!wasConnected && this.isConnected) {
-        this.emitToRenderer('opencode:connected', info);
+        this.emitToRenderer('opencode:connected', { ...info, url: this.serverUrl });
       }
       return this.isConnected;
     } catch {
@@ -128,7 +179,6 @@ class OpenCodeBridgeService {
       const res = await this.makeRequest<{ data: OpenCodeSession[] }>('GET', '/api/session');
       return res.data || [];
     } catch (e) {
-      console.error('Failed to get OpenCode sessions:', e);
       return [];
     }
   }
@@ -144,7 +194,6 @@ class OpenCodeBridgeService {
         enabled: m.enabled
       }));
     } catch (e) {
-      console.error('Failed to get OpenCode models:', e);
       return [];
     }
   }
