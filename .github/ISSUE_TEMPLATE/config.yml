@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Уязвимость / безопасность
+    url: https://github.com/mmmatveyz/OpenIsland/security/advisories/new
+    about: Не создавайте публичный issue — сообщите о проблеме безопасности приватно.
+  - name: Документация
+    url: https://github.com/mmmatveyz/OpenIsland/blob/master/README.md
+    about: Обзор проекта, сборка и запуск.

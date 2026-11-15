@@ -108,6 +108,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 - Токен OpenCode хранится только в зашифрованном виде через Windows DPAPI для текущего пользователя; старый plaintext-файл автоматически мигрируется и удаляется.
 - Пароли и токены не попадают в репозиторий и логи.
 - Все запросы идут на локальный демон `http://127.0.0.1:<port>`, порт определяется через `opencode service status`.
+- Единственный внешний запрос — проверка обновлений в GitHub Releases; ассет сверяется по `sha256`-дайджесту.
+
+Нашли уязвимость — не создавайте публичный issue, см. [SECURITY.md](./SECURITY.md).
 
 ---
 
