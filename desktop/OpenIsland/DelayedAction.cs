@@ -1,6 +1,6 @@
 using System.Windows.Threading;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class DelayedAction
 {

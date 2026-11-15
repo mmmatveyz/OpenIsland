@@ -135,7 +135,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 Отдельный exe, которому не нужен установленный .NET:
 
 ```powershell
-dotnet publish desktop\OpenIsland\DynamicIsland.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
+dotnet publish desktop\OpenIsland\OpenIsland.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o publish
 ```
 
 ### Аргументы запуска

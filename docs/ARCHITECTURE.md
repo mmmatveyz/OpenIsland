@@ -215,7 +215,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
 ```
 
-- Проект: `desktop/OpenIsland/DynamicIsland.csproj`, имя сборки — `OpenIsland`, пространство имён — `DynamicIsland`.
+- Проект: `desktop/OpenIsland/OpenIsland.csproj`, имя сборки — `OpenIsland`, пространство имён — `OpenIsland`.
 - Вывод: `bin/OpenIsland/OpenIsland.exe`.
 - Если .NET 8 SDK не найден, `scripts/build.ps1` устанавливает его в `.dotnet/`.
 - Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--selftest` (диагностика).

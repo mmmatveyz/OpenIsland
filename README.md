@@ -59,7 +59,7 @@ OpenIsland/
 │   ├── Settings.cs             # Настройки в реестре
 │   ├── Native.cs               # Win32-вызовы (topmost, toolwindow, DWM)
 │   ├── Fonts/ Gadgets/ Assets/ # Шрифты, графика виджетов, иконка и звук
-│   └── DynamicIsland.csproj
+│   └── OpenIsland.csproj
 ├── scripts/build.ps1           # Сборка, запуск и self-test
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
 ├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации

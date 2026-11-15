@@ -8,9 +8,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Microsoft.Win32;
-using static DynamicIsland.Motion;
+using static OpenIsland.Motion;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public partial class MainWindow : Window
 {

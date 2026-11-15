@@ -1,8 +1,8 @@
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using static DynamicIsland.Motion;
+using static OpenIsland.Motion;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public partial class MainWindow
 {

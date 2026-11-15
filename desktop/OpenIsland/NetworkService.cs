@@ -3,7 +3,7 @@ using System.Windows.Threading;
 using Windows.Networking.Connectivity;
 using Connectivity = Windows.Networking.Connectivity.NetworkInformation;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class NetworkService
 {

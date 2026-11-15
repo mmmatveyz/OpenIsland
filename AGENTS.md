@@ -61,7 +61,7 @@ OpenIsland/
 │   ├── Fonts/                     # SF Pro (встроенные ресурсы)
 │   ├── Gadgets/                   # PNG-графика виджетов
 │   ├── Assets/                    # Иконка приложения и звук завершения задачи
-│   └── DynamicIsland.csproj
+│   └── OpenIsland.csproj
 ├── scripts/build.ps1              # Сборка, запуск и self-test
 ├── bin/OpenIsland/                # Результат сборки (OpenIsland.exe)
 ├── tools/agency-agents/           # Каталог ролей-персон для промптов

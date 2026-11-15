@@ -1,6 +1,6 @@
 using Microsoft.Win32;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 static class Autostart
 {

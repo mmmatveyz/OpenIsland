@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 /// <summary>Значок в системном трее: показать/скрыть остров, настройки, выход.</summary>
 public partial class MainWindow

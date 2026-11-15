@@ -4,7 +4,7 @@ using Windows.Graphics.DirectX;
 using Windows.UI.Composition;
 using WinRT;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class DrawingSurfaces : IDisposable
 {

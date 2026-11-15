@@ -17,7 +17,7 @@ jobs:
 
       # Warnings are errors: the project must build at 0 warnings / 0 errors.
       - name: Build
-        run: dotnet build desktop/OpenIsland/DynamicIsland.csproj -c Release -warnaserror --nologo
+        run: dotnet build desktop/OpenIsland/OpenIsland.csproj -c Release -warnaserror --nologo
 
       - name: Verify produced binary
         shell: pwsh

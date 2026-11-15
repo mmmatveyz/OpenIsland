@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 /// <summary>
 /// Диагностический прогон интеграции с OpenCode без участия UI.

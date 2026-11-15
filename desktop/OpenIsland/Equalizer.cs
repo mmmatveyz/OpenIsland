@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed class Equalizer : FrameworkElement
 {

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Automation;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class PlayerBar
 {

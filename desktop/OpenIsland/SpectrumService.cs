@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class SpectrumService
 {

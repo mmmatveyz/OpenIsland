@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed class ChipCorners : IValueConverter
 {

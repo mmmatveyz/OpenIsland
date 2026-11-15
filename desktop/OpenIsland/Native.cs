@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 static class Native
 {

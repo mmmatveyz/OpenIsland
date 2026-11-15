@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class FrameLoop
 {

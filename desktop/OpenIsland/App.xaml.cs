@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public partial class App : Application
 {

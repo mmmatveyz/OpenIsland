@@ -1,4 +1,4 @@
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class SpectrumAnalyzer
 {

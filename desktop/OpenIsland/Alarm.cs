@@ -1,7 +1,7 @@
 using System.IO;
 using System.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class Alarm
 {

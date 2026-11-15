@@ -82,15 +82,15 @@ REST + SSE клиент, сессии, модели, промпты, стрим�
 | `Updater.cs` | чужой GitHub-репозиторий и ассет `DynamicIsland.exe` | `Stage.NotConfigured`: апдейтер выключен, чужой бинарник не скачивается; репозиторий задаётся `const string Repository` | ✅ |
 | `Settings.cs` | реестр `HKCU\Software\DynamicIsland` | `HKCU\Software\OpenIsland` + авто-миграция значений при первом чтении | ✅ |
 | `Autostart.cs` | Run-значение `DynamicIsland` | `OpenIsland` (+ миграция и удаление старого) | ✅ |
-| `DynamicIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version 1.0.0`, `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
+| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version 1.0.0`, `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
 | `app.manifest` | `name="DynamicIsland.app"` | `OpenIsland.app` | ✅ |
 | Иконка приложения | отсутствовала | `Assets/OpenIsland.ico` (7 кадров 16–256, тёмная капсула + индиго-циан ободок + искра) | ✅ |
 | Трей | кода не было вообще | `MainWindow.Tray.cs` + `Native.cs`: `Shell_NotifyIcon`, меню (Открыть / Скрыть-Показать / Настройки / Выход), двойной клик — показать | ✅ |
 | `desktop/OpenIsland/DynamicIsland.exe` | лежал в исходниках | удалён | ✅ |
 | `README.md` (в `desktop/OpenIsland`) | чужой README с чужими фичами | переписан под OpenIsland (наши виджеты, OpenCode, звук завершения; удалённые модули не описываются) | ✅ |
-| Пространства имён | `namespace DynamicIsland` во всех файлах | решено **отложить**: массовая механическая правка без пользы для пользователя | ⏳ |
+| Пространства имён | `namespace DynamicIsland` во всех файлах | переименовано в `OpenIsland` во всех `.cs`, XAML (`x:Class`, `clr-namespace`), проекте и `.sln`; легаси-константы миграции оставлены | ✅ |
 
-Итого по идентичности: всё, что видит пользователь (имя окна/exe, иконка, трей, реестр, автозапуск, README), переведено на `OpenIsland`. Остаётся только внутреннее пространство имён — косметика для разработчика, не для релиза.
+Итого по идентичности: всё, что видит пользователь (имя окна/exe, иконка, трей, реестр, автозапуск, README), переведено на `OpenIsland`. Пространства имён и файл проекта тоже переименованы.
 
 ---
 
@@ -114,7 +114,7 @@ REST + SSE клиент, сессии, модели, промпты, стрим�
 4. ✅ Трей: иконка, контекстное меню (Открыть / Скрыть-Показать, Настройки, Выход).
 5. ✅ Удалён мусорный exe из исходников; ✅ свой `desktop/OpenIsland/README.md` переписан.
 
-Осталось: переименование пространства имён `DynamicIsland` → `OpenIsland` (отложено) и включение апдейтера после перевода репозитория `mmmatveyz/OpenIsland` в публичный (репозиторий уже создан и запушен, но приватный).
+Осталось: включение апдейтера после перевода репозитория `mmmatveyz/OpenIsland` в публичный (репозиторий уже создан и запушен, но приватный).
 
 ### Шаг 2. Ревизия чужих функций — ✅ **выполнено**
 Вырезаны как чужие: тексты песен, запись OBS, полка файлов, погода, QR-код (подробности и список удалённых файлов — §2.5). Оформление/обои (матрица/звёзды) остаются — это часть собственного вида островка. Обновление через GitHub выключено, пока репозиторий приватный (§2.8).
@@ -141,4 +141,4 @@ REST + SSE клиент, сессии, модели, промпты, стрим�
 - `OpenCodeService.cs` — крупный модуль в одном файле, стоит разбить на `OpenCode.Client/Events/Sessions/Models`.
 - Дублирование логики таймеров OpenCode было (устранено при правке «0:00»): теперь единый `UpdateOpenCodeTimer`.
 - Репозиторий переведён под git в корне проекта; `desktop/` и `scripts/` теперь под версионным контролем.
-- Пространство имён `DynamicIsland` оставлено как есть (косметика для разработчика).
+- Пространство имён, имя файла проекта и XAML переведены с `DynamicIsland` на `OpenIsland`; легаси-константы миграции реестра и автозапуска (`Software\DynamicIsland`, Run-значение `DynamicIsland`) намеренно сохранены.

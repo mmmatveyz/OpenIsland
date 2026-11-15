@@ -8,7 +8,7 @@ using Manager = Windows.Media.Control.GlobalSystemMediaTransportControlsSessionM
 using Session = Windows.Media.Control.GlobalSystemMediaTransportControlsSession;
 using Status = Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class MediaService
 {

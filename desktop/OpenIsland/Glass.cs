@@ -5,7 +5,7 @@ using System.Windows.Media;
 using Windows.UI.Composition;
 using Windows.UI.Composition.Desktop;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class Glass
 {

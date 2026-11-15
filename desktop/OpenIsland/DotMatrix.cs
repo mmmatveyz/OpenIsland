@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed class DotMatrix : FrameworkElement
 {

@@ -1,4 +1,4 @@
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed class SpectrumLevels
 {

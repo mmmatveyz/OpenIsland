@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "desktop", "desktop", "{89E99B58-21FD-4482-ACBD-BF80D8D31FE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicIsland", "desktop\OpenIsland\DynamicIsland.csproj", "{57C4EC3D-100B-4C7A-90DD-7BBA883910EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenIsland", "desktop\OpenIsland\OpenIsland.csproj", "{57C4EC3D-100B-4C7A-90DD-7BBA883910EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

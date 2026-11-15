@@ -9,7 +9,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows.Threading;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed record OpenCodeSessionInfo(
     string Id,

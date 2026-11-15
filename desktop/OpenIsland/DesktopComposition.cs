@@ -3,7 +3,7 @@ using Windows.UI.Composition;
 using Windows.UI.Composition.Desktop;
 using WinRT;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 static class DesktopComposition
 {

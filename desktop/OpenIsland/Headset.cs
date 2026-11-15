@@ -1,6 +1,6 @@
 using Windows.Devices.Enumeration;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 static class Headset
 {

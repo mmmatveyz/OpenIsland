@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class BackdropPreview : FrameworkElement
 {

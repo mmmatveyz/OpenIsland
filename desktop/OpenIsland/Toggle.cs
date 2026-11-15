@@ -5,7 +5,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public sealed class Toggle : FrameworkElement
 {

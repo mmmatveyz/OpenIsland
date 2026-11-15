@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public enum Glyph
 {

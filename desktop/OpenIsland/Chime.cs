@@ -1,7 +1,7 @@
 using System.IO;
 using System.Windows.Media;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 /// <summary>
 /// Короткий звук завершения задачи. Источник — <c>Assets/staplebops-01.mp3</c>

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 sealed class Updater
 {

@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 public partial class MainWindow
 {

@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $root = Split-Path -Parent $PSScriptRoot
-$project = Join-Path $root 'desktop\OpenIsland\DynamicIsland.csproj'
+$project = Join-Path $root 'desktop\OpenIsland\OpenIsland.csproj'
 $output = Join-Path $root 'bin\OpenIsland'
 $exe = Join-Path $output 'OpenIsland.exe'
 $log = Join-Path $env:LOCALAPPDATA 'OpenIsland\logs\app.log'

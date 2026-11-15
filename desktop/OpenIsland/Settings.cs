@@ -1,7 +1,7 @@
 using System.Windows.Media;
 using Microsoft.Win32;
 
-namespace DynamicIsland;
+namespace OpenIsland;
 
 [Flags]
 enum Backdrop
