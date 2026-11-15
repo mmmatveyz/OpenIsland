@@ -14,9 +14,9 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Record, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, RecordBig, RecordSet, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Media, Timer, Record, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, RecordBig, RecordSet, Menu, Settings, Look, Shelf, Weather, Place, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
 
-    enum Panel { None, Player, Timer, TimerSet, Record, Menu, Settings, Look, Shelf, Weather, Place, Qr, Update, Lyrics, OpenCode }
+    enum Panel { None, Player, Timer, TimerSet, Record, Menu, Settings, Look, Shelf, Weather, Place, Update, Lyrics, OpenCode }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -44,7 +44,6 @@ public partial class MainWindow : Window
         [View.Shelf] = new(380, 136, 34),
         [View.Weather] = new(340, 190, 34),
         [View.Place] = new(320, 200, 34),
-        [View.Qr] = new(320, 104, 34),
         [View.Update] = new(320, 150, 34),
         [View.Lyrics] = new(352, 312, 34),
         [View.Loading] = new(118, 34, 17),
@@ -66,7 +65,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.RecordSet, View.RecordBig, View.Shelf, View.Weather, View.Qr, View.OpenCodeBig];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.RecordSet, View.RecordBig, View.Shelf, View.Weather, View.OpenCodeBig];
 
     static readonly View[] SettingsPages = [View.Update, View.Lyrics];
 
@@ -145,7 +144,6 @@ public partial class MainWindow : Window
             [View.Shelf] = ShelfView,
             [View.Weather] = WeatherView,
             [View.Place] = PlaceView,
-            [View.Qr] = QrView,
             [View.Update] = UpdatePage,
             [View.Lyrics] = LyricsPage,
             [View.Loading] = LoadingView,
@@ -437,7 +435,6 @@ public partial class MainWindow : Window
             Panel.Shelf => View.Shelf,
             Panel.Weather => View.Weather,
             Panel.Place => View.Place,
-            Panel.Qr => View.Qr,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Record => _obs.Recording ? View.RecordBig : View.RecordSet,
