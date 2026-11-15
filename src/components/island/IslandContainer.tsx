@@ -28,10 +28,14 @@ export const IslandContainer: React.FC = () => {
     <div className="w-full flex justify-center pt-2 select-none">
       <motion.div
         layout
-        initial={false}
+        initial={{
+          width: 300,
+          height: 44,
+          borderRadius: 9999
+        }}
         animate={{
           width: mode === 'compact' ? 300 : 560,
-          height: mode === 'compact' ? 42 : 360,
+          height: mode === 'compact' ? 44 : 360,
           borderRadius: mode === 'compact' ? 9999 : 24,
         }}
         transition={{
@@ -40,8 +44,10 @@ export const IslandContainer: React.FC = () => {
           damping: 32,
           mass: 0.8
         }}
-        className="relative overflow-hidden pointer-events-auto island-glass shadow-island cursor-pointer flex flex-col items-center justify-center border border-white/20"
+        className="relative overflow-hidden island-glass shadow-island cursor-pointer flex flex-col items-center justify-center border border-white/20"
         style={{
+          width: mode === 'compact' ? 300 : 560,
+          height: mode === 'compact' ? 44 : 360,
           backgroundColor: '#0d0f12',
           boxShadow: mode === 'compact'
             ? '0 12px 30px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.2)'

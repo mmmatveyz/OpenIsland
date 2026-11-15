@@ -10,7 +10,7 @@ let mousePollTimer: NodeJS.Timeout | null = null;
 
 let currentIslandBounds = {
   width: 300,
-  height: 44,
+  height: 48,
   y: 8
 };
 let isHoveredState = false;
@@ -27,9 +27,7 @@ function checkUrlLive(urlStr: string): Promise<boolean> {
           method: 'GET',
           timeout: 800
         },
-        (res) => {
-          resolve(true);
-        }
+        () => resolve(true)
       );
       req.on('error', () => resolve(false));
       req.on('timeout', () => {
@@ -52,7 +50,7 @@ async function createWindow() {
   const posX = displayX + Math.round((displayWidth - winWidth) / 2);
   const posY = displayY;
 
-  console.log(`[OpenIsland] Screen: ${displayWidth}x${primaryDisplay.bounds.height}, Window pos: (${posX}, ${posY})`);
+  console.log(`[OpenIsland] Screen: ${displayWidth}x${primaryDisplay.bounds.height}, Pos: (${posX}, ${posY})`);
 
   mainWindow = new BrowserWindow({
     width: winWidth,
@@ -66,7 +64,7 @@ async function createWindow() {
     resizable: false,
     hasShadow: false,
     skipTaskbar: false,
-    show: false, // Покажем сразу после загрузки контента
+    show: false, // Покажем при ready-to-show
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -74,11 +72,7 @@ async function createWindow() {
     }
   });
 
-  // Поверх всех окон на Windows
-  mainWindow.setAlwaysOnTop(true, 'screen-saver');
-
-  // Сквозной клик
-  mainWindow.setIgnoreMouseEvents(true, { forward: true });
+  mainWindow.setAlwaysOnTop(true);
 
   systemMonitor.setWindow(mainWindow);
   systemMonitor.start();
@@ -86,21 +80,32 @@ async function createWindow() {
   openCodeBridge.setWindow(mainWindow);
   openCodeBridge.start();
 
-  startMouseTracking(posX, posY, winWidth);
+  // Логирование консоли из Renderer
+  mainWindow.webContents.on('console-message', (_e, _lvl, msg) => {
+    console.log('[Renderer]:', msg);
+  });
 
-  // Проверяем: запущен ли Vite сервер (http://localhost:5173)
+  mainWindow.once('ready-to-show', () => {
+    console.log('[OpenIsland] Window ready-to-show: Showing window on screen');
+    mainWindow?.show();
+    mainWindow?.focus();
+
+    // Включаем сквозной клик только после того, как первый кадр отрисован
+    setTimeout(() => {
+      mainWindow?.setIgnoreMouseEvents(true, { forward: true });
+      startMouseTracking(posX, posY, winWidth);
+    }, 150);
+  });
+
   const isViteReady = await checkUrlLive('http://localhost:5173');
   if (isViteReady) {
-    console.log('[OpenIsland] Загрузка через Vite HMR: http://localhost:5173');
+    console.log('[OpenIsland] Loading Vite HMR: http://localhost:5173');
     await mainWindow.loadURL('http://localhost:5173');
   } else {
     const distPath = path.join(__dirname, '../dist/index.html');
-    console.log('[OpenIsland] Vite не запущен, загрузка продакшн сборки:', distPath);
+    console.log('[OpenIsland] Loading local build:', distPath);
     await mainWindow.loadFile(distPath);
   }
-
-  mainWindow.show();
-  mainWindow.focus();
 
   mainWindow.on('closed', () => {
     stopMouseTracking();
