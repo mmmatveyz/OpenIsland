@@ -4,6 +4,9 @@ import http from 'http';
 import { systemMonitor } from './ipc/system-monitor';
 import { openCodeBridge } from './ipc/opencode';
 
+// Отключаем аппаратное ускорение для устранения бага невидимости прозрачных окон на Windows 11 (NVIDIA/AMD)
+app.disableHardwareAcceleration();
+
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let mousePollTimer: NodeJS.Timeout | null = null;
@@ -64,7 +67,7 @@ async function createWindow() {
     resizable: false,
     hasShadow: false,
     skipTaskbar: false,
-    show: false, // Покажем при ready-to-show
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -72,7 +75,7 @@ async function createWindow() {
     }
   });
 
-  mainWindow.setAlwaysOnTop(true);
+  mainWindow.setAlwaysOnTop(true, 'screen-saver');
 
   systemMonitor.setWindow(mainWindow);
   systemMonitor.start();
@@ -90,11 +93,17 @@ async function createWindow() {
     mainWindow?.show();
     mainWindow?.focus();
 
-    // Включаем сквозной клик только после того, как первый кадр отрисован
+    // Фикс для Windows 11 DWM (принудительное обновление геометрии)
+    if (mainWindow) {
+      const [w, h] = mainWindow.getSize();
+      mainWindow.setSize(w, h + 1);
+      mainWindow.setSize(w, h);
+    }
+
     setTimeout(() => {
       mainWindow?.setIgnoreMouseEvents(true, { forward: true });
       startMouseTracking(posX, posY, winWidth);
-    }, 150);
+    }, 200);
   });
 
   const isViteReady = await checkUrlLive('http://localhost:5173');
@@ -150,7 +159,10 @@ function stopMouseTracking() {
 }
 
 function createTray() {
-  const icon = nativeImage.createEmpty();
+  // Настоящая 16x16 PNG иконка острова (голубой круг) в Base64 для отображения в трее Windows
+  const iconBase64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR42mNkQAO/fzP8Z6ACxsDAwMDAwMhACWBmYvgPwsxQMRjAAmYmKGAg3gCm/0eB6v4Tox6rmf9R8P///5947UdW/J947ScZBjAxmKNgFBDnBhyF9e//DAwMDFRwgAErGQ4AAJsNFR+w9a0AAAAASUVORK5CYII=';
+  const icon = nativeImage.createFromDataURL(`data:image/png;base64,${iconBase64}`);
+  
   tray = new Tray(icon);
   const contextMenu = Menu.buildFromTemplate([
     { label: 'OpenIsland v0.1.0', enabled: false },
@@ -164,6 +176,7 @@ function createTray() {
           mainWindow.hide();
         } else {
           mainWindow.show();
+          mainWindow.focus();
         }
       }
     },
