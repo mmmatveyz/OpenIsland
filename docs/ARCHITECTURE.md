@@ -25,8 +25,8 @@
 |                                                                          |
 |  - View/Panel routing: TargetView(), ShowPanel(), WorkArea()             |
 |  - Spring physics: Spring.cs + MainWindow.Shape.cs                       |
-|  - Custom visuals: DrawingVisual widgets (spectrum, lyrics, goo, glass)  |
-|  - Modules: MainWindow.Media.cs, .Timer.cs, .Record.cs, .Shelf.cs, ...   |
+|  - Custom visuals: DrawingVisual widgets (spectrum, equ, goo, glass)     |
+|  - Modules: MainWindow.Media.cs, .Timer.cs, .Status.cs, .Menu.cs, ...    |
 |  - OpenCode UI: MainWindow.OpenCode.cs                                   |
 +--------------------------------------------------------------------------+
                      │
@@ -68,7 +68,7 @@
 
 - `MainWindow.Pointer.cs`: наведение, клик, drag, правый клик (контекстное меню), прокрутка.
 - Пружины (`Spring.cs`) обеспечивают плавное «дыхание» и морфинг без резких скачков.
-- Наведение на капсулу включает компактное превью (обложка, прогресс, текст песни) и увеличивает кликабельную область точечно, не раздувая окно.
+- Наведение на капсулу включает компактное превью (обложка, прогресс, эквалайзер) и увеличивает кликабельную область точечно, не раздувая окно.
 
 ### 2.4. Глобальный хоткей
 
@@ -81,9 +81,9 @@
 
 ### 2.5. Активация окна и авто-сворачивание
 
-- По умолчанию окно неактивируемо (`WS_EX_NOACTIVATE`), чтобы не отбирать фокус. Перед вводом текста (поле задачи OpenCode, поиск места) `EnterTextEntry()` запоминает текущее активное окно, включает активацию (`MakeActivatable(true)`), поднимает и активирует островок; `LeaveTextEntry()` снимает фокус, возвращает передний план прежнему окну и снова запрещает активацию.
+- По умолчанию окно неактивируемо (`WS_EX_NOACTIVATE`), чтобы не отбирать фокус. Перед вводом текста (поле задачи OpenCode) `EnterTextEntry()` запоминает текущее активное окно, включает активацию (`MakeActivatable(true)`), поднимает и активирует островок; `LeaveTextEntry()` снимает фокус, возвращает передний план прежнему окну и снова запрещает активацию.
 - Раскрытая панель сворачивается сама по таймеру `_collapseTimeout`: `CollapseDelay` (≈0.55 с) для обычных панелей и `LongCollapseDelay` (2.5 с) для `Panel.OpenCode`, чтобы успеть прочитать текст или начать ввод. Наведение мыши отменяет таймер, уход курсора — перезапускает, набор в поле задачи (`OpenCodePromptBox_TextChanged`) продлевает его.
-- `Collapse()` не сворачивает панель, пока курсор на островке или идёт набор в поиске места (`IsTyping` — только `View.Place`). `CollapseNow()` сворачивает немедленно: по повторному нажатию хоткея и при потере активации (`OnDeactivated`, например клик по другому окну).
+- `Collapse()` не сворачивает панель, пока курсор на островке. `CollapseNow()` сворачивает немедленно: по повторному нажатию хоткея и при потере активации (`OnDeactivated`, например клик по другому окну).
 
 ---
 
@@ -93,20 +93,20 @@
 
 Состояния UI описаны двумя перечислениями в `MainWindow.xaml.cs`:
 
-- `View` — конкретный визуальный экран (`Idle`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `Lyrics`, `OpenCodeBig`, ...).
-- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Record`, `Menu`, `Settings`, `Shelf`, `Weather`, `Qr`, `OpenCode`, ...).
+- `View` — конкретный визуальный экран (`Idle`, `Sound`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `OpenCodeBig`, ...).
+- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Menu`, `Settings`, `OpenCode`, ...).
 
-`TargetView()` выбирает экран по приоритету: принудительный view → активная панель → активный агент OpenCode → медиа → таймер → idle. `ShowPanel()`/`SelectPanel()` переключают панель и анимируют переход.
+`TargetView()` выбирает экран по приоритету: принудительный view → активная панель → активный агент OpenCode → медиа → звук (`_sounding`) → таймер → idle. `ShowPanel()`/`SelectPanel()` переключают панель и анимируют переход.
 
 ### 3.2. Геометрия капсулы
 
-`PillShapes` задаёт базовые `Width`, `Height`, `Radius` для каждого `View`. Динамические размеры (например, `MediaBig` с текстом песни или `Update`) вычисляются в `ShapeOf()`.
+`PillShapes` задаёт базовые `Width`, `Height`, `Radius` для каждого `View`. Динамические размеры (например, `MediaBig` с крупной обложкой или `Update`) вычисляются в `ShapeOf()`.
 
 `MainWindow.Shape.cs`:
 
 - четыре пружины `_width`, `_height`, `_radius`, `_userScale` плавно интерполируют форму;
 - тень, блики и «жидкое» стекло (`Liquid.cs`, `Goo.cs`, `Glass.cs`) рисуются вручную;
-- пузырьки уведомлений (запись, таймер, полка) анимируются отдельными пружинами;
+- пузырьки уведомлений (таймер, громкость, наушники) анимируются отдельными пружинами;
 - `DrawingSurfaces.cs` и `Visuals.cs` инкапсулируют недорогие `DrawingVisual`-поверхности.
 
 ### 3.3. Модули виджетов
@@ -114,16 +114,14 @@
 | Модуль | Файлы | Возможности |
 | :--- | :--- | :--- |
 | Плеер | `MainWindow.Media.cs`, `MediaService.cs`, `Cover.cs`, `Scrubber.cs`, `PlayerBar.cs` | Управление системным плеером через GSMTC, обложка, прогресс, перемотка, источник приложения |
-| Тексты песен | `MainWindow.Lyrics.cs`, `LyricsService.cs`, `Lyric.cs`, `CompactLyric.cs` | Поиск текста (LRCLIB, Deezer, NetEase, QQ Music, Kugou), синхронный показ в капсуле и карточке, эффекты |
-| Спектр | `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `BandMeter.cs` | Захват системного звука и визуализация |
+| Эквалайзер | `MainWindow.Media.cs`, `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `BandMeter.cs`, `Equalizer.cs`, `AudioService.cs` | Живой спектр из реального вывода звука (WASAPI loopback); капсула `View.Sound` при любом системном звуке без активного трека (дешёвый master peak через `IAudioMeterInformation`) |
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер, секундомер, будильник |
-| Запись OBS | `MainWindow.Record.cs`, `ObsService.cs` | Подключение к OBS по WebSocket, старт/стоп записи, индикатор |
-| Полка | `MainWindow.Shelf.cs`, `Shelf.cs`, `ShelfTile.cs` | Drag & drop файлов, быстрый доступ |
-| Погода | `MainWindow.Weather.cs`, `WeatherService.cs`, `WeatherService` | Текущая погода и выбор местоположения |
-| QR | `MainWindow.Qr.cs`, `QrReader.cs`, `AreaPicker.cs` | Сканирование QR с экрана и показ QR-кода |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
-| Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, анимации |
-| Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка и установка обновлений |
+| Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
+| OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: сессии, модели, промпты, разрешения, стриминг, звук завершения задачи |
+| Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка и установка обновлений (выключено до появления нашего репозитория) |
+
+> Апстрим-модули «Тексты песен», «Запись OBS», «Полка файлов», «Погода» и «QR-код» вырезаны из проекта (см. `docs/PRODUCT.md` §2.5).
 
 Настройки хранятся в реестре `HKCU\Software\OpenIsland` (`Settings.cs`); при первом чтении значения автоматически переносятся из старого ключа `HKCU\Software\DynamicIsland`. Автозапуск — в `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` под именем `OpenIsland` (`Autostart.cs`, старое значение `DynamicIsland` переносится). Значок приложения живёт в системном трее (`MainWindow.Tray.cs`, `Native.cs`).
 
@@ -180,7 +178,8 @@
 - чипы персон: Desktop App Engineer, Frontend Developer, Code Reviewer, Bug Fixer — к промпту добавляется выдержка из `tools/agency-agents/...`;
 - блок ответа агента (живой текст и финальный ответ из истории сообщений);
 - панель разрешений «Разрешить / Отклонить»;
-- кнопка «Стоп» для прерывания выполнения.
+- кнопка «Стоп» для прерывания выполнения;
+- звук завершения: при переходе агента из «работает» в «готово» играет `Chime` (файл `Assets/staplebops-01.mp3` рядом с exe — звук OpenCode, MIT).
 
 Компактная капсула `View.OpenCode` показывает статус агента; при работе агента островок автоматически переходит в это состояние.
 
@@ -205,7 +204,7 @@
 1. **Токен OpenCode** хранится только в зашифрованном виде (DPAPI, `CurrentUser`). Plaintext-файл старого формата мигрируется и удаляется.
 2. **Пейринг** выполняется через официальный `opencode pair`; ссылка одноразовая и живёт 5 минут.
 3. **Логи** не содержат токенов, cookies и приватного содержимого; ошибки API логируются в усечённом виде.
-4. **Сеть** — только локальный демон `127.0.0.1`. Внешние запросы (погода, тексты песен, обновления) идут напрямую к соответствующим сервисам.
+4. **Сеть** — только локальный демон `127.0.0.1`. Внешние интеграции (погода, тексты песен) из проекта удалены; запросы обновлений идут напрямую на GitHub и выключены до появления нашего репозитория.
 5. **Окно** не активируется и не появляется в панели задач, что снижает риск перехвата ввода.
 
 ---

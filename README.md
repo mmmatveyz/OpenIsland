@@ -15,15 +15,16 @@
    - Скрытие в полноэкранных приложениях и играх.
 
 2. **Виджеты повседневного использования**
-   - Плеер: обложка, прогресс, спектр, управление медиа, текст песни в капсуле и в раскрытой карточке.
-   - Таймер и секундомер, запись экрана через OBS, полка для файлов (drag & drop).
-   - Погода, определение местоположения, QR-код с экрана (сканирование и генерация).
-   - Индикаторы громкости, заряда, наушников, сети; настройки внешнего вида (масштаб, отступ, тема, эффекты).
+   - Плеер: обложка, прогресс, живой спектр (реальный вывод звука через WASAPI loopback), управление медиа.
+   - Таймер и секундомер.
+   - Мини-эквалайзер в свёрнутом островке: реагирует на **любой** системный звук, даже когда активной медиасессии нет (например, видео в браузере).
+   - Индикаторы громкости, заряда, наушников, сети; настройки внешнего вида (масштаб, отступ, стекло, эффекты).
 
 3. **OpenCode AI Hub**
    - Обнаружение локального демона OpenCode и автоматический пейринг.
    - Список сессий и моделей, переключение сессии/модели прямо из островка.
    - Отправка задачи агенту и живой стриминг ответа (SSE).
+   - Звук завершения задачи — тот же `staplebops-01`, что играет сам OpenCode (MIT), прямо из островка.
    - Запросы разрешений агента (`allow` / `deny`) без переключения в OpenCode Desktop.
    - Быстрые роли-персоны из каталога `tools/agency-agents` (Desktop App Engineer, Frontend Developer, Code Reviewer, Bug Fixer).
    - Глобальный хоткей **Ctrl+Alt+O** — мгновенно открыть или свернуть карточку OpenCode из любого приложения.
@@ -39,7 +40,7 @@
 | Интеграция с ИИ | REST + SSE клиент локального демона OpenCode (`OpenCodeService.cs`) |
 | Хранение токена | Windows DPAPI (`ProtectedData`, `%LOCALAPPDATA%\OpenIsland\opencode-token.bin`) |
 | Настройки | Реестр `HKCU\Software\OpenIsland` (старый `Software\DynamicIsland` мигрируется автоматически) |
-| Доп. библиотеки | `ZXing.Net` (QR), `System.Security.Cryptography.ProtectedData` |
+| Доп. библиотеки | `System.Security.Cryptography.ProtectedData` (DPAPI-токен) |
 
 Проверено на Windows 11 (сборка 19041+). Требуется .NET 8 Desktop Runtime; для сборки — .NET 8 SDK.
 
@@ -54,9 +55,10 @@ OpenIsland/
 │   ├── MainWindow.*.cs         # Логика по модулям (медиа, таймер, OpenCode, ...)
 │   ├── OpenCodeService.cs      # REST/SSE клиент OpenCode, токен, статусы
 │   ├── OpenCodeSelfTest.cs     # Диагностика интеграции (--selftest)
+│   ├── Chime.cs                # Звук завершения задачи (staplebops-01, MIT)
 │   ├── Settings.cs             # Настройки в реестре
 │   ├── Native.cs               # Win32-вызовы (topmost, toolwindow, DWM)
-│   ├── Fonts/ Gadgets/         # Шрифты и графика виджетов
+│   ├── Fonts/ Gadgets/ Assets/ # Шрифты, графика виджетов, иконка и звук
 │   └── DynamicIsland.csproj
 ├── scripts/build.ps1           # Сборка, запуск и self-test
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
@@ -125,6 +127,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 ## 🧪 Легаси-прототип
 
 Каталоги `electron/`, `src/`, `index.html`, `package.json` содержат ранний прототип на Electron + React + Vite. Он сохранён для экспериментов с браузерными сессиями платных подписок и не является основной сборкой. Запуск прототипа: `npm install` → `npm run dev`.
+
+---
+
+## 🙏 Благодарности
+
+- **Апстрим `mihailkotovski/DynamicIsland`** — ядро островка (окно-оверлей, пружинная физика, стекло, медиа, оформление), из которого вырос OpenIsland.
+- **[OpenCode](https://github.com/sst/opencode)** (sst) — звук завершения задачи `staplebops-01`, распространяется по лицензии MIT.
 
 ---
 

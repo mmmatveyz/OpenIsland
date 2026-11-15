@@ -8,7 +8,7 @@
 
 **OpenIsland** — это нативное/десктопное приложение для Windows 10/11, объединяющее:
 1. **Dynamic Island UI**: плавающий, ненавязчивый адаптивный «островок» вверху экрана с плавной физикой анимаций (Apple-like).
-2. **Пульт управления и виджеты**: медиаплеер с текстами песен, таймер, запись OBS, полка файлов, погода, QR-код, индикаторы системы. Мониторинг CPU/GPU/RAM/сети — запланирован, но пока не реализован в WPF-версии.
+2. **Пульт управления и виджеты**: медиаплеер с живым спектром, таймер, мини-эквалайзер на любой системный звук, звук завершения задачи агента, индикаторы системы (громкость, заряд, наушники, сеть). Мониторинг CPU/GPU/RAM/сети — запланирован, но пока не реализован в WPF-версии.
 3. **AI Hub (OpenCode)**: быстрый доступ к локальному агенту OpenCode прямо из островка — сессии, модели, отправка задач, живой стриминг ответа и подтверждение разрешений.
 
 > В репозитории также лежит ранний прототип на Electron + React (`electron/`, `src/`). Это **легаси**, а не основная сборка. Все новые изменения делаются в `desktop/OpenIsland`.
@@ -46,28 +46,24 @@ OpenIsland/
 │   ├── MainWindow.xaml.cs         # Окно, View/Panel-роутинг, форма капсулы
 │   ├── MainWindow.Shape.cs        # Пружинная геометрия, стекло, морфинг
 │   ├── MainWindow.Pointer.cs      # Мышь, drag, hover, контекстное меню
-│   ├── MainWindow.Media.cs        # Плеер и обложки
-│   ├── MainWindow.Lyrics.cs       # Тексты песен в островке
+│   ├── MainWindow.Media.cs        # Плеер, эквалайзер, обложки
 │   ├── MainWindow.Timer.cs        # Таймер и секундомер
-│   ├── MainWindow.Record.cs       # Запись OBS
-│   ├── MainWindow.Shelf.cs        # Полка файлов (drag & drop)
-│   ├── MainWindow.Weather.cs      # Погода и местоположение
-│   ├── MainWindow.Qr.cs           # QR-код: сканирование и показ
 │   ├── MainWindow.Menu.cs         # Меню и настройки
 │   ├── MainWindow.Status.cs       # Громкость, заряд, наушники, сеть
-│   ├── MainWindow.OpenCode.cs     # UI OpenCode AI Hub
+│   ├── MainWindow.OpenCode.cs     # UI OpenCode AI Hub, звук завершения задачи
 │   ├── OpenCodeService.cs         # REST/SSE клиент OpenCode, пейринг, DPAPI-токен
 │   ├── OpenCodeSelfTest.cs        # Диагностический прогон (--selftest)
+│   ├── Chime.cs                   # Звук завершения задачи (staplebops-01, MIT)
 │   ├── Settings.cs                # Настройки в реестре
 │   ├── Native.cs                  # Win32: topmost, toolwindow, DWM, клики
 │   ├── MediaService.cs            # Интеграция с системным медиаплеером (GSMTC)
-│   ├── ObsService.cs              # WebSocket-управление OBS
-│   ├── LyricsService.cs           # Поиск текстов песен по источникам
-│   ├── WeatherService.cs          # Погода и геолокация
-│   ├── Updater.cs                 # Проверка обновлений
+│   ├── AudioService.cs            # Громкость и пик вывода (IAudioMeterInformation)
+│   ├── SpectrumService.cs         # Захват системного звука (WASAPI loopback)
+│   ├── Updater.cs                 # Обновления (выключено до появления нашего репозитория)
 │   ├── Autostart.cs               # Автозапуск с Windows
 │   ├── Fonts/                     # SF Pro (встроенные ресурсы)
 │   ├── Gadgets/                   # PNG-графика виджетов
+│   ├── Assets/                    # Иконка приложения и звук завершения задачи
 │   └── DynamicIsland.csproj
 ├── scripts/build.ps1              # Сборка, запуск и self-test
 ├── bin/OpenIsland/                # Результат сборки (OpenIsland.exe)
