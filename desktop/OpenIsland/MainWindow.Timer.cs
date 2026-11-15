@@ -180,7 +180,6 @@ public partial class MainWindow
     Panel BubblePanelAt(double x)
     {
         var parts = new List<(double Width, Panel Panel)>();
-        if (_bubbleRecord.Target > 0) parts.Add((RecordBubbleWidth, Panel.Record));
         if (_bubbleTimer.Target > 0) parts.Add((TimerBubbleWidth, Panel.Timer));
         if (_bubbleShelf.Target > 0) parts.Add((_shelfBubbleWidth.Value, Panel.Shelf));
         double end = 0;

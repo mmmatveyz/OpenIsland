@@ -128,7 +128,7 @@ public partial class MainWindow
             return;
         }
         if (_ringing || _panel != Panel.None) SelectPanel(Panel.None);
-        else SelectPanel(_openCode.IsBusy ? Panel.OpenCode : IsMediaActive ? Panel.Player : _obs.Recording ? Panel.Record : _countdown.IsActive ? Panel.Timer : Panel.OpenCode);
+        else SelectPanel(_openCode.IsBusy ? Panel.OpenCode : IsMediaActive ? Panel.Player : _countdown.IsActive ? Panel.Timer : Panel.OpenCode);
         UpdateView();
     }
 
