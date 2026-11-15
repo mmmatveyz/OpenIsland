@@ -10,6 +10,7 @@ namespace DynamicIsland;
 public partial class MainWindow
 {
     const double UpdatePagePadding = 14, UpdateNotesWheelStep = 54;
+    const double EdgeFadeLength = 16;
     const int MegabyteShift = 20;
     const double LookHeight = 430, LookTilesHeight = 72, LookWheelStep = 80;
     const double LookEdgeZone = 70, LookEdgeScale = 0.8;
@@ -216,6 +217,8 @@ public partial class MainWindow
         UpdateNotesEdgeTop.Color = EdgeFade(scrolled);
         UpdateNotesEdgeBottom.Color = EdgeFade(UpdateNotesOverflow - scrolled);
     }
+
+    static Color EdgeFade(double past) => Color.FromArgb((byte)Math.Round(255 * (1 - Math.Clamp(past / EdgeFadeLength, 0, 1))), 0, 0, 0);
 
     void SizeSlider_Changed(object? sender, EventArgs e) => SetScale((int)SizeSlider.Value);
 

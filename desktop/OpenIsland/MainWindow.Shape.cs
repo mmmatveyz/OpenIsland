@@ -14,9 +14,8 @@ public partial class MainWindow
     const double BubbleGap = 7;
     const double BubbleTuckFactor = 1.6;
     const double BubbleVisibleSplit = 0.01, BubbleClickableSplit = 0.75;
-    const double TimerBubbleWidth = 78, ShelfBubbleWidth = 54;
+    const double TimerBubbleWidth = 78;
     const double BubbleOverlap = 11;
-    const double ShelfBubblePadding = 13, ShelfBubblePaddingWithTimer = 10;
     const double MinViewScale = 0.5, MaxViewScale = 1.15;
     const double MotionBlurSpeed = 650;
     const double MaxMotionBlur = 4, MinMotionBlur = 0.1;
@@ -29,7 +28,7 @@ public partial class MainWindow
     readonly Spring _userScale = new(Settings.Scale / 100.0, 240, 26), _topGap = new(Settings.Gap, 240, 26);
     readonly Spring _bubbleSplit = new(0), _bubbleScale = new(1, 320, 20);
     readonly Spring _lyricSnapX = new(0, 200, 28), _lyricSnapY = new(0, 200, 28);
-    readonly Spring _bubbleTimer = new(0, 260, 24), _bubbleShelf = new(0, 260, 24), _shelfBubbleWidth = new(ShelfBubbleWidth, 260, 24);
+    readonly Spring _bubbleTimer = new(0, 260, 24);
     readonly BlurEffect _motionBlur = new() { Radius = 0, RenderingBias = RenderingBias.Performance };
     readonly FrameLoop _shapeLoop;
     readonly Glass _glass;
@@ -64,21 +63,17 @@ public partial class MainWindow
 
     void UpdateBubbleTargets(bool compact)
     {
-        bool timer = _countdown.IsActive && _view != View.Timer, shelf = _shelf.Items.Count > 0;
-        bool split = compact && (timer || shelf);
+        bool timer = _countdown.IsActive && _view != View.Timer;
+        bool split = compact && timer;
         _bubbleSplit.Target = split ? 1 : 0;
         if (compact) _bubbleSplit.Tune(140, 17);
         else _bubbleSplit.Tune(300, 30);
         if (!split) return;
 
         _bubbleTimer.Target = timer ? 1 : 0;
-        _bubbleShelf.Target = shelf ? 1 : 0;
-        if (shelf) _shelfBubbleWidth.Target = MeasureShelfBubble();
         if (_bubbleSplit.Value >= BarelyVisible) return;
 
         _bubbleTimer.Snap(_bubbleTimer.Target);
-        _bubbleShelf.Snap(_bubbleShelf.Target);
-        _shelfBubbleWidth.Snap(_shelfBubbleWidth.Target);
     }
 
     static double RubberBand(double distance, double limit) => limit * (1 - 1 / (distance * DragFollow / limit + 1));
@@ -91,12 +86,6 @@ public partial class MainWindow
         foreach (Spring spring in _spotSprings) spring.Tune(stiffness, damping);
         _radius.Tune(tight ? 900 : 300, tight ? 60 : 30);
         _leanX.Tune(tight ? 900 : 230, tight ? 60 : 15);
-    }
-
-    double MeasureShelfBubble()
-    {
-        BubbleShelf.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-        return Math.Max(ShelfBubbleWidth, BubbleShelf.DesiredSize.Width - BubbleShelf.Margin.Right + 2 * ShelfBubblePadding);
     }
 
     void StartShapeLoop() => _shapeLoop.Start();
@@ -133,7 +122,6 @@ public partial class MainWindow
         FitMediaViews(w, h);
         if (_morphing) FitViews(w, h);
         ApplyMotionBlur();
-        ApplyShelfScroll();
         ApplyLookScroll();
         ApplyUpdateNotesScroll();
         StretchVolumeBar();
@@ -223,15 +211,12 @@ public partial class MainWindow
     void PlaceBubble(Rect pill, double r, double scale)
     {
         double split = _bubbleSplit.Value, bubble = Math.Max(_bubbleScale.Value, MinScale);
-        double timer = Math.Max(_bubbleTimer.Value, 0), shelf = Math.Max(_bubbleShelf.Value, 0);
-        double seams = timer * shelf;
-        double wide = Math.Max(TimerBubbleWidth * timer + _shelfBubbleWidth.Value * shelf - BubbleOverlap * seams, Bubble.Height);
+        double timer = Math.Max(_bubbleTimer.Value, 0);
+        double wide = Math.Max(TimerBubbleWidth * timer, Bubble.Height);
         bool apart = split > BubbleVisibleSplit;
         Bubble.SetVisible(apart);
         Bubble.Width = wide;
         BubbleTimer.Opacity = Math.Clamp(timer * 2 - 1, 0, 1);
-        BubbleShelf.Opacity = Math.Clamp(shelf * 2 - 1, 0, 1);
-        BubbleShelf.Margin = new Thickness(0, 0, ShelfBubblePadding + (ShelfBubblePaddingWithTimer - ShelfBubblePadding) * Math.Clamp(timer, 0, 1), 0);
         double tuck = Math.Max(r - Bubble.Height / 2, 0) * BubbleTuckFactor * (1 - Math.Clamp(split, 0, 1)) * scale;
         BubbleMove.X = (pill.Width * scale - wide) / 2 + (BubbleGap + wide) * split - tuck;
         BubbleScale.ScaleX = BubbleScale.ScaleY = bubble;

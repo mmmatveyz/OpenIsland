@@ -181,7 +181,6 @@ public partial class MainWindow
     {
         var parts = new List<(double Width, Panel Panel)>();
         if (_bubbleTimer.Target > 0) parts.Add((TimerBubbleWidth, Panel.Timer));
-        if (_bubbleShelf.Target > 0) parts.Add((_shelfBubbleWidth.Value, Panel.Shelf));
         double end = 0;
         foreach ((double width, Panel panel) in parts.SkipLast(1))
         {

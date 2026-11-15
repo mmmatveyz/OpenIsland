@@ -447,8 +447,7 @@
           HorizontalAlignment="Center" VerticalAlignment="Top" RenderTransformOrigin="0.5,0"
           MouseLeftButtonDown="Root_MouseLeftButtonDown" MouseLeftButtonUp="Root_MouseLeftButtonUp"
           MouseMove="Root_MouseMove"
-          MouseRightButtonUp="Root_MouseRightButtonUp" MouseUp="Root_MouseUp" MouseWheel="Root_MouseWheel"
-          AllowDrop="True" DragEnter="Root_DragOver" DragOver="Root_DragOver" DragLeave="Root_DragLeave" Drop="Root_Drop">
+          MouseRightButtonUp="Root_MouseRightButtonUp" MouseUp="Root_MouseUp" MouseWheel="Root_MouseWheel">
         <Grid.RenderTransform>
             <TransformGroup>
                 <TranslateTransform x:Name="RootMove"/>
@@ -845,16 +844,6 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="ShelfRow_Click">
-                            <Grid>
-                                <local:Icon Style="{StaticResource RowIcon}" Kind="Tray"/>
-                                <TextBlock Style="{StaticResource RowLabel}" Text="Полка"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <local:Digits x:Name="MenuShelf" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
-                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                        </Button>
                         <Button Style="{StaticResource RowButton}" Click="SettingsRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Gear"/>
@@ -1221,51 +1210,6 @@
                     </Border>
                 </Grid>
 
-                <Grid x:Name="ShelfView" Width="380" Height="136" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Grid Height="22" Margin="22,12,16,0" VerticalAlignment="Top">
-                        <TextBlock Style="{StaticResource Caption}" Text="ПОЛКА" VerticalAlignment="Center"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button Style="{StaticResource ChipButton}" Width="22" Height="22" Margin="0,0,6,0" Click="ShelfAdd_Click">
-                                <local:Icon Kind="Plus" Width="12" Height="12" Fill="{StaticResource Dim}"/>
-                            </Button>
-                            <Button x:Name="ShelfClear" Style="{StaticResource ChipButton}" Height="22" Margin="0" FontSize="11"
-                                    Click="ShelfClear_Click">
-                                <TextBlock Text="Очистить" Margin="10,0" Foreground="{StaticResource Dim}"/>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                    <Rectangle x:Name="ShelfZone" Margin="14,40,14,12" RadiusX="16" RadiusY="16"
-                               Stroke="White" StrokeThickness="1.5" StrokeDashArray="3 2.5" Fill="#0AFFFFFF" Opacity="0"
-                               IsHitTestVisible="False"/>
-                    <Button x:Name="ShelfHint" Style="{StaticResource PlainButton}" Margin="14,40,14,12" Click="ShelfAdd_Click"
-                            MouseEnter="ShelfHint_MouseHover" MouseLeave="ShelfHint_MouseHover">
-                        <StackPanel>
-                            <local:Icon Kind="Tray" Width="22" Height="22" Fill="{StaticResource Dim}"/>
-                            <TextBlock x:Name="ShelfHintText" Text="Перетащите сюда файлы" FontSize="12" Foreground="{StaticResource Dim}"
-                                       Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="ShelfHintMore" Text="или нажмите, чтобы выбрать" FontSize="11" Foreground="{StaticResource Faint}"
-                                       Margin="0,1,0,0" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Border x:Name="ShelfStrip" Margin="18,36,18,10" ClipToBounds="True">
-                        <Border.OpacityMask>
-                            <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="344,0">
-                                <GradientStop x:Name="ShelfEdgeLeft" Color="Black" Offset="0"/>
-                                <GradientStop Color="Black" Offset="0.05"/>
-                                <GradientStop Color="Black" Offset="0.95"/>
-                                <GradientStop x:Name="ShelfEdgeRight" Color="Black" Offset="1"/>
-                            </LinearGradientBrush>
-                        </Border.OpacityMask>
-                        <Canvas>
-                            <StackPanel x:Name="ShelfTiles" Orientation="Horizontal" Margin="0,8,0,0">
-                                <StackPanel.RenderTransform>
-                                    <TranslateTransform x:Name="ShelfMove"/>
-                                </StackPanel.RenderTransform>
-                            </StackPanel>
-                        </Canvas>
-                    </Border>
-                </Grid>
-
                 <Grid x:Name="OpenCodeBigView" Width="380" Height="460" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="16,14" Margin="0">
                         <StackPanel VerticalAlignment="Top">
@@ -1424,12 +1368,6 @@
                     <local:Digits x:Name="BubbleText" Text="25:00" FontSize="12.5" FontWeight="SemiBold"
                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0"/>
                 </Grid>
-                <StackPanel x:Name="BubbleShelf" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Margin="0,0,13,0">
-                    <local:Icon Kind="Tray" Width="15" Height="15" VerticalAlignment="Center"/>
-                    <local:Digits x:Name="BubbleShelfText" Text="0" FontSize="12.5" FontWeight="SemiBold"
-                                  VerticalAlignment="Center" Margin="4,0,0,0"/>
-                </StackPanel>
             </Grid>
         </Border>
     </Grid>

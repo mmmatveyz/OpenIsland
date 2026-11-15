@@ -199,12 +199,6 @@ static class Settings
         set => Write(nameof(Accent), _accent = value is { } c ? c.R << 16 | c.G << 8 | c.B : 0);
     }
 
-    public static string[] Shelf
-    {
-        get => Read<string[]>(nameof(Shelf), []);
-        set => Write(nameof(Shelf), value, RegistryValueKind.MultiString);
-    }
-
     static LyricSource Known(LyricSource sources) => (sources & LyricSource.All) == 0 ? LyricSource.Usual : sources & LyricSource.All;
 
     static bool ReadSwitch(string name, bool fallback = true) => Read(name, fallback ? 1 : 0) != 0;

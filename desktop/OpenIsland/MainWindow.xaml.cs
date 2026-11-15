@@ -14,9 +14,9 @@ namespace DynamicIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Shelf, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Lyrics, Loading, OpenCode, OpenCodeBig }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Shelf, Update, Lyrics, OpenCode }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, Lyrics, OpenCode }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -38,7 +38,6 @@ public partial class MainWindow : Window
         [View.Menu] = new(300, 416, 34),
         [View.Settings] = new(320, 374, 34),
         [View.Look] = new(352, LookHeight, 34),
-        [View.Shelf] = new(380, 136, 34),
         [View.Update] = new(320, 150, 34),
         [View.Lyrics] = new(352, 312, 34),
         [View.Loading] = new(118, 34, 17),
@@ -60,7 +59,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.Shelf, View.OpenCodeBig];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig];
 
     static readonly View[] SettingsPages = [View.Update, View.Lyrics];
 
@@ -132,7 +131,6 @@ public partial class MainWindow : Window
             [View.Menu] = MenuView,
             [View.Settings] = SettingsView,
             [View.Look] = LookView,
-            [View.Shelf] = ShelfView,
             [View.Update] = UpdatePage,
             [View.Lyrics] = LyricsPage,
             [View.Loading] = LoadingView,
@@ -142,8 +140,8 @@ public partial class MainWindow : Window
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
         [
-            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleTimer, _bubbleShelf, _shelfBubbleWidth,
-            _shelfScroll, _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY, .. _spotSprings,
+            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleTimer,
+            _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, _lyricSnapX, _lyricSnapY, .. _spotSprings,
         ];
         _timerTint = new SolidColorBrush(_orange.Color);
         _lyricBlock = LyricA;
@@ -161,7 +159,6 @@ public partial class MainWindow : Window
         _collapseTimeout = new DelayedAction(Collapse);
         _awayTimeout = new DelayedAction(ReturnFromAway);
         _overshootTimeout = new DelayedAction(ReleaseVolumeOvershoot);
-        _dragLeaveTimeout = new DelayedAction(OnDragLeft);
 
         _media = new MediaService(Dispatcher);
         _media.Changed += OnMediaChanged;
@@ -169,9 +166,6 @@ public partial class MainWindow : Window
         _network = new NetworkService(Dispatcher);
         _network.Changed += OnNetworkChanged;
         _updater.Changed += RefreshUpdatePage;
-        _shelf = new Shelf(Dispatcher);
-        _shelf.Changed += SyncShelf;
-        _shelf.PictureLoaded += OnShelfPictureLoaded;
 
         PrepareViews();
         InitOpenCode();
@@ -315,7 +309,6 @@ public partial class MainWindow : Window
         RefreshLookPage();
         RefreshUpdatePage();
         SyncAccent(false);
-        SyncShelf();
         SyncGlass(false);
         PlayIntro();
         InitTray();
@@ -409,7 +402,6 @@ public partial class MainWindow : Window
             Panel.Look => View.Look,
             Panel.Update => View.Update,
             Panel.Lyrics => View.Lyrics,
-            Panel.Shelf => View.Shelf,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
@@ -560,7 +552,7 @@ public partial class MainWindow : Window
 
     void Collapse()
     {
-        if (_pickingFiles || _hovered) return;
+        if (_hovered) return;
         if (_activatable)
         {
             // Пользователь набирает текст — не мешаем.
