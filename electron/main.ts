@@ -4,19 +4,16 @@ import http from 'http';
 import { systemMonitor } from './ipc/system-monitor';
 import { openCodeBridge } from './ipc/opencode';
 
-// Отключаем аппаратное ускорение для устранения бага невидимости прозрачных окон на Windows 11 (NVIDIA/AMD)
-app.disableHardwareAcceleration();
-
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
-let mousePollTimer: NodeJS.Timeout | null = null;
 
-let currentIslandBounds = {
-  width: 300,
-  height: 48,
-  y: 8
-};
-let isHoveredState = false;
+// Архитектура по референсу DynamicIslandForWindows:
+// Окно имеет ТОЧНЫЙ размер самой капсулы, без гигантских прозрачных оверлеев на пол-экрана!
+const COMPACT_WIDTH = 320;
+const COMPACT_HEIGHT = 44;
+const EXPANDED_WIDTH = 560;
+const EXPANDED_HEIGHT = 380;
+const TOP_OFFSET = 8;
 
 function checkUrlLive(urlStr: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -28,7 +25,7 @@ function checkUrlLive(urlStr: string): Promise<boolean> {
           port: u.port,
           path: '/',
           method: 'GET',
-          timeout: 800
+          timeout: 600
         },
         () => resolve(true)
       );
@@ -48,16 +45,14 @@ async function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { x: displayX, y: displayY, width: displayWidth } = primaryDisplay.bounds;
 
-  const winWidth = 720;
-  const winHeight = 480;
-  const posX = displayX + Math.round((displayWidth - winWidth) / 2);
-  const posY = displayY;
+  const posX = displayX + Math.round((displayWidth - COMPACT_WIDTH) / 2);
+  const posY = displayY + TOP_OFFSET;
 
-  console.log(`[OpenIsland] Screen: ${displayWidth}x${primaryDisplay.bounds.height}, Pos: (${posX}, ${posY})`);
+  console.log(`[Desktop Engineer] Spawning Dynamic Island Window at (${posX}, ${posY}) size ${COMPACT_WIDTH}x${COMPACT_HEIGHT}`);
 
   mainWindow = new BrowserWindow({
-    width: winWidth,
-    height: winHeight,
+    width: COMPACT_WIDTH,
+    height: COMPACT_HEIGHT,
     x: posX,
     y: posY,
     transparent: true,
@@ -65,9 +60,8 @@ async function createWindow() {
     frame: false,
     alwaysOnTop: true,
     resizable: false,
-    hasShadow: false,
-    skipTaskbar: false,
-    show: false,
+    hasShadow: true,
+    skipTaskbar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -83,27 +77,20 @@ async function createWindow() {
   openCodeBridge.setWindow(mainWindow);
   openCodeBridge.start();
 
-  // Логирование консоли из Renderer
-  mainWindow.webContents.on('console-message', (_e, _lvl, msg) => {
-    console.log('[Renderer]:', msg);
-  });
+  // Ресайз окна по команде из Renderer (компактный <-> развернутый)
+  ipcMain.on('island:resize', (_event, mode: 'compact' | 'expanded') => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
 
-  mainWindow.once('ready-to-show', () => {
-    console.log('[OpenIsland] Window ready-to-show: Showing window on screen');
-    mainWindow?.show();
-    mainWindow?.focus();
+    const targetWidth = mode === 'expanded' ? EXPANDED_WIDTH : COMPACT_WIDTH;
+    const targetHeight = mode === 'expanded' ? EXPANDED_HEIGHT : COMPACT_HEIGHT;
+    const targetX = displayX + Math.round((displayWidth - targetWidth) / 2);
 
-    // Фикс для Windows 11 DWM (принудительное обновление геометрии)
-    if (mainWindow) {
-      const [w, h] = mainWindow.getSize();
-      mainWindow.setSize(w, h + 1);
-      mainWindow.setSize(w, h);
-    }
-
-    setTimeout(() => {
-      mainWindow?.setIgnoreMouseEvents(true, { forward: true });
-      startMouseTracking(posX, posY, winWidth);
-    }, 200);
+    mainWindow.setBounds({
+      x: targetX,
+      y: posY,
+      width: targetWidth,
+      height: targetHeight
+    }, true);
   });
 
   const isViteReady = await checkUrlLive('http://localhost:5173');
@@ -116,50 +103,17 @@ async function createWindow() {
     await mainWindow.loadFile(distPath);
   }
 
+  mainWindow.show();
+  mainWindow.focus();
+
   mainWindow.on('closed', () => {
-    stopMouseTracking();
     systemMonitor.stop();
     openCodeBridge.stop();
     mainWindow = null;
   });
 }
 
-function startMouseTracking(winX: number, winY: number, winWidth: number) {
-  if (mousePollTimer) clearInterval(mousePollTimer);
-
-  mousePollTimer = setInterval(() => {
-    if (!mainWindow || mainWindow.isDestroyed()) return;
-
-    const cursor = screen.getCursorScreenPoint();
-
-    const islandLeft = winX + (winWidth - currentIslandBounds.width) / 2;
-    const islandRight = islandLeft + currentIslandBounds.width;
-    const islandTop = winY + currentIslandBounds.y;
-    const islandBottom = islandTop + currentIslandBounds.height;
-
-    const inside =
-      cursor.x >= islandLeft &&
-      cursor.x <= islandRight &&
-      cursor.y >= islandTop &&
-      cursor.y <= islandBottom;
-
-    if (inside !== isHoveredState) {
-      isHoveredState = inside;
-      mainWindow.setIgnoreMouseEvents(!inside, { forward: true });
-      mainWindow.webContents.send('window:hover-changed', inside);
-    }
-  }, 50);
-}
-
-function stopMouseTracking() {
-  if (mousePollTimer) {
-    clearInterval(mousePollTimer);
-    mousePollTimer = null;
-  }
-}
-
 function createTray() {
-  // Настоящая 16x16 PNG иконка острова (голубой круг) в Base64 для отображения в трее Windows
   const iconBase64 = 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVR42mNkQAO/fzP8Z6ACxsDAwMDAwMhACWBmYvgPwsxQMRjAAmYmKGAg3gCm/0eB6v4Tox6rmf9R8P///5947UdW/J947ScZBjAxmKNgFBDnBhyF9e//DAwMDFRwgAErGQ4AAJsNFR+w9a0AAAAASUVORK5CYII=';
   const icon = nativeImage.createFromDataURL(`data:image/png;base64,${iconBase64}`);
   
@@ -168,16 +122,9 @@ function createTray() {
     { label: 'OpenIsland v0.1.0', enabled: false },
     { type: 'separator' },
     {
-      label: 'Показать/Скрыть',
+      label: 'Переключить режим',
       click: () => {
-        if (!mainWindow) {
-          createWindow();
-        } else if (mainWindow.isVisible()) {
-          mainWindow.hide();
-        } else {
-          mainWindow.show();
-          mainWindow.focus();
-        }
+        mainWindow?.webContents.send('island:toggle-mode');
       }
     },
     {
@@ -193,21 +140,6 @@ function createTray() {
 }
 
 function setupIPC() {
-  ipcMain.on('window:update-island-bounds', (_event, bounds: { width: number; height: number; y?: number }) => {
-    currentIslandBounds = {
-      width: bounds.width,
-      height: bounds.height,
-      y: bounds.y ?? 8
-    };
-  });
-
-  ipcMain.on('window:set-ignore-mouse-events', (event, ignore: boolean) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    if (win && !win.isDestroyed()) {
-      win.setIgnoreMouseEvents(ignore, { forward: true });
-    }
-  });
-
   ipcMain.handle('system:get-stats', async () => {
     return await systemMonitor.getStats();
   });

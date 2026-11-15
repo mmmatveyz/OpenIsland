@@ -31,20 +31,16 @@ export interface SystemStats {
 }
 
 const electronAPI = {
-  // Управление прозрачностью для сквозных кликов (click-through)
-  setIgnoreMouseEvents: (ignore: boolean) => {
-    ipcRenderer.send('window:set-ignore-mouse-events', ignore);
+  // Управление размерами окна по архитектуре DynamicIslandForWindows
+  resizeIsland: (mode: 'compact' | 'expanded') => {
+    ipcRenderer.send('island:resize', mode);
   },
 
-  updateIslandBounds: (bounds: { width: number; height: number; y?: number }) => {
-    ipcRenderer.send('window:update-island-bounds', bounds);
-  },
-
-  onHoverChange: (callback: (isHovered: boolean) => void) => {
-    const handler = (_event: any, hovered: boolean) => callback(hovered);
-    ipcRenderer.on('window:hover-changed', handler);
+  onToggleMode: (callback: () => void) => {
+    const handler = () => callback();
+    ipcRenderer.on('island:toggle-mode', handler);
     return () => {
-      ipcRenderer.removeListener('window:hover-changed', handler);
+      ipcRenderer.removeListener('island:toggle-mode', handler);
     };
   },
 

@@ -5,37 +5,30 @@ import { CompactIsland } from './CompactIsland';
 import { ExpandedIsland } from './ExpandedIsland';
 
 export const IslandContainer: React.FC = () => {
-  const { mode, setMode, setIsHovered } = useIslandStore();
+  const { mode, setMode } = useIslandStore();
 
-  // Синхронизация реальных размеров островка с Main-процессом Electron
+  // Ресайз нативного окна Electron по референсу DynamicIslandForWindows
   useEffect(() => {
-    const width = mode === 'compact' ? 300 : 560;
-    const height = mode === 'compact' ? 42 : 360;
-    window.electronAPI?.updateIslandBounds({ width, height, y: 8 });
+    window.electronAPI?.resizeIsland(mode);
   }, [mode]);
 
-  // Подписка на нативный Win32 трекинг наведения мыши
   useEffect(() => {
-    const unsub = window.electronAPI?.onHoverChange((hovered) => {
-      setIsHovered(hovered);
+    const unsub = window.electronAPI?.onToggleMode?.(() => {
+      setMode(mode === 'compact' ? 'expanded' : 'compact');
     });
     return () => {
       if (unsub) unsub();
     };
-  }, [setIsHovered]);
+  }, [mode, setMode]);
 
   return (
-    <div className="w-full flex justify-center pt-2 select-none">
+    <div className="w-full h-full flex items-center justify-center select-none overflow-hidden p-0.5">
       <motion.div
         layout
-        initial={{
-          width: 300,
-          height: 44,
-          borderRadius: 9999
-        }}
+        initial={false}
         animate={{
-          width: mode === 'compact' ? 300 : 560,
-          height: mode === 'compact' ? 44 : 360,
+          width: '100%',
+          height: '100%',
           borderRadius: mode === 'compact' ? 9999 : 24,
         }}
         transition={{
@@ -44,13 +37,11 @@ export const IslandContainer: React.FC = () => {
           damping: 32,
           mass: 0.8
         }}
-        className="relative overflow-hidden island-glass shadow-island cursor-pointer flex flex-col items-center justify-center border border-white/20"
+        className="w-full h-full relative overflow-hidden island-glass shadow-island cursor-pointer flex flex-col items-center justify-center border border-white/20"
         style={{
-          width: mode === 'compact' ? 300 : 560,
-          height: mode === 'compact' ? 44 : 360,
           backgroundColor: '#0d0f12',
           boxShadow: mode === 'compact'
-            ? '0 12px 30px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.2)'
+            ? '0 10px 25px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.2)'
             : '0 25px 50px -15px rgba(0, 0, 0, 0.95), 0 0 30px -5px rgba(59, 130, 246, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.2)'
         }}
       >
@@ -62,7 +53,7 @@ export const IslandContainer: React.FC = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="w-full h-full"
+              className="w-full h-full flex items-center"
             >
               <CompactIsland onExpand={() => setMode('expanded')} />
             </motion.div>
