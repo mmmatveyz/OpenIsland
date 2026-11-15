@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>OpenIsland</AssemblyName>
+    <RootNamespace>DynamicIsland</RootNamespace>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <ApplicationIcon>Assets\OpenIsland.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>OpenIsland</Product>
+    <Company>OpenIsland</Company>
+    <AssemblyTitle>OpenIsland — островок с пультом AI-агента</AssemblyTitle>
+    <Description>Плавающий островок для Windows с пультом AI-агента OpenCode</Description>
+    <Copyright>© 2026 OpenIsland</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Fonts\*.otf;Fonts\*.ttf" />
+    <Resource Include="Gadgets\*.png" />
+    <Resource Include="Assets\*.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
+  </ItemGroup>
+
+</Project>

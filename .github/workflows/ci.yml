@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      # Warnings are errors: the project must build at 0 warnings / 0 errors.
+      - name: Build
+        run: dotnet build desktop/OpenIsland/DynamicIsland.csproj -c Release -warnaserror --nologo
+
+      - name: Verify produced binary
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Recurse -Filter OpenIsland.exe -Path desktop/OpenIsland/bin | Select-Object -First 1
+          if (-not $exe) { throw 'OpenIsland.exe was not produced.' }
+          Write-Host "Built $($exe.FullName) ($([math]::Round($exe.Length / 1MB, 1)) MB)"

@@ -4,3 +4,20 @@ dist-electron/
 .vscode/
 .idea/
 *.log
+
+# .NET
+.dotnet/
+bin/
+obj/
+publish/
+desktop/OpenIsland/bin/
+desktop/OpenIsland/obj/
+desktop/OpenIsland/publish/
+*.user
+*.suo
+
+# Vendored reference binaries and scratch assets
+tools/**/*.exe
+tools/reference-dynamic-island/
+top_screen.png
+.claude/

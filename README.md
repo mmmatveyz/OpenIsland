@@ -1,62 +1,130 @@
 # 🏝️ OpenIsland
 
-> **Dynamic Island + OpenCode для Windows**: умный плавающий островок для мониторинга ПК, управления рабочим процессом и мгновенного доступа к ИИ (Claude, ChatGPT, Gemini).
+> **Dynamic Island для Windows + OpenCode AI Hub**: нативный плавающий островок на C# WPF с пружинными анимациями, плеером, таймером, виджетами и управлением ИИ-агентом OpenCode прямо с капсулы.
 
 ---
 
 ## 💡 О проекте
 
-**OpenIsland** переносит концепцию Apple Dynamic Island на Windows 10/11, наделяя её мощными инструментами для повседневной работы разработчиков и опытных пользователей ПК:
+**OpenIsland** переносит концепцию Apple Dynamic Island на Windows 10/11 и превращает её в рабочий инструмент:
 
-1. **Интерактивный плавающий остров (Dynamic Island UI)**:
-   - Минималистичная «капсула» вверху экрана по центру, гармонично вписывающаяся в дизайн Windows 11 (Fluent / Dark / Blur).
-   - Плавное физическое расширение при наведении курсора или клике.
-   - Умное управление кликабельностью (`click-through`): свободные прозрачные области экрана вокруг островка не блокируют клики по другим окнам.
+1. **Dynamic Island UI**
+   - Плавающая капсула по центру верхней кромки экрана, поверх всех окон.
+   - Нативная пружинная физика (spring physics) расширения и морфинга, стеклянные блики, тени и адаптивная геометрия.
+   - Сквозные клики: прозрачные области окна не перехватывают мышь.
+   - Скрытие в полноэкранных приложениях и играх.
 
-2. **Пульт управления и мониторинга ПК**:
-   - Живые метрики нагрузки: CPU (по ядрам и общая), GPU, RAM, диск, сеть.
-   - Мониторинг запущенных dev-процессов и портов (localhost:3000, 8080 и др.).
-   - Быстрые действия: управление звуком/медиа, буфер обмена, запуск утилит.
+2. **Виджеты повседневного использования**
+   - Плеер: обложка, прогресс, спектр, управление медиа, текст песни в капсуле и в раскрытой карточке.
+   - Таймер и секундомер, запись экрана через OBS, полка для файлов (drag & drop).
+   - Погода, определение местоположения, QR-код с экрана (сканирование и генерация).
+   - Индикаторы громкости, заряда, наушников, сети; настройки внешнего вида (масштаб, отступ, тема, эффекты).
 
-3. **OpenCode & AI Hub (Claude, ChatGPT, Gemini)**:
-   - Быстрый вызов всплывающего поля промпта к ИИ из любого места системы.
-   - **Поддержка аккаунтов с платными подписками** (Claude Pro, ChatGPT Plus, Gemini Advanced) через авторизацию в изолированной сессии браузера, а также поддержка API-ключей.
-   - Режим мини-ассистента для кодинга (генерация команд терминала, объяснение ошибок, рефакторинг).
-
----
-
-## 🛠️ Архитектурный стек
-
-- **Платформа**: [Electron](https://www.electronjs.org/) (надежная изоляция сессий Chromium для авторизации в Google/Apple/SSO, доступ к Windows API).
-- **Frontend**: [React 18/19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vitejs.dev/).
-- **Стилизация и анимации**: [TailwindCSS](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/) (пружинная физика трансформации капсулы).
-- **Сбор метрик системы**: [`systeminformation`](https://systeminformation.io/) + нативные Win32 вызовы.
-- **Стейт**: [Zustand](https://github.com/pmndrs/zustand).
+3. **OpenCode AI Hub**
+   - Обнаружение локального демона OpenCode и автоматический пейринг.
+   - Список сессий и моделей, переключение сессии/модели прямо из островка.
+   - Отправка задачи агенту и живой стриминг ответа (SSE).
+   - Запросы разрешений агента (`allow` / `deny`) без переключения в OpenCode Desktop.
+   - Быстрые роли-персоны из каталога `tools/agency-agents` (Desktop App Engineer, Frontend Developer, Code Reviewer, Bug Fixer).
+   - Глобальный хоткей **Ctrl+Alt+O** — мгновенно открыть или свернуть карточку OpenCode из любого приложения.
 
 ---
 
-## 📂 Структура документации
+## 🛠️ Стек
 
-Вся подробная техническая документация находится в директории [`docs/`](./docs/):
-- [**docs/ARCHITECTURE.md**](./docs/ARCHITECTURE.md) — детальная архитектура приложения, окон и взаимодействия процессов.
-- [**docs/AI_SESSION_AUTH.md**](./docs/AI_SESSION_AUTH.md) — принцип работы авторизации с подписками Claude Pro, ChatGPT Plus, Gemini.
-- [**docs/ROADMAP.md**](./docs/ROADMAP.md) — пошаговый план разработки.
-- [**AGENTS.md**](./AGENTS.md) — правила и стандарты для ИИ-ассистентов в репозитории.
+| Компонент | Технология |
+| :--- | :--- |
+| Платформа | **C# WPF, .NET 8 (`net8.0-windows10.0.19041.0`)** |
+| Рендеринг | Direct3D через WPF, Windows.UI.Composition (acrylic-стекло), кастомные `DrawingVisual`-виджеты |
+| Интеграция с ИИ | REST + SSE клиент локального демона OpenCode (`OpenCodeService.cs`) |
+| Хранение токена | Windows DPAPI (`ProtectedData`, `%LOCALAPPDATA%\OpenIsland\opencode-token.bin`) |
+| Настройки | Реестр `HKCU\Software\OpenIsland` (старый `Software\DynamicIsland` мигрируется автоматически) |
+| Доп. библиотеки | `ZXing.Net` (QR), `System.Security.Cryptography.ProtectedData` |
+
+Проверено на Windows 11 (сборка 19041+). Требуется .NET 8 Desktop Runtime; для сборки — .NET 8 SDK.
 
 ---
 
-## 🚀 Быстрый старт (Разработка)
+## 📂 Структура репозитория
 
-```bash
-# Установка зависимостей
-npm install
-
-# Запуск в режиме разработки с HMR
-npm run dev
-
-# Сборка установочного пакета под Windows
-npm run build
+```text
+OpenIsland/
+├── desktop/OpenIsland/         # Основное нативное приложение (C# WPF)
+│   ├── MainWindow.xaml         # Разметка островка, панелей и карточек
+│   ├── MainWindow.*.cs         # Логика по модулям (медиа, таймер, OpenCode, ...)
+│   ├── OpenCodeService.cs      # REST/SSE клиент OpenCode, токен, статусы
+│   ├── OpenCodeSelfTest.cs     # Диагностика интеграции (--selftest)
+│   ├── Settings.cs             # Настройки в реестре
+│   ├── Native.cs               # Win32-вызовы (topmost, toolwindow, DWM)
+│   ├── Fonts/ Gadgets/         # Шрифты и графика виджетов
+│   └── DynamicIsland.csproj
+├── scripts/build.ps1           # Сборка, запуск и self-test
+├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
+├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации
+├── tools/agency-agents/        # 380+ ролей-персон для промптов
+├── electron/ src/              # Легаси-прототип на Electron + React
+└── Запуск_OpenIsland.bat       # Запуск в один клик (собирает при необходимости)
 ```
+
+---
+
+## 🚀 Быстрый старт
+
+### Сборка и запуск
+
+```powershell
+# Сборка Release в bin\OpenIsland
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
+
+# Сборка и немедленный запуск
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
+
+# Диагностика интеграции с OpenCode (без UI)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
+```
+
+Либо двойной клик по `Запуск_OpenIsland.bat` — скрипт соберёт приложение, если `bin\OpenIsland\OpenIsland.exe` ещё нет.
+
+Если .NET SDK не установлен в системе, `scripts\build.ps1` автоматически скачает SDK 8.0 в локальную папку `.dotnet/` (она исключена из git).
+
+### Требования
+
+- Windows 10 19041+ / Windows 11.
+- .NET 8 SDK для сборки (ставится скриптом) и .NET 8 Desktop Runtime для запуска.
+- Запущенный OpenCode Desktop (или сервис `opencode`) для AI Hub. Остальные виджеты работают автономно.
+
+### Полезные аргументы запуска
+
+| Аргумент | Назначение |
+| :--- | :--- |
+| `--view OpenCodeBig` | Открыть сразу карточку OpenCode AI Hub |
+| `--selftest` | Прогнать headless-проверку OpenCode (сессии, модели, промпт, ответ) |
+
+Логи приложения: `%LOCALAPPDATA%\OpenIsland\logs\app.log` (ротация при 1 МБ).
+
+---
+
+## 🔐 Безопасность
+
+- Токен OpenCode хранится только в зашифрованном виде через Windows DPAPI для текущего пользователя; старый plaintext-файл автоматически мигрируется и удаляется.
+- Пароли и токены не попадают в репозиторий и логи.
+- Все запросы идут на локальный демон `http://127.0.0.1:<port>`, порт определяется через `opencode service status`.
+
+---
+
+## 📚 Документация
+
+- [**docs/ARCHITECTURE.md**](./docs/ARCHITECTURE.md) — устройство окна, слоёв рендеринга, сервисов и интеграции с OpenCode.
+- [**docs/ROADMAP.md**](./docs/ROADMAP.md) — состояние фаз и дальнейшие планы.
+- [**docs/PRODUCT.md**](./docs/PRODUCT.md) — карта функций: что пришло из апстрима, что наше, что осталось «чужим» в идентичности и план дальнейших работ.
+- [**docs/AI_SESSION_AUTH.md**](./docs/AI_SESSION_AUTH.md) — отложенный дизайн авторизации по подпискам (Claude Pro / ChatGPT Plus / Gemini Advanced).
+- [**AGENTS.md**](./AGENTS.md) — правила и контекст для ИИ-агентов, работающих с репозиторием.
+
+---
+
+## 🧪 Легаси-прототип
+
+Каталоги `electron/`, `src/`, `index.html`, `package.json` содержат ранний прототип на Electron + React + Vite. Он сохранён для экспериментов с браузерными сессиями платных подписок и не является основной сборкой. Запуск прототипа: `npm install` → `npm run dev`.
 
 ---
 
