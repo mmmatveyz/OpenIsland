@@ -41,7 +41,7 @@ public partial class MainWindow : Window
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
-        [View.OpenCode] = new(210, 34, 17),
+        [View.OpenCode] = new(246, 34, 17),
         [View.OpenCodeBig] = new(380, 440, 36),
     };
 
@@ -56,6 +56,7 @@ public partial class MainWindow : Window
     {
         [View.Sound] = new(0, 0, 0, 38, 17, 34, 18, 1, false),
         [View.Media] = new(7, 6, 22, 13, 17, 21, 16, 0, true),
+        [View.OpenCode] = new(0, 0, 0, 13, 17, 21, 16, 0, false),
         [View.Toast] = new(12, 12, 44, 20, 34, 23, 20, 0, true),
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };

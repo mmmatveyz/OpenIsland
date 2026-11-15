@@ -20,6 +20,8 @@ public partial class MainWindow
     const double IconBlur = 6;
     const string UnknownArtist = "Неизвестный исполнитель";
     static readonly Duration TintTime = Ms(450);
+    static readonly Thickness TimerMargin = new(0, 0, 10, 0);
+    static readonly Thickness TimerMarginWithEq = new(0, 0, 40, 0);
 
     readonly SpectrumService _spectrum = new();
     readonly float[] _bands = new float[SpectrumService.Bands];
@@ -154,8 +156,12 @@ public partial class MainWindow
 
     void SyncEq()
     {
-        _spectrum.Active = IsEqVisible;
-        if (IsEqVisible) _eqLoop.Start();
+        // В капсуле агента полосы появляются только когда есть звук; в медиа-капсулах — всегда.
+        bool bars = IsEqVisible && (_view != View.OpenCode || _sounding);
+        _spectrum.Active = bars;
+        if (bars) _eqLoop.Start();
+        Eq.Opacity = bars ? 1 : 0;
+        OpenCodeCompactTimer.Margin = bars ? TimerMarginWithEq : TimerMargin;
     }
 
     void PollSound()
