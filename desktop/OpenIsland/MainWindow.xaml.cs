@@ -36,7 +36,7 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 416, 34),
+        [View.Menu] = new(300, 344, 34),
         [View.Settings] = new(320, 416, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),

@@ -169,7 +169,7 @@ public partial class MainWindow
         if (!Settings.TaskToast || duration < TaskToastAfter || !_trayAdded) return;
 
         string title = string.IsNullOrWhiteSpace(_openCode.SessionTitle) ? "OpenCode" : _openCode.SessionTitle;
-        string text = $"Агент закончил за {FormatElapsed(duration)}";
+        string text = $"Задача заняла {FormatElapsed(duration)}";
         Native.ShowBalloon(_hwnd, TrayId, title, text);
         App.LogDebug($"Toast: task finished in {FormatElapsed(duration)}.");
     }
