@@ -31,19 +31,26 @@ public partial class MainWindow
 
     void SyncPerfUI()
     {
-        PerfCpuText.Text = $"{_perf.CpuPercent:0}%";
-        SetPerfBar(PerfCpuBar, _perf.CpuPercent);
+        bool sampled = _perf.HasSample;
 
-        PerfRamText.Text = $"{_perf.MemoryUsedGb:0.0} / {_perf.MemoryTotalGb:0.0} ГБ · {_perf.MemoryPercent:0}%";
-        SetPerfBar(PerfRamBar, _perf.MemoryPercent);
+        PerfCpuText.Text = sampled ? $"{_perf.CpuPercent:0}%" : "—";
+        SetPerfBar(PerfCpuBar, sampled ? _perf.CpuPercent : 0);
+
+        PerfRamText.Text = sampled
+            ? $"{_perf.MemoryUsedGb:0.0} / {_perf.MemoryTotalGb:0.0} ГБ · {_perf.MemoryPercent:0}%"
+            : "—";
+        SetPerfBar(PerfRamBar, sampled ? _perf.MemoryPercent : 0);
 
         PerfGpuText.Text = _perf.GpuPercent is { } gpu ? $"{gpu:0}%" : "н/д";
         SetPerfBar(PerfGpuBar, _perf.GpuPercent ?? 0);
 
-        PerfNetText.Text = $"↓ {PerfRate(_perf.NetDownBps)} · ↑ {PerfRate(_perf.NetUpBps)}";
+        PerfNetText.Text = sampled
+            ? $"↓ {PerfRate(_perf.NetDownBps)} · ↑ {PerfRate(_perf.NetUpBps)}"
+            : "—";
         PerfTempText.Text = _perf.TemperatureC is { } temperature ? $"{temperature:0}°C" : "н/д";
 
-        if (MenuPerfCpu != null) MenuPerfCpu.Text = $"{_perf.CpuPercent:0}%";
+        // В меню показываем последний известный замер: до первого — пусто, чтобы «0%» не читалось как факт.
+        if (MenuPerfCpu != null) MenuPerfCpu.Text = sampled ? $"{_perf.CpuPercent:0}%" : "";
     }
 
     static void SetPerfBar(Rectangle bar, double percent)

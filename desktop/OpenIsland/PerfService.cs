@@ -38,6 +38,9 @@ sealed class PerfService : IDisposable
     public double? GpuPercent { get; private set; }
     public double? TemperatureC { get; private set; }
 
+    /// <summary>Появился ли хотя бы один полноценный замер (после него имеет смысл показывать числа).</summary>
+    public bool HasSample { get; private set; }
+
     public PerfService(Dispatcher dispatcher)
     {
         _dispatcher = dispatcher;
@@ -112,6 +115,7 @@ sealed class PerfService : IDisposable
 
         if (totalDelta <= 0) return true;
         CpuPercent = Math.Clamp((1.0 - (double)idleDelta / totalDelta) * 100.0, 0, 100);
+        HasSample = true;
         return true;
     }
 
@@ -251,12 +255,16 @@ sealed class PerfService : IDisposable
         {
             using var searcher = new ManagementObjectSearcher(
                 @"root\WMI", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+            using ManagementObjectCollection zones = searcher.Get();
             double hottest = double.MinValue;
-            foreach (ManagementBaseObject zone in searcher.Get())
+            foreach (ManagementBaseObject zone in zones)
             {
-                if (zone["CurrentTemperature"] is not { } raw) continue;
-                double celsius = Convert.ToDouble(raw) / 10.0 - 273.15;
-                if (celsius > 0 && celsius < 200) hottest = Math.Max(hottest, celsius);
+                using (zone)
+                {
+                    if (zone["CurrentTemperature"] is not { } raw) continue;
+                    double celsius = Convert.ToDouble(raw) / 10.0 - 273.15;
+                    if (celsius > 0 && celsius < 200) hottest = Math.Max(hottest, celsius);
+                }
             }
             TemperatureC = hottest > double.MinValue ? Math.Round(hottest) : null;
         }

@@ -45,11 +45,7 @@ public partial class MainWindow
         return IntPtr.Zero;
     }
 
-    void ClipboardRow_Click(object sender, RoutedEventArgs e)
-    {
-        RefreshClipboardUI();
-        ShowPanel(Panel.Clipboard);
-    }
+    void ClipboardRow_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Clipboard);
 
     void ClipboardBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Menu);
 
@@ -82,6 +78,10 @@ public partial class MainWindow
                 : "выкл.";
         }
 
+        // Список строк перестраиваем только когда карточка буфера реально открыта —
+        // иначе это лишняя работа на каждое копирование.
+        if (_view != View.Clipboard) return;
+
         ClipboardClear.IsEnabled = items.Count > 0;
         ClipboardEmpty.Visibility = items.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         ClipboardEmpty.Text = recording
@@ -94,7 +94,7 @@ public partial class MainWindow
             ClipboardList.Children.Add(CreateClipboardRow(items[i], i));
         }
 
-        if (_panel == Panel.Clipboard) UpdateTargets();
+        UpdateTargets();
     }
 
     Button CreateClipboardRow(ClipboardService.Entry entry, int index)

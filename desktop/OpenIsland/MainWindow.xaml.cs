@@ -436,6 +436,7 @@ public partial class MainWindow : Window
         SyncEq();
         SyncRim();
         SyncCover();
+        if (target == View.Clipboard) RefreshClipboardUI();
         if (!changed) return;
         if (target == View.MediaBig) StartSeekLoop();
     }
