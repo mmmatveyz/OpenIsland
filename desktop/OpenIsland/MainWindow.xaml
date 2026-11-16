@@ -1131,8 +1131,10 @@
                                     <TextBox x:Name="OpenCodePromptBox" Background="Transparent" Foreground="White" BorderThickness="0"
                                              FontSize="12.5" CaretBrush="White" VerticalAlignment="Center" Padding="0,2,30,2"
                                              KeyDown="OpenCodePromptBox_KeyDown" TextChanged="OpenCodePromptBox_TextChanged"
-                                             GotFocus="OpenCodePromptBox_GotFocus" LostFocus="OpenCodePromptBox_LostFocus" PreviewMouseLeftButtonDown="OpenCodePromptBox_MouseDown"
-                                             Text="Дать задачу агенту..."/>
+                                             GotFocus="OpenCodePromptBox_GotFocus" PreviewMouseLeftButtonDown="OpenCodePromptBox_MouseDown"/>
+                                    <TextBlock x:Name="OpenCodePromptHint" Text="Дать задачу агенту..." FontSize="12.5"
+                                               Foreground="{StaticResource Dim}" VerticalAlignment="Center"
+                                               Margin="0,0,30,0" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
                                     <Button x:Name="OpenCodeSendIcon" Style="{StaticResource PlainButton}" HorizontalAlignment="Right" Width="24" Height="24" Click="OpenCodeSend_Click">
                                         <local:Icon Kind="Sparkle" Width="13" Height="13" Fill="{StaticResource Indigo}"/>
                                     </Button>

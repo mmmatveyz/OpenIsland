@@ -13,7 +13,7 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <ApplicationIcon>Assets\OpenIsland.ico</ApplicationIcon>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Product>OpenIsland</Product>
     <Company>OpenIsland</Company>
     <AssemblyTitle>OpenIsland — островок с пультом AI-агента</AssemblyTitle>

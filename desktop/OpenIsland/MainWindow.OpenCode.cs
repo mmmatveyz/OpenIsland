@@ -9,8 +9,6 @@ namespace OpenIsland;
 
 public partial class MainWindow
 {
-    const string PromptPlaceholder = "Дать задачу агенту...";
-
     /// <summary>Задачи короче этого порога уведомлением не сопровождаем — только звуком.</summary>
     static readonly TimeSpan TaskToastAfter = TimeSpan.FromSeconds(15);
 
@@ -321,7 +319,7 @@ public partial class MainWindow
         if (!_openCode.IsConnected) return;
 
         string text = OpenCodePromptBox.Text.Trim();
-        if (string.IsNullOrEmpty(text) || text == PromptPlaceholder) return;
+        if (string.IsNullOrEmpty(text)) return;
 
         _openCodeSending = true;
         OpenCodePromptBox.IsEnabled = false;
@@ -335,7 +333,6 @@ public partial class MainWindow
         finally
         {
             _openCodeSending = false;
-            OpenCodePromptBox_LostFocus(OpenCodePromptBox, new RoutedEventArgs());
             SyncOpenCodeUI();
         }
     }
@@ -358,30 +355,19 @@ public partial class MainWindow
     /// <summary>Пока пользователь набирает задачу, продлеваем таймер сворачивания.</summary>
     void OpenCodePromptBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_panel != Panel.OpenCode) return;
-        if (OpenCodePromptBox.Text == PromptPlaceholder) return;
-        _collapseTimeout.Cancel();
-        _collapseTimeout.Start(LongCollapseDelay);
+        if (OpenCodePromptHint == null) return;
+        bool empty = string.IsNullOrEmpty(OpenCodePromptBox.Text);
+        OpenCodePromptHint.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        if (!empty && _panel == Panel.OpenCode)
+        {
+            _collapseTimeout.Cancel();
+            _collapseTimeout.Start(LongCollapseDelay);
+        }
     }
 
 
     void OpenCodePromptBox_GotFocus(object sender, RoutedEventArgs e)
     {
         EnterTextEntry();
-
-        if (OpenCodePromptBox.Text == PromptPlaceholder)
-        {
-            OpenCodePromptBox.Text = "";
-            OpenCodePromptBox.Foreground = Brushes.White;
-        }
-    }
-
-    void OpenCodePromptBox_LostFocus(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(OpenCodePromptBox.Text))
-        {
-            OpenCodePromptBox.Text = PromptPlaceholder;
-            OpenCodePromptBox.Foreground = _dim;
-        }
     }
 }
