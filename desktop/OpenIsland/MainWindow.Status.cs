@@ -42,6 +42,7 @@ public partial class MainWindow
         if (hidden == _hiddenByFullscreen) return;
         _hiddenByFullscreen = hidden;
         UpdateTargets();
+        SyncEq();
     }
 
     void PollVolume()

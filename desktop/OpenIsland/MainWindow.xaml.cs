@@ -181,6 +181,7 @@ public partial class MainWindow : Window
         ApplyTimerTint();
         TuneDragSprings(false);
         _ticker.Tick += (_, _) => OnTick();
+        IsVisibleChanged += (_, _) => SyncEq();
         Loaded += OnLoaded;
         Deactivated += OnDeactivated;
     }
@@ -601,5 +602,6 @@ public partial class MainWindow : Window
     {
         _sentAway = false;
         UpdateTargets();
+        SyncEq();
     }
 }

@@ -1035,7 +1035,26 @@ public sealed partial class OpenCodeService : IDisposable
     public async Task<bool> DeleteSessionAsync(string sessionId)
     {
         (int status, _) = await SendAsync(HttpMethod.Delete, $"/api/session/{Esc(sessionId)}");
-        return status is >= 200 and < 300;
+        if (status is < 200 or >= 300) return false;
+
+        lock (_gate)
+        {
+            if (_sessionId == sessionId)
+            {
+                _sessionId = null;
+                _sessionTitle = null;
+                _sessionDirectory = null;
+                _isBusy = false;
+                _taskStartedAtUtc = null;
+                _pendingPermission = null;
+                _lastAssistantText = "";
+                _needMessages = false;
+            }
+            UpdateStatusText();
+        }
+
+        Notify(force: true);
+        return true;
     }
 
     public async Task<bool> ReplyPermissionAsync(string decision)

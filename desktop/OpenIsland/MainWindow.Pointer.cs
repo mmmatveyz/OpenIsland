@@ -126,7 +126,9 @@ public partial class MainWindow
             return;
         }
         if (_ringing || _panel != Panel.None) SelectPanel(Panel.None);
-        else SelectPanel(_openCode.IsBusy ? Panel.OpenCode : IsMediaActive ? Panel.Player : _countdown.IsActive ? Panel.Timer : _openCode.IsConnected ? Panel.OpenCode : Panel.Menu);
+        // Плеер важнее фоновой задачи агента: пока играет музыка, клик открывает её,
+        // а карточка агента остаётся доступной через Ctrl+Alt+O и меню.
+        else SelectPanel(IsMediaActive ? Panel.Player : _openCode.IsBusy ? Panel.OpenCode : _countdown.IsActive ? Panel.Timer : _openCode.IsConnected ? Panel.OpenCode : Panel.Menu);
         UpdateView();
     }
 

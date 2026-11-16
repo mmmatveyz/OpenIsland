@@ -157,7 +157,9 @@ public partial class MainWindow
     void SyncEq()
     {
         // В капсуле агента полосы появляются только когда есть звук; в медиа-капсулах — всегда.
-        bool bars = IsEqVisible && (_view != View.OpenCode || _sounding);
+        // Захват звука не работает, пока остров скрыт (трей, полный экран, «спрятать на 5 секунд»).
+        bool visible = IsVisible && !_hiddenByFullscreen && !_sentAway;
+        bool bars = visible && IsEqVisible && (_view != View.OpenCode || _sounding);
         _spectrum.Active = bars;
         if (bars) _eqLoop.Start();
         Eq.Opacity = bars ? 1 : 0;

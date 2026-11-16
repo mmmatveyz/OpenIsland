@@ -16,6 +16,7 @@ public partial class MainWindow
 
     static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
     static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
+    static readonly Brush DangerBackground = Frozen(Color.FromArgb(0xFF, 0xFF, 0x45, 0x3A));
 
     readonly OpenCodeService _openCode = new();
     readonly Chime _chime = new();
@@ -23,6 +24,8 @@ public partial class MainWindow
     bool _openCodeReady;
     bool _openCodeBusy;
     bool _openCodeSending;
+    bool _openCodeDeleteArmed;
+    DispatcherTimer? _openCodeDeleteTimeout;
     DateTime _openCodeBusySinceUtc;
 
     static Brush Frozen(Color color)
@@ -34,6 +37,8 @@ public partial class MainWindow
 
     void InitOpenCode()
     {
+        _openCodeDeleteTimeout = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+        _openCodeDeleteTimeout.Tick += (_, _) => DisarmDeleteSession();
         _openCode.StateChanged += OnOpenCodeStateChanged;
         _openCodeReady = true;
         SyncOpenCodeUI();
@@ -146,6 +151,8 @@ public partial class MainWindow
         OpenCodeModelPrev.IsEnabled = online;
         OpenCodeModelNext.IsEnabled = online;
         OpenCodeNewSession.IsEnabled = online;
+        OpenCodeDeleteSession.IsEnabled = online && !_openCode.IsBusy && !string.IsNullOrWhiteSpace(_openCode.SelectedSessionId);
+        if (!OpenCodeDeleteSession.IsEnabled) DisarmDeleteSession();
         OpenCodeStopButton.IsEnabled = online;
         OpenCodeSendIcon.IsEnabled = editable;
         OpenCodeSendButton.IsEnabled = editable;
@@ -210,6 +217,53 @@ public partial class MainWindow
     void OpenCodeNextSession_Click(object sender, RoutedEventArgs e)
     {
         _openCode.SelectSession(1);
+        SyncOpenCodeUI();
+    }
+
+    void ArmDeleteSession()
+    {
+        _openCodeDeleteArmed = true;
+        OpenCodeDeleteSession.Background = DangerBackground;
+        OpenCodeDeleteSession.Foreground = Brushes.White;
+        OpenCodeDeleteSession.ToolTip = "Нажмите ещё раз, чтобы удалить сессию";
+        _openCodeDeleteTimeout?.Stop();
+        _openCodeDeleteTimeout?.Start();
+    }
+
+    void DisarmDeleteSession()
+    {
+        _openCodeDeleteTimeout?.Stop();
+        if (!_openCodeDeleteArmed) return;
+
+        _openCodeDeleteArmed = false;
+        OpenCodeDeleteSession.ClearValue(Control.BackgroundProperty);
+        OpenCodeDeleteSession.ClearValue(Control.ForegroundProperty);
+        OpenCodeDeleteSession.ToolTip = "Удалить текущую сессию";
+    }
+
+    async void OpenCodeDeleteSession_Click(object sender, RoutedEventArgs e)
+    {
+        string? sessionId = _openCode.SelectedSessionId;
+        if (string.IsNullOrWhiteSpace(sessionId)) return;
+
+        if (!_openCodeDeleteArmed)
+        {
+            ArmDeleteSession();
+            return;
+        }
+
+        DisarmDeleteSession();
+        OpenCodeSubText.Text = "Удаление сессии...";
+        bool deleted = await _openCode.DeleteSessionAsync(sessionId);
+        if (!deleted)
+        {
+            OpenCodeSubText.Text = string.IsNullOrWhiteSpace(_openCode.LastError)
+                ? "Не удалось удалить сессию"
+                : _openCode.LastError;
+            return;
+        }
+
+        await _openCode.RefreshAsync();
         SyncOpenCodeUI();
     }
 
