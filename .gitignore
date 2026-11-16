@@ -19,7 +19,3 @@ desktop/OpenIsland/obj/
 desktop/OpenIsland/publish/
 *.user
 *.suo
-
-# Vendored reference binaries
-tools/**/*.exe
-tools/reference-dynamic-island/
