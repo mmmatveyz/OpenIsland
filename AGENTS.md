@@ -121,7 +121,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Installer
 
 # Юнит-тесты (xUnit): разбор ответов OpenCode, версии/changelog апдейтера,
-# Countdown, инварианты настроек
+# Countdown, история буфера обмена, инварианты настроек
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 ```
 

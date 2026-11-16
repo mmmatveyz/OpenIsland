@@ -87,7 +87,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 # Диагностика интеграции с OpenCode (без UI)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 
-# Юнит-тесты (xUnit): разбор OpenCode, апдейтер, Countdown, настройки
+# Юнит-тесты (xUnit): разбор OpenCode, апдейтер, Countdown, буфер, настройки
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 
 # Сборка установщика (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)

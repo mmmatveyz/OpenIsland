@@ -36,7 +36,8 @@
   </ItemGroup>
 
   <!-- Юнит-тесты (tests/OpenIsland.Tests) работают с internal-логикой: парсинг
-       ответов OpenCode, нормализация версий и разбор changelog апдейтера. -->
+       ответов OpenCode, история буфера обмена, нормализация версий и разбор
+       changelog апдейтера. -->
   <ItemGroup>
     <InternalsVisibleTo Include="OpenIsland.Tests" />
   </ItemGroup>

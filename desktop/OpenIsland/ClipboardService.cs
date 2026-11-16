@@ -12,6 +12,8 @@ sealed class ClipboardService
 {
     const int MaxItems = 30;
     const int MaxStoredChars = 20000;
+    const int Attempts = 3;
+    const int RetryDelayMs = 10;
 
     readonly List<Entry> _items = [];
 
@@ -28,36 +30,71 @@ sealed class ClipboardService
     {
         if (!Recording) return;
 
-        try
-        {
-            if (!Clipboard.ContainsText()) return;
+        string? text = ReadClipboard();
+        if (text is not null) Add(text);
+    }
 
-            string text = Clipboard.GetText();
-            if (string.IsNullOrWhiteSpace(text)) return;
-            if (text.Length > MaxStoredChars) text = text[..MaxStoredChars];
-            if (_items.Count > 0 && _items[0].Text == text) return;
+    /// <summary>
+    /// Кладёт фрагмент в начало истории: пустое не берём, дубликат поднимаем наверх,
+    /// длинный обрезаем, а всё, что вышло за лимит, отбрасываем.
+    /// Отдельно от <see cref="Capture"/> — чтобы логику истории можно было проверить тестами.
+    /// </summary>
+    internal void Add(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        if (text.Length > MaxStoredChars) text = text[..MaxStoredChars];
+        if (_items.Count > 0 && _items[0].Text == text) return;
 
-            _items.RemoveAll(entry => entry.Text == text);
-            _items.Insert(0, new Entry(text, DateTime.UtcNow));
-            if (_items.Count > MaxItems) _items.RemoveRange(MaxItems, _items.Count - MaxItems);
-            Changed?.Invoke();
-        }
-        catch (Exception ex)
+        _items.RemoveAll(entry => entry.Text == text);
+        _items.Insert(0, new Entry(text, DateTime.UtcNow));
+        if (_items.Count > MaxItems) _items.RemoveRange(MaxItems, _items.Count - MaxItems);
+        Changed?.Invoke();
+    }
+
+    /// <summary>
+    /// Читает текст из буфера. Буфер бывает кратко занят другим процессом, поэтому
+    /// пробуем несколько раз, прежде чем сдаться (каждый пропуск — потерянный фрагмент).
+    /// </summary>
+    static string? ReadClipboard()
+    {
+        for (int attempt = 1; ; attempt++)
         {
-            // Буфер может быть занят другим процессом — это нормально, просто пропускаем кадр.
-            App.LogDebug($"Clipboard: capture skipped ({ex.Message}).");
+            try
+            {
+                if (!Clipboard.ContainsText()) return null;
+                string text = Clipboard.GetText();
+                return string.IsNullOrWhiteSpace(text) ? null : text;
+            }
+            catch (Exception ex)
+            {
+                if (attempt >= Attempts)
+                {
+                    App.LogDebug($"Clipboard: capture skipped ({ex.Message}).");
+                    return null;
+                }
+                Thread.Sleep(RetryDelayMs);
+            }
         }
     }
 
     public void Copy(string text)
     {
-        try
+        for (int attempt = 1; ; attempt++)
         {
-            Clipboard.SetText(text);
-        }
-        catch (Exception ex)
-        {
-            App.LogDebug($"Clipboard: copy failed ({ex.Message}).");
+            try
+            {
+                Clipboard.SetText(text);
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (attempt >= Attempts)
+                {
+                    App.LogDebug($"Clipboard: copy failed ({ex.Message}).");
+                    return;
+                }
+                Thread.Sleep(RetryDelayMs);
+            }
         }
     }
 
