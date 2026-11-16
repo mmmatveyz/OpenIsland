@@ -1,3 +1,4 @@
+using System.IO;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
@@ -14,6 +15,9 @@ namespace OpenIsland;
 /// </summary>
 sealed class PerfService : IDisposable
 {
+    const int MaxCoreBars = 16;
+    const int FastIntervalMs = 1000, SlowIntervalMs = 3000;
+
     readonly Dispatcher _dispatcher;
     readonly Timer _timer;
 
@@ -25,6 +29,7 @@ sealed class PerfService : IDisposable
     bool _cpuPrimed;
     bool _netPrimed;
     bool _active;
+    bool _fast = true;
     bool _disposed;
 
     public event Action? Changed;
@@ -38,8 +43,24 @@ sealed class PerfService : IDisposable
     public double? GpuPercent { get; private set; }
     public double? TemperatureC { get; private set; }
 
+    /// <summary>Загрузка каждого ядра (или групп ядер), 0..100.</summary>
+    public IReadOnlyList<double> CpuCores { get; private set; } = [];
+
+    /// <summary>Сколько логических процессоров вернул счётчик (до агрегации).</summary>
+    public int CpuCoreCount { get; private set; }
+
+    /// <summary>Активность дисков (%; null, если счётчик недоступен).</summary>
+    public double? DiskPercent { get; private set; }
+
+    /// <summary>Свободно и всего на системном диске, ГБ.</summary>
+    public double DiskFreeGb { get; private set; }
+    public double DiskTotalGb { get; private set; }
+
     /// <summary>Появился ли хотя бы один полноценный замер (после него имеет смысл показывать числа).</summary>
     public bool HasSample { get; private set; }
+
+    /// <summary>Идёт ли учащённый опрос (курсор над карточкой).</summary>
+    public bool Fast => _fast;
 
     public PerfService(Dispatcher dispatcher)
     {
@@ -47,23 +68,36 @@ sealed class PerfService : IDisposable
         _timer = new Timer(_ => Sample(), null, Timeout.Infinite, Timeout.Infinite);
     }
 
-    /// <summary>Включает/выключает опрос. Пока карточка закрыта, таймер не тикает вообще.</summary>
-    public void SetActive(bool active)
+    /// <summary>
+    /// Включает/выключает опрос. Пока карточка закрыта, таймер не тикает вообще.
+    /// <paramref name="fast"/> — карточка под курсором (опрос раз в секунду), иначе раз в три.
+    /// </summary>
+    public void SetActive(bool active, bool fast = true)
     {
-        if (_active == active || _disposed) return;
+        if (_disposed) return;
+        if (_active == active && _fast == fast) return;
+
+        bool started = active && !_active;
         _active = active;
-        if (active)
+        _fast = fast;
+
+        if (!active)
+        {
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+            return;
+        }
+
+        if (started)
         {
             _cpuPrimed = false;
             _netPrimed = false;
             _gpuCollected = false;
+            _sysCollected = false;
             _ticks = 0;
-            _timer.Change(0, 1000);
         }
-        else
-        {
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
-        }
+
+        int interval = fast ? FastIntervalMs : SlowIntervalMs;
+        _timer.Change(started ? 0 : interval, interval);
     }
 
     void Sample()
@@ -74,6 +108,7 @@ sealed class PerfService : IDisposable
             bool cpu = SampleCpu();
             SampleMemory();
             SampleNetwork();
+            SampleStorage();
             if (_ticks % 2 == 0) SampleGpu();
             if (_ticks % 5 == 0) SampleTemperature();
             _ticks++;
@@ -247,6 +282,142 @@ sealed class PerfService : IDisposable
         }
     }
 
+    // ------------------------------------------- CPU cores & disk (PDH, 1 с)
+
+    IntPtr _sysQuery, _coresCounter, _diskCounter;
+    bool _sysTried, _sysCollected;
+
+    void SampleStorage()
+    {
+        SampleDiskSpace();
+
+        if (!_sysTried)
+        {
+            _sysTried = true;
+            try
+            {
+                if (PdhOpenQuery(null, IntPtr.Zero, out IntPtr query) == 0)
+                {
+                    _sysQuery = query;
+                    bool cores = TryAddCounter(query, @"\Processor Information(*)\% Processor Time", out _coresCounter);
+                    TryAddCounter(query, @"\PhysicalDisk(_Total)\% Disk Time", out _diskCounter);
+                    if (cores)
+                    {
+                        App.LogDebug("Perf: CPU core counters opened.");
+                    }
+                    else
+                    {
+                        PdhCloseQuery(query);
+                        _sysQuery = IntPtr.Zero;
+                        _diskCounter = IntPtr.Zero;
+                        App.LogDebug("Perf: CPU core counters unavailable.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                App.LogDebug($"Perf: system counters unavailable ({ex.Message}).");
+                _sysQuery = IntPtr.Zero;
+            }
+        }
+
+        if (_sysQuery == IntPtr.Zero) return;
+
+        try
+        {
+            if (PdhCollectQueryData(_sysQuery) != 0) return;
+            if (!_sysCollected)
+            {
+                // Счётчикам нужны два замера подряд.
+                _sysCollected = true;
+                return;
+            }
+
+            ReadCores();
+            ReadDisk();
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"Perf: system counters read failed ({ex.Message}).");
+        }
+    }
+
+    static bool TryAddCounter(IntPtr query, string path, out IntPtr counter)
+    {
+        counter = IntPtr.Zero;
+        if (PdhAddEnglishCounter(query, path, IntPtr.Zero, out IntPtr created) != 0) return false;
+        counter = created;
+        return true;
+    }
+
+    void ReadCores()
+    {
+        if (_coresCounter == IntPtr.Zero) return;
+
+        uint size = 0, count = 0;
+        if (PdhGetFormattedCounterArray(_coresCounter, PdhFmtDouble, out size, out count, IntPtr.Zero) != PdhMoreData || size == 0) return;
+
+        IntPtr buffer = Marshal.AllocHGlobal((int)size);
+        try
+        {
+            if (PdhGetFormattedCounterArray(_coresCounter, PdhFmtDouble, out size, out count, buffer) != 0) return;
+
+            List<double> values = [];
+            int itemSize = Marshal.SizeOf<PdhCounterItem>();
+            for (int i = 0; i < count; i++)
+            {
+                PdhCounterItem item = Marshal.PtrToStructure<PdhCounterItem>(buffer + i * itemSize);
+                if (item.FmtValue.Status > 1) continue;
+                if (Marshal.PtrToStringUni(item.Name) == "_Total") continue;
+                values.Add(Math.Clamp(item.FmtValue.Value, 0, 100));
+            }
+
+            if (values.Count > 0)
+            {
+                CpuCoreCount = values.Count;
+                CpuCores = PerfMath.AggregateCores(values, MaxCoreBars);
+            }
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(buffer);
+        }
+    }
+
+    void ReadDisk()
+    {
+        if (_diskCounter == IntPtr.Zero)
+        {
+            DiskPercent = null;
+            return;
+        }
+
+        if (PdhGetFormattedCounterValue(_diskCounter, PdhFmtDouble, out _, out PdhFormatted value) != 0 || value.Status > 1)
+        {
+            DiskPercent = null;
+            return;
+        }
+
+        DiskPercent = Math.Clamp(value.Value, 0, 100);
+    }
+
+    void SampleDiskSpace()
+    {
+        try
+        {
+            string root = Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\";
+            var drive = new DriveInfo(root);
+            if (!drive.IsReady) return;
+
+            DiskTotalGb = drive.TotalSize / 1024.0 / 1024.0 / 1024.0;
+            DiskFreeGb = drive.AvailableFreeSpace / 1024.0 / 1024.0 / 1024.0;
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"Perf: disk space unavailable ({ex.Message}).");
+        }
+    }
+
     // ------------------------------------------------------ temperature (WMI)
 
     void SampleTemperature()
@@ -285,6 +456,11 @@ sealed class PerfService : IDisposable
         {
             try { PdhCloseQuery(_query); } catch { }
             _query = IntPtr.Zero;
+        }
+        if (_sysQuery != IntPtr.Zero)
+        {
+            try { PdhCloseQuery(_sysQuery); } catch { }
+            _sysQuery = IntPtr.Zero;
         }
     }
 
@@ -330,6 +506,9 @@ sealed class PerfService : IDisposable
 
     [DllImport("pdh.dll")]
     static extern uint PdhGetFormattedCounterArray(IntPtr counter, uint format, out uint size, out uint count, IntPtr buffer);
+
+    [DllImport("pdh.dll")]
+    static extern uint PdhGetFormattedCounterValue(IntPtr counter, uint format, out uint type, out PdhFormatted value);
 
     [DllImport("pdh.dll")]
     static extern uint PdhCloseQuery(IntPtr query);

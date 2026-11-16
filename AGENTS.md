@@ -52,7 +52,9 @@ OpenIsland/
 │   ├── MainWindow.Clipboard.cs    # Карточка истории буфера обмена
 │   ├── OpenCodeService.cs         # REST/SSE клиент OpenCode, пейринг, DPAPI-токен
 │   ├── OpenCodeSelfTest.cs        # Диагностический прогон (--selftest)
-│   ├── PerfService.cs             # CPU/RAM/сеть/GPU/температура (опрос по требованию)
+│   ├── SessionList.cs             # Чистая логика списка сессий (порядок, поиск, время)
+│   ├── PerfService.cs             # CPU/ядра/диск, RAM, сеть, GPU, температура (опрос по требованию)
+│   ├── PerfMath.cs                # Агрегация загрузки ядер CPU для столбиков мониторинга
 │   ├── ClipboardService.cs        # История буфера обмена (только в памяти)
 │   ├── Chime.cs                   # Звук завершения задачи (staplebops-01, MIT)
 │   ├── Settings.cs                # Настройки в реестре

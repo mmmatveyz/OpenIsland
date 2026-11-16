@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace OpenIsland;
@@ -23,6 +26,11 @@ public partial class MainWindow
     bool _openCodeBusy;
     bool _openCodeSending;
     bool _openCodeDeleteArmed;
+    bool _openCodeSessionsOpen;
+    bool _openCodeSessionsBuilding;
+    string _openCodeSessionsSignature = "";
+    string _openCodeNotice = "";
+    DispatcherTimer? _openCodeNoticeTimeout;
     DispatcherTimer? _openCodeDeleteTimeout;
     DateTime _openCodeBusySinceUtc;
 
@@ -64,7 +72,7 @@ public partial class MainWindow
         if (busy && !_openCodeBusy) _openCodeBusySinceUtc = DateTime.UtcNow;
         if (_openCodeBusy && !busy && online)
         {
-            _chime.Play();
+            if (Settings.TaskChime) _chime.Play();
             NotifyTaskDone(DateTime.UtcNow - _openCodeBusySinceUtc);
         }
         _openCodeBusy = busy;
@@ -76,22 +84,21 @@ public partial class MainWindow
             ? (online ? "Нет активной сессии" : "OpenCode не запущен")
             : title;
 
-        string subtitle = !online && string.IsNullOrWhiteSpace(_openCode.LastError)
-            ? "Нажмите «Запустить OpenCode»"
-            : (string.IsNullOrWhiteSpace(_openCode.LastError) ? _openCode.StatusText : _openCode.LastError);
+        bool error = !string.IsNullOrWhiteSpace(_openCode.LastError);
+        string subtitle = _openCodeNotice.Length > 0
+            ? _openCodeNotice
+            : !online && !error
+                ? "Нажмите «Запустить OpenCode»"
+                : error ? _openCode.LastError : _openCode.StatusText;
         OpenCodeSubText.Text = subtitle;
-        OpenCodeSubText.Foreground = string.IsNullOrWhiteSpace(_openCode.LastError)
-            ? _dim
-            : _orange;
+        OpenCodeSubText.Foreground = error && _openCodeNotice.Length == 0 ? _orange : _dim;
 
         string modelName = _openCode.ModelName;
         OpenCodeModelBadge.Text = modelName;
         OpenCodeModelName.Text = modelName;
 
-        int sessionIndex = _openCode.SelectedSessionIndex;
-        OpenCodeSessionCounter.Text = _openCode.Sessions.Count == 0
-            ? "0 / 0"
-            : $"{sessionIndex + 1} / {_openCode.Sessions.Count}";
+        int sessionCount = _openCode.Sessions.Count;
+        OpenCodeSessionCounter.Text = sessionCount > 1 ? sessionCount.ToString() : "";
 
         string answer = _openCode.LastAssistantText.Trim();
         OpenCodeAnswerBox.Visibility = answer.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -125,6 +132,7 @@ public partial class MainWindow
         }
 
         SetOpenCodeAvailable(online);
+        SyncOpenCodeSessions(online);
 
         string signature = string.Join('|',
             _openCode.SelectedSessionId,
@@ -144,8 +152,7 @@ public partial class MainWindow
     {
         bool editable = online && !_openCodeSending;
 
-        OpenCodePrevSession.IsEnabled = online;
-        OpenCodeNextSession.IsEnabled = online;
+        OpenCodeSessionHeader.IsEnabled = online;
         OpenCodeModelPrev.IsEnabled = online;
         OpenCodeModelNext.IsEnabled = online;
         OpenCodeNewSession.IsEnabled = online;
@@ -201,21 +208,173 @@ public partial class MainWindow
         ShowPanel(Panel.OpenCode);
     }
 
+    void PlayerRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (_media.HasTrack) ShowPanel(Panel.Player);
+    }
+
     void OpenCodeBack_Click(object sender, RoutedEventArgs e)
     {
+        CloseOpenCodeSessions();
         ShowPanel(Panel.Menu);
     }
 
-    void OpenCodePrevSession_Click(object sender, RoutedEventArgs e)
+    void OpenCodeSessionHeader_Click(object sender, RoutedEventArgs e)
     {
-        _openCode.SelectSession(-1);
+        if (!_openCode.IsConnected) return;
+        if (_openCodeSessionsOpen) CloseOpenCodeSessions();
+        else OpenOpenCodeSessions();
+    }
+
+    void OpenCodeSessionClose_Click(object sender, RoutedEventArgs e) => CloseOpenCodeSessions();
+
+    void OpenCodeSessionScrim_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        CloseOpenCodeSessions();
+        e.Handled = true;
+    }
+
+    void OpenCodeSessionSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (OpenCodeSessionSearchHint != null)
+        {
+            OpenCodeSessionSearchHint.Visibility = string.IsNullOrEmpty(OpenCodeSessionSearch.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+        }
+
+        if (_openCodeSessionsBuilding || !_openCodeSessionsOpen) return;
+        RebuildSessionRows();
+    }
+
+    void OpenCodeSessionRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string id }) return;
+        CloseOpenCodeSessions();
+        _openCode.SelectSession(id);
         SyncOpenCodeUI();
     }
 
-    void OpenCodeNextSession_Click(object sender, RoutedEventArgs e)
+    void OpenOpenCodeSessions()
     {
-        _openCode.SelectSession(1);
-        SyncOpenCodeUI();
+        _openCodeSessionsOpen = true;
+        _openCodeSessionsSignature = "";
+        RebuildSessionRows();
+        _openCodeSessionsSignature = SessionSignature();
+        OpenCodeSessionOverlay.Visibility = Visibility.Visible;
+        OpenCodeSessionChevron.RenderTransform = new RotateTransform(90);
+    }
+
+    void CloseOpenCodeSessions()
+    {
+        _openCodeSessionsOpen = false;
+        OpenCodeSessionOverlay.Visibility = Visibility.Collapsed;
+        OpenCodeSessionChevron.RenderTransform = new RotateTransform(0);
+    }
+
+    /// <summary>Перестраивает список, только пока он открыт и его содержимое изменилось.</summary>
+    void SyncOpenCodeSessions(bool online)
+    {
+        if (!_openCodeSessionsOpen) return;
+        if (!online)
+        {
+            CloseOpenCodeSessions();
+            return;
+        }
+
+        string signature = SessionSignature();
+        if (signature == _openCodeSessionsSignature) return;
+        _openCodeSessionsSignature = signature;
+        RebuildSessionRows();
+    }
+
+    string SessionSignature() => string.Join('|',
+        _openCode.Sessions.Select(session => $"{session.Id}:{session.UpdatedAt}:{session.IsRunning}:{session.Title}"));
+
+    void RebuildSessionRows()
+    {
+        if (OpenCodeSessionList == null) return;
+
+        _openCodeSessionsBuilding = true;
+        try
+        {
+            IReadOnlyList<OpenCodeSessionInfo> all = _openCode.Sessions;
+            bool searchable = all.Count >= SessionList.SearchThreshold;
+            OpenCodeSessionSearchBox.Visibility = searchable ? Visibility.Visible : Visibility.Collapsed;
+            if (!searchable && OpenCodeSessionSearch.Text.Length > 0) OpenCodeSessionSearch.Text = "";
+
+            List<OpenCodeSessionInfo> rows = SessionList.Filter(all, searchable ? OpenCodeSessionSearch.Text : "");
+            string? currentId = _openCode.SelectedSessionId;
+            DateTime now = DateTime.UtcNow;
+
+            OpenCodeSessionList.Children.Clear();
+            foreach (OpenCodeSessionInfo session in rows)
+                OpenCodeSessionList.Children.Add(BuildSessionRow(session, currentId, now));
+
+            OpenCodeSessionEmpty.Text = all.Count == 0 ? "Сессий пока нет" : "Ничего не найдено";
+            OpenCodeSessionEmpty.Visibility = rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+        finally
+        {
+            _openCodeSessionsBuilding = false;
+        }
+    }
+
+    Button BuildSessionRow(OpenCodeSessionInfo session, string? currentId, DateTime now)
+    {
+        bool current = session.Id == currentId;
+        string folder = SessionList.FolderName(session.Directory);
+        string time = SessionList.RelativeTime(session.UpdatedAt, now);
+        string detail = folder.Length == 0 ? time : time.Length == 0 ? folder : $"{folder} · {time}";
+        if (session.IsRunning && !current)
+            detail = detail.Length == 0 ? "работает" : "работает · " + detail;
+
+        Ellipse dot = new()
+        {
+            Width = 7,
+            Height = 7,
+            Margin = new Thickness(0, 0, 9, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Fill = current ? _indigo : session.IsRunning ? _orange : Brushes.Transparent,
+        };
+
+        StackPanel text = new() { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock
+        {
+            Text = session.Title,
+            FontSize = 12.5,
+            Foreground = Brushes.White,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        if (detail.Length > 0)
+        {
+            text.Children.Add(new TextBlock
+            {
+                Text = detail,
+                FontSize = 10.5,
+                Foreground = _dim,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+                Margin = new Thickness(0, 1, 0, 0),
+            });
+        }
+
+        Grid content = new();
+        content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        Grid.SetColumn(dot, 0);
+        Grid.SetColumn(text, 1);
+        content.Children.Add(dot);
+        content.Children.Add(text);
+
+        Button row = new()
+        {
+            Style = (Style)FindResource("SessionRowButton"),
+            Tag = session.Id,
+            Content = content,
+            Margin = new Thickness(0, 0, 0, 2),
+        };
+        row.Click += OpenCodeSessionRow_Click;
+        return row;
     }
 
     void ArmDeleteSession()
@@ -237,6 +396,27 @@ public partial class MainWindow
         OpenCodeDeleteSession.ClearValue(Control.BackgroundProperty);
         OpenCodeDeleteSession.ClearValue(Control.ForegroundProperty);
         OpenCodeDeleteSession.ToolTip = "Удалить текущую сессию";
+    }
+
+    /// <summary>Короткое сообщение под заголовком сессии, которое гаснет само.</summary>
+    void ShowOpenCodeNotice(string text)
+    {
+        _openCodeNotice = text;
+
+        if (_openCodeNoticeTimeout == null)
+        {
+            _openCodeNoticeTimeout = new DispatcherTimer { Interval = TimeSpan.FromSeconds(4) };
+            _openCodeNoticeTimeout.Tick += (_, _) =>
+            {
+                _openCodeNoticeTimeout!.Stop();
+                _openCodeNotice = "";
+                SyncOpenCodeUI();
+            };
+        }
+
+        _openCodeNoticeTimeout.Stop();
+        _openCodeNoticeTimeout.Start();
+        SyncOpenCodeUI();
     }
 
     async void OpenCodeDeleteSession_Click(object sender, RoutedEventArgs e)
@@ -262,6 +442,9 @@ public partial class MainWindow
         }
 
         await _openCode.RefreshAsync();
+        ShowOpenCodeNotice(string.IsNullOrWhiteSpace(_openCode.SelectedSessionId)
+            ? "Сессия удалена"
+            : "Сессия удалена — выбрана другая");
         SyncOpenCodeUI();
     }
 

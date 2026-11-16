@@ -64,6 +64,11 @@ public partial class MainWindow
         TitleBig.Text = ToastTitle.Text = title;
         ArtistBig.Text = ToastArtist.Text = _sourceName.Length > 0 ? _sourceName + " · " + artist : artist;
 
+        bool track = _media.HasTrack;
+        MenuPlayerRow.IsEnabled = track;
+        MenuPlayerRow.Opacity = track ? 1 : 0.45;
+        MenuPlayerTrack.Text = track ? _media.Name : "";
+
         if (!ReferenceEquals(_cover, _media.Art))
         {
             _cover = _media.Art;

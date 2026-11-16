@@ -36,14 +36,14 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 344, 34),
+        [View.Menu] = new(300, 384, 34),
         [View.Settings] = new(320, 416, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(246, 34, 17),
         [View.OpenCodeBig] = new(380, 406, 36),
-        [View.Perf] = new(340, 330, 34),
+        [View.Perf] = new(340, 410, 34),
         [View.Clipboard] = new(340, 430, 34),
     };
 
@@ -431,7 +431,7 @@ public partial class MainWindow : Window
     {
         View target = TargetView();
         bool changed = target != _view;
-        _perf.SetActive(target == View.Perf);
+        _perf.SetActive(target == View.Perf, PerfView.IsMouseOver);
         if (changed) MorphTo(target);
 
         SyncEq();

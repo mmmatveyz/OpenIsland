@@ -921,6 +921,33 @@ public sealed partial class OpenCodeService : IDisposable
         }
     }
 
+    /// <summary>Выбирает сессию по id. Возвращает false, если такая сессия не найдена.</summary>
+    public bool SelectSession(string sessionId)
+    {
+        OpenCodeSessionInfo? selected = Sessions.FirstOrDefault(s => s.Id == sessionId);
+        if (selected == null) return false;
+
+        lock (_gate)
+        {
+            _sessionId = selected.Id;
+            _sessionTitle = selected.Title;
+            _sessionDirectory = selected.Directory;
+            _sessionModelId = selected.ModelId;
+            _sessionModelProviderId = selected.ModelProviderId;
+            _isBusy = selected.IsRunning;
+            _pendingPermission = null;
+            _streamText.Clear();
+            _lastAssistantText = "";
+            _lastError = "";
+            _needMessages = true;
+            UpdateStatusText();
+        }
+
+        Notify(force: true);
+        _ = RefreshAsync();
+        return true;
+    }
+
     public void SelectSession(int direction)
     {
         IReadOnlyList<OpenCodeSessionInfo> sessions = Sessions;
@@ -1428,9 +1455,12 @@ public sealed partial class OpenCodeService : IDisposable
     {
         string detail = status switch
         {
-            0 => "нет связи с OpenCode",
+            0 => body.Trim().Equals("timeout", StringComparison.OrdinalIgnoreCase)
+                ? "OpenCode не отвечает"
+                : "нет связи с OpenCode",
             401 => "требуется авторизация",
             404 => "сессия не найдена",
+            409 => "сессия занята",
             _ => $"код {status}"
         };
 

@@ -36,7 +36,7 @@ static class Settings
 
     static bool _network = ReadSwitch(nameof(Network)), _hideFullscreen = ReadSwitch(nameof(HideFullscreen));
     static bool _rim = ReadSwitch(nameof(Rim)), _appVolume = ReadSwitch(nameof(AppVolume));
-    static bool _taskToast = ReadSwitch(nameof(TaskToast));
+    static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
     static bool _dots = ReadSwitch(nameof(Dots), false);
     static bool _glass = ReadSwitch(nameof(Glass), false);
@@ -105,6 +105,13 @@ static class Settings
     {
         get => _taskToast;
         set => Write(nameof(TaskToast), _taskToast = value);
+    }
+
+    /// <summary>Звук завершения задачи агента (независим от тоста).</summary>
+    public static bool TaskChime
+    {
+        get => _taskChime;
+        set => Write(nameof(TaskChime), _taskChime = value);
     }
 
     /// <summary>Вести историю буфера обмена (только в памяти, ничего не сохраняется на диск).</summary>

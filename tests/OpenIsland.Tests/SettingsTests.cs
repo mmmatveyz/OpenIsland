@@ -38,4 +38,28 @@ public class SettingsTests
 
         if (accent is { } color) Assert.Equal((byte)0xFF, color.A);
     }
+
+    /// <summary>
+    /// Тумблер звука завершения задачи должен переживать запись-чтение
+    /// (и не зависеть от тумблера уведомлений). Значение восстанавливается.
+    /// </summary>
+    [Fact]
+    public void TaskChime_RoundTripsIndependently()
+    {
+        bool originalChime = Settings.TaskChime;
+        bool originalToast = Settings.TaskToast;
+
+        try
+        {
+            Settings.TaskChime = !originalChime;
+            Settings.TaskToast = originalToast;
+
+            Assert.Equal(!originalChime, Settings.TaskChime);
+            Assert.Equal(originalToast, Settings.TaskToast);
+        }
+        finally
+        {
+            Settings.TaskChime = originalChime;
+        }
+    }
 }

@@ -75,6 +75,12 @@ public partial class MainWindow
         UpdateSwitches(true);
     }
 
+    void TaskChime_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.TaskChime = !Settings.TaskChime;
+        UpdateSwitches(true);
+    }
+
     void Clipboard_Click(object sender, RoutedEventArgs e)
     {
         Settings.Clipboard = !Settings.Clipboard;
@@ -96,6 +102,7 @@ public partial class MainWindow
         AppVolumeSwitch.Set(Settings.AppVolume, animate);
         NetworkSwitch.Set(Settings.Network, animate);
         TaskToastSwitch.Set(Settings.TaskToast, animate);
+        TaskChimeSwitch.Set(Settings.TaskChime, animate);
         ClipboardSwitch.Set(Settings.Clipboard, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
