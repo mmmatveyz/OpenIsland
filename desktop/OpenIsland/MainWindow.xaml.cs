@@ -14,9 +14,9 @@ namespace OpenIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -37,12 +37,14 @@ public partial class MainWindow : Window
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
         [View.Menu] = new(300, 416, 34),
-        [View.Settings] = new(320, 374, 34),
+        [View.Settings] = new(320, 416, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(246, 34, 17),
         [View.OpenCodeBig] = new(380, 406, 36),
+        [View.Perf] = new(340, 330, 34),
+        [View.Clipboard] = new(340, 430, 34),
     };
 
     readonly record struct MediaSpot(
@@ -61,7 +63,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard];
 
     static readonly View[] SettingsPages = [View.Update];
 
@@ -140,6 +142,8 @@ public partial class MainWindow : Window
             [View.Loading] = LoadingView,
             [View.OpenCode] = OpenCodeView,
             [View.OpenCodeBig] = OpenCodeBigView,
+            [View.Perf] = PerfView,
+            [View.Clipboard] = ClipboardView,
         };
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
@@ -166,10 +170,14 @@ public partial class MainWindow : Window
         _media.Changed += OnMediaChanged;
         _network = new NetworkService(Dispatcher);
         _network.Changed += OnNetworkChanged;
+        _perf = new PerfService(Dispatcher);
+        _perf.Changed += OnPerfChanged;
         _updater.Changed += RefreshUpdatePage;
 
         PrepareViews();
         InitOpenCode();
+        InitClipboard();
+        InitPerf();
         ApplyTimerTint();
         TuneDragSprings(false);
         _ticker.Tick += (_, _) => OnTick();
@@ -218,6 +226,8 @@ public partial class MainWindow : Window
         if (_windowSource != null)
         {
             _windowSource.AddHook(OnHotkeyMessage);
+            _windowSource.AddHook(OnClipboardMessage);
+            Native.WatchClipboard(_hwnd, true);
             _hotkeyRegistered = Native.RegisterOpenCodeHotkey(_hwnd, OpenCodeHotkeyId);
             App.LogDebug(_hotkeyRegistered
                 ? "Global hotkey Ctrl+Alt+O registered."
@@ -233,8 +243,11 @@ public partial class MainWindow : Window
             _hotkeyRegistered = false;
         }
         _windowSource?.RemoveHook(OnHotkeyMessage);
+        _windowSource?.RemoveHook(OnClipboardMessage);
+        if (_hwnd != IntPtr.Zero) Native.WatchClipboard(_hwnd, false);
         _openCodeReady = false;
         _openCode.Dispose();
+        _perf.Dispose();
         DisposeTray();
         base.OnClosed(e);
     }
@@ -400,6 +413,8 @@ public partial class MainWindow : Window
             Panel.Update => View.Update,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
+            Panel.Perf => View.Perf,
+            Panel.Clipboard => View.Clipboard,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
             Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (_openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
@@ -415,6 +430,7 @@ public partial class MainWindow : Window
     {
         View target = TargetView();
         bool changed = target != _view;
+        _perf.SetActive(target == View.Perf);
         if (changed) MorphTo(target);
 
         SyncEq();

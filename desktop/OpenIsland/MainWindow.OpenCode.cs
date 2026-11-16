@@ -11,6 +11,9 @@ public partial class MainWindow
 {
     const string PromptPlaceholder = "Дать задачу агенту...";
 
+    /// <summary>Задачи короче этого порога уведомлением не сопровождаем — только звуком.</summary>
+    static readonly TimeSpan TaskToastAfter = TimeSpan.FromSeconds(15);
+
     static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
     static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
 
@@ -20,6 +23,7 @@ public partial class MainWindow
     bool _openCodeReady;
     bool _openCodeBusy;
     bool _openCodeSending;
+    DateTime _openCodeBusySinceUtc;
 
     static Brush Frozen(Color color)
     {
@@ -54,7 +58,12 @@ public partial class MainWindow
 
         bool online = _openCode.IsConnected;
         bool busy = _openCode.IsBusy;
-        if (_openCodeBusy && !busy && online) _chime.Play();
+        if (busy && !_openCodeBusy) _openCodeBusySinceUtc = DateTime.UtcNow;
+        if (_openCodeBusy && !busy && online)
+        {
+            _chime.Play();
+            NotifyTaskDone(DateTime.UtcNow - _openCodeBusySinceUtc);
+        }
         _openCodeBusy = busy;
 
         OpenCodeCompactText.Text = _openCode.StatusText;
@@ -153,6 +162,17 @@ public partial class MainWindow
         elapsed.TotalHours >= 1
             ? $"{(int)elapsed.TotalHours}:{elapsed.Minutes:D2}:{elapsed.Seconds:D2}"
             : $"{(int)elapsed.TotalMinutes}:{elapsed.Seconds:D2}";
+
+    /// <summary>Системное уведомление о завершении длинной задачи агента (если включено в настройках).</summary>
+    void NotifyTaskDone(TimeSpan duration)
+    {
+        if (!Settings.TaskToast || duration < TaskToastAfter || !_trayAdded) return;
+
+        string title = string.IsNullOrWhiteSpace(_openCode.SessionTitle) ? "OpenCode" : _openCode.SessionTitle;
+        string text = $"Агент закончил за {FormatElapsed(duration)}";
+        Native.ShowBalloon(_hwnd, TrayId, title, text);
+        App.LogDebug($"Toast: task finished in {FormatElapsed(duration)}.");
+    }
 
     void UpdateOpenCodeTimer()
     {

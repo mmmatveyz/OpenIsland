@@ -142,6 +142,30 @@
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
 
+        <Style x:Key="ThinScrollBar" TargetType="ScrollBar">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Grid>
+                            <Track x:Name="PART_Track" IsDirectionReversed="True">
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#55FFFFFF" CornerRadius="4" Margin="2,0"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <local:ChipCorners x:Key="ChipCorners"/>
 
         <Style x:Key="ChipButton" TargetType="Button">
@@ -741,6 +765,26 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
+                        <Button Style="{StaticResource RowButton}" Click="ClipboardRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Буфер обмена"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MenuClipboardCount" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="PerfRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Мониторинг ПК"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MenuPerfCpu" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
                         <Button Style="{StaticResource RowButton}" Click="TimerRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
@@ -774,7 +818,7 @@
                     </local:RowList>
                 </Grid>
 
-                <Grid x:Name="SettingsView" Width="320" Height="334" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="SettingsView" Width="320" Height="376" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,8,10,0">
                         <Button Style="{StaticResource BackButton}" Content="НАСТРОЙКИ" Click="SettingsBack_Click"/>
                         <Button Style="{StaticResource RowButton}" Click="Rim_Click">
@@ -796,6 +840,20 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Wifi"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Уведомления о сети"/>
                                 <local:Toggle x:Name="NetworkSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="TaskToast_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bell"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Уведомления о задачах"/>
+                                <local:Toggle x:Name="TaskToastSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="Clipboard_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="История буфера"/>
+                                <local:Toggle x:Name="ClipboardSwitch" Style="{StaticResource RowSwitch}"/>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RowButton}" Click="Fullscreen_Click">
@@ -1082,29 +1140,7 @@
                             <Border x:Name="OpenCodeAnswerBox" Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="14" Padding="10,8" Margin="0,0,0,8" Visibility="Collapsed">
                                 <ScrollViewer x:Name="OpenCodeAnswerScroll" MaxHeight="132" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                     <ScrollViewer.Resources>
-                                        <Style TargetType="ScrollBar">
-                                            <Setter Property="Width" Value="8"/>
-                                            <Setter Property="Background" Value="Transparent"/>
-                                            <Setter Property="Template">
-                                                <Setter.Value>
-                                                    <ControlTemplate TargetType="ScrollBar">
-                                                        <Grid>
-                                                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                                                <Track.Thumb>
-                                                                    <Thumb>
-                                                                        <Thumb.Template>
-                                                                            <ControlTemplate TargetType="Thumb">
-                                                                                <Border Background="#55FFFFFF" CornerRadius="4" Margin="2,0"/>
-                                                                            </ControlTemplate>
-                                                                        </Thumb.Template>
-                                                                    </Thumb>
-                                                                </Track.Thumb>
-                                                            </Track>
-                                                        </Grid>
-                                                    </ControlTemplate>
-                                                </Setter.Value>
-                                            </Setter>
-                                        </Style>
+                                        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
                                     </ScrollViewer.Resources>
                                     <TextBlock x:Name="OpenCodeAnswerText" FontSize="12.5" Foreground="#E5E5EA" TextWrapping="Wrap" LineHeight="18" Margin="0,0,6,0"/>
                                 </ScrollViewer>
@@ -1131,6 +1167,87 @@
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="PerfView" Width="340" Height="330" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="16,14">
+                        <StackPanel VerticalAlignment="Top">
+                            <Grid Height="30" Margin="0,0,0,10">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="PerfBack_Click" ToolTip="Назад"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="МОНИТОРИНГ ПК" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="PerfState" Text="1 с" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <StackPanel Margin="2,0,2,12">
+                                <Grid>
+                                    <TextBlock Text="Процессор" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfCpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                    <Rectangle x:Name="PerfCpuBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Green}" HorizontalAlignment="Left"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Margin="2,0,2,12">
+                                <Grid>
+                                    <TextBlock Text="Память" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfRamText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                    <Rectangle x:Name="PerfRamBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Indigo}" HorizontalAlignment="Left"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Margin="2,0,2,12">
+                                <Grid>
+                                    <TextBlock Text="Видеокарта" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfGpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                    <Rectangle x:Name="PerfGpuBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Orange}" HorizontalAlignment="Left"/>
+                                </Border>
+                            </StackPanel>
+
+                            <Grid Margin="2,2,2,12">
+                                <TextBlock Text="Сеть" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PerfNetText" Text="↓ 0 · ↑ 0" FontSize="12.5" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                            </Grid>
+
+                            <Grid Margin="2,0,2,0">
+                                <TextBlock Text="Температура" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PerfTempText" Text="—" FontSize="12.5" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="ClipboardView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="ClipboardBack_Click" ToolTip="Назад"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="БУФЕР ОБМЕНА" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button x:Name="ClipboardClear" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="Очистить" Click="ClipboardClear_Click"/>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                </ScrollViewer.Resources>
+                                <StackPanel x:Name="ClipboardList"/>
+                            </ScrollViewer>
+                            <TextBlock x:Name="ClipboardEmpty" Grid.Row="1" Text="Скопируйте что-нибудь &#8212; история появится здесь"
+                                       FontSize="12" Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                       MaxWidth="240" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        </Grid>
                     </Border>
                 </Grid>
 </Grid>

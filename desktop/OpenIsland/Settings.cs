@@ -36,6 +36,8 @@ static class Settings
 
     static bool _network = ReadSwitch(nameof(Network)), _hideFullscreen = ReadSwitch(nameof(HideFullscreen));
     static bool _rim = ReadSwitch(nameof(Rim)), _appVolume = ReadSwitch(nameof(AppVolume));
+    static bool _taskToast = ReadSwitch(nameof(TaskToast));
+    static bool _clipboard = ReadSwitch(nameof(Clipboard));
     static bool _dots = ReadSwitch(nameof(Dots), false);
     static bool _glass = ReadSwitch(nameof(Glass), false);
     static Backdrop _backdrop = (Backdrop)Math.Clamp(Read(nameof(Backdrop), 0), 0, (int)Backdrop.MatrixAndStars);
@@ -97,6 +99,19 @@ static class Settings
     {
         get => _hideFullscreen;
         set => Write(nameof(HideFullscreen), _hideFullscreen = value);
+    }
+
+    public static bool TaskToast
+    {
+        get => _taskToast;
+        set => Write(nameof(TaskToast), _taskToast = value);
+    }
+
+    /// <summary>Вести историю буфера обмена (только в памяти, ничего не сохраняется на диск).</summary>
+    public static bool Clipboard
+    {
+        get => _clipboard;
+        set => Write(nameof(Clipboard), _clipboard = value);
     }
 
     public static int Scale

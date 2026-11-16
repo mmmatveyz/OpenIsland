@@ -93,8 +93,8 @@
 
 Состояния UI описаны двумя перечислениями в `MainWindow.xaml.cs`:
 
-- `View` — конкретный визуальный экран (`Idle`, `Sound`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `OpenCodeBig`, ...).
-- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Menu`, `Settings`, `OpenCode`, ...).
+- `View` — конкретный визуальный экран (`Idle`, `Sound`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `OpenCodeBig`, `Perf`, `Clipboard`, ...).
+- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Menu`, `Settings`, `OpenCode`, `Perf`, `Clipboard`, ...).
 
 `TargetView()` выбирает экран по приоритету: принудительный view → активная панель → активный агент OpenCode → медиа → звук (`_sounding`) → таймер → idle. `ShowPanel()`/`SelectPanel()` переключают панель и анимируют переход.
 
@@ -118,7 +118,9 @@
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер, секундомер, будильник |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
 | Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
-| OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: сессии, модели, промпты, разрешения, стриминг, звук завершения задачи |
+| OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: сессии, модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
+| Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs` | CPU (`GetSystemTimes`), RAM (`GlobalMemoryStatusEx`), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта |
+| Буфер обмена | `MainWindow.Clipboard.cs`, `ClipboardService.cs` | История последних 30 фрагментов (в памяти), захват по `WM_CLIPBOARDUPDATE`, вставка в один клик |
 | Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка релизов [`mmmatveyz/OpenIsland`](https://github.com/mmmatveyz/OpenIsland), скачивание ассета `OpenIsland.exe`, сверка `sha256`-дайджеста, подмена файла с автоперезапуском |
 
 > Апстрим-модули «Тексты песен», «Запись OBS», «Полка файлов», «Погода» и «QR-код» вырезаны из проекта (см. `docs/PRODUCT.md` §2.5).
@@ -178,7 +180,8 @@
 - блок ответа агента (живой текст и финальный ответ из истории сообщений);
 - панель разрешений «Разрешить / Отклонить»;
 - кнопка «Стоп» для прерывания выполнения;
-- звук завершения: при переходе агента из «работает» в «готово» играет `Chime` (звук OpenCode, MIT). MP3 встроен в exe (`Resource`) и один раз выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3`, потому что `MediaPlayer` умеет открывать только файл на диске.
+- звук завершения: при переходе агента из «работает» в «готово» играет `Chime` (звук OpenCode, MIT). MP3 встроен в exe (`Resource`) и один раз выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3`, потому что `MediaPlayer` умеет открывать только файл на диске;
+- тост о завершении: если задача выполнялась дольше `TaskToastAfter` (15 с), вместе со звуком показывается уведомление Windows через иконку трея (`Shell_NotifyIcon` + `NIF_INFO`, `Native.ShowBalloon`); выключается настройкой `Settings.TaskToast`.
 
 Компактная капсула `View.OpenCode` показывает статус агента; при работе агента островок автоматически переходит в это состояние.
 
@@ -196,6 +199,8 @@
 - `OpenCodeService` использует отдельный `HttpClient` с бесконечным таймаутом для SSE и обычный клиент с таймаутом 10 с для REST.
 - Опрос OpenCode — раз в 2 секунды; при отсутствии соединения интервал сохраняется, но discovery выполняется не чаще раза в 15 секунд.
 - Тяжёлые визуальные эффекты включаются только для видимых состояний; фоновые таймеры останавливаются при скрытии островка.
+- `PerfService` опрашивается **только пока открыта карточка мониторинга**: `UpdateView` вызывает `SetActive(target == View.Perf)`, и пока карточка закрыта, таймер спит (`Timeout.Infinite`). Замеры идут на фоновом потоке, готовые значения приходят в UI через `Dispatcher`.
+- Захват буфера обмена — это событие `WM_CLIPBOARDUPDATE`, а не опрос: окно получает сообщение из системы (`Native.WatchClipboard`) и только тогда читает текст. Подписка снимается в `OnClosed`.
 - Логирование (`App.LogDebug`) — в `%LOCALAPPDATA%\OpenIsland\logs\app.log` с ротацией при 1 МБ; в релизе — только значимые события и ошибки.
 
 ---
@@ -207,6 +212,7 @@
 3. **Логи** не содержат токенов, cookies и приватного содержимого; ошибки API логируются в усечённом виде.
 4. **Сеть** — только локальный демон `127.0.0.1`. Внешние интеграции (погода, тексты песен) из проекта удалены; единственный внешний запрос — проверка релизов на GitHub (`api.github.com`), анонимно, без передачи данных пользователя.
 5. **Окно** не активируется и не появляется в панели задач, что снижает риск перехвата ввода.
+6. **Буфер обмена** хранится только в памяти процесса (`ClipboardService`): фрагменты не пишутся на диск, не уходят в логи и не передаются по сети; выключатель `Settings.Clipboard` очищает историю.
 
 ---
 
@@ -219,4 +225,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
 - Проект: `desktop/OpenIsland/OpenIsland.csproj`, имя сборки — `OpenIsland`, пространство имён — `OpenIsland`.
 - Вывод: `bin/OpenIsland/OpenIsland.exe`.
 - Если .NET 8 SDK не найден, `scripts/build.ps1` устанавливает его в `.dotnet/`.
-- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--selftest` (диагностика).
+- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--view Perf` / `--view Clipboard` (карточки мониторинга и буфера), `--selftest` (диагностика).

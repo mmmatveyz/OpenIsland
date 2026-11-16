@@ -22,6 +22,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Fonts\*.otf;Fonts\*.ttf" />
     <Resource Include="Gadgets\*.png" />
     <Resource Include="Assets\*.ico;Assets\*.mp3" />

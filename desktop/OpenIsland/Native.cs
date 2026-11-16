@@ -40,9 +40,11 @@ static class Native
     static readonly int ShellMessage = (int)RegisterWindowMessage("SHELLHOOK");
     public static readonly int TrayCallback = (int)RegisterWindowMessage("OpenIsland.TrayCallback");
 
-    const uint NIM_ADD = 0, NIM_DELETE = 2;
-    const uint NIF_MESSAGE = 1, NIF_ICON = 2, NIF_TIP = 4;
+    const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2;
+    const uint NIF_MESSAGE = 1, NIF_ICON = 2, NIF_TIP = 4, NIF_INFO = 0x10;
+    const uint NIIF_INFO = 1;
     public const int WM_NULL = 0, WM_LBUTTONDBLCLK = 0x0203, WM_RBUTTONUP = 0x0205, WM_CONTEXTMENU = 0x007B;
+    public const int WM_CLIPBOARDUPDATE = 0x031D;
     public const uint MF_STRING = 0, MF_SEPARATOR = 0x800;
     public const uint TPM_RIGHTBUTTON = 0x0002, TPM_RETURNCMD = 0x0100;
 
@@ -126,6 +128,16 @@ static class Native
 
     [DllImport("user32.dll")]
     static extern bool RegisterShellHookWindow(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+    [DllImport("user32.dll")]
+    static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+
+    /// <summary>Подписка на изменения буфера обмена (сообщение <see cref="WM_CLIPBOARDUPDATE"/>).</summary>
+    public static bool WatchClipboard(IntPtr hwnd, bool on)
+        => on ? AddClipboardFormatListener(hwnd) : RemoveClipboardFormatListener(hwnd);
 
     [DllImport("user32.dll")]
     static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint key);
@@ -370,6 +382,26 @@ static class Native
         };
         Shell_NotifyIcon(NIM_DELETE, ref data);
     }
+
+    /// <summary>Показывает системное уведомление через значок в трее (Windows 10/11 рисует его как тост).</summary>
+    public static void ShowBalloon(IntPtr hwnd, uint id, string title, string text)
+    {
+        var data = new NOTIFYICONDATA
+        {
+            cbSize = Marshal.SizeOf<NOTIFYICONDATA>(),
+            hWnd = hwnd,
+            uID = id,
+            uFlags = NIF_INFO,
+            szTip = "",
+            szInfo = Truncate(text, 255),
+            szInfoTitle = Truncate(title, 63),
+            dwInfoFlags = NIIF_INFO,
+        };
+        Shell_NotifyIcon(NIM_MODIFY, ref data);
+    }
+
+    static string Truncate(string value, int max)
+        => value.Length <= max ? value : value[..max];
 
     public static IntPtr NewMenu() => CreatePopupMenu();
 

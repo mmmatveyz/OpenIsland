@@ -69,6 +69,20 @@ public partial class MainWindow
         UpdateSwitches(true);
     }
 
+    void TaskToast_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.TaskToast = !Settings.TaskToast;
+        UpdateSwitches(true);
+    }
+
+    void Clipboard_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.Clipboard = !Settings.Clipboard;
+        if (!Settings.Clipboard) _clipboard.Clear();
+        UpdateSwitches(true);
+        RefreshClipboardUI();
+    }
+
     void Fullscreen_Click(object sender, RoutedEventArgs e)
     {
         Settings.HideFullscreen = !Settings.HideFullscreen;
@@ -81,6 +95,8 @@ public partial class MainWindow
         RimSwitch.Set(Settings.Rim, animate);
         AppVolumeSwitch.Set(Settings.AppVolume, animate);
         NetworkSwitch.Set(Settings.Network, animate);
+        TaskToastSwitch.Set(Settings.TaskToast, animate);
+        ClipboardSwitch.Set(Settings.Clipboard, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
     }
