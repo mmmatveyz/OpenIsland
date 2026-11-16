@@ -29,7 +29,7 @@ static class Native
     const int HSHELL_APPCOMMAND = 12;
     const int WM_HOTKEY = 0x0312;
     const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
-    const uint VK_O = 0x4F;
+    const uint VK_O = 0x4F, VK_I = 0x49;
     const ulong WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED = 0x0D83063EA3BF1C75;
     const byte AC_LINE_ONLINE = 1, BATTERY_FLAG_NO_BATTERY = 128, BATTERY_FLAG_UNKNOWN = 255, BATTERY_PERCENT_MAX = 100;
     const int ClassNameCapacity = 64;
@@ -45,7 +45,7 @@ static class Native
     const uint NIIF_INFO = 1, NIIF_NOSOUND = 0x10;
     public const int WM_NULL = 0, WM_LBUTTONDBLCLK = 0x0203, WM_RBUTTONUP = 0x0205, WM_CONTEXTMENU = 0x007B;
     public const int WM_CLIPBOARDUPDATE = 0x031D;
-    public const uint MF_STRING = 0, MF_SEPARATOR = 0x800;
+    public const uint MF_STRING = 0, MF_SEPARATOR = 0x800, MF_CHECKED = 0x0008;
     public const uint TPM_RIGHTBUTTON = 0x0002, TPM_RETURNCMD = 0x0100;
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -191,6 +191,12 @@ static class Native
 
     public static void UnregisterOpenCodeHotkey(IntPtr hwnd, int id) => UnregisterHotKey(hwnd, id);
 
+    /// <summary>Регистрирует глобальный хоткей Ctrl+Alt+I (сквозной режим, без автоповтора).</summary>
+    public static bool RegisterClickThroughHotkey(IntPtr hwnd, int id) =>
+        RegisterHotKey(hwnd, id, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_I);
+
+    public static void UnregisterHotkey(IntPtr hwnd, int id) => UnregisterHotKey(hwnd, id);
+
     public static bool IsHotkeyMessage(int message, IntPtr wParam, int id) =>
         message == WM_HOTKEY && wParam.ToInt64() == id;
 
@@ -208,6 +214,17 @@ static class Native
         long style = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
         if (activatable) style &= ~WS_EX_NOACTIVATE;
         else style |= WS_EX_NOACTIVATE;
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(style));
+    }
+
+    /// <summary>
+    /// Сквозной режим: с <c>WS_EX_TRANSPARENT</c> окно не получает мышь —
+    /// клики и наведение уходят приложениям под островом.
+    /// </summary>
+    public static void SetClickThrough(IntPtr hwnd, bool on)
+    {
+        long style = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
+        style = on ? style | WS_EX_TRANSPARENT : style & ~WS_EX_TRANSPARENT;
         SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(style));
     }
 
@@ -406,7 +423,9 @@ static class Native
 
     public static IntPtr NewMenu() => CreatePopupMenu();
 
-    public static void MenuItem(IntPtr menu, int id, string text) => AppendMenu(menu, MF_STRING, new IntPtr(id), text);
+    /// <summary>Меню: <paramref name="checked"/> рисует галочку у пункта (переключатели режимов).</summary>
+    public static void MenuItem(IntPtr menu, int id, string text, bool @checked = false)
+        => AppendMenu(menu, MF_STRING | (@checked ? MF_CHECKED : 0), new IntPtr(id), text);
 
     public static void MenuSeparator(IntPtr menu) => AppendMenu(menu, MF_SEPARATOR, IntPtr.Zero, null);
 

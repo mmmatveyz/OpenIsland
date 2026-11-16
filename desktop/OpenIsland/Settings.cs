@@ -38,6 +38,7 @@ static class Settings
     static bool _rim = ReadSwitch(nameof(Rim)), _appVolume = ReadSwitch(nameof(AppVolume));
     static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
+    static bool _clickThrough = ReadSwitch(nameof(ClickThrough), false);
     static bool _dots = ReadSwitch(nameof(Dots), false);
     static bool _glass = ReadSwitch(nameof(Glass), false);
     static Backdrop _backdrop = (Backdrop)Math.Clamp(Read(nameof(Backdrop), 0), 0, (int)Backdrop.MatrixAndStars);
@@ -119,6 +120,13 @@ static class Settings
     {
         get => _clipboard;
         set => Write(nameof(Clipboard), _clipboard = value);
+    }
+
+    /// <summary>Сквозной режим: остров не ловит мышь, клики уходят под него. Выключается хоткеем Ctrl+Alt+I или из меню трея.</summary>
+    public static bool ClickThrough
+    {
+        get => _clickThrough;
+        set => Write(nameof(ClickThrough), _clickThrough = value);
     }
 
     public static int Scale

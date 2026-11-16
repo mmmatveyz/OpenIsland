@@ -57,15 +57,17 @@ public partial class MainWindow
         {
             Native.MenuItem(menu, 1, "Открыть остров");
             Native.MenuItem(menu, 2, IsVisible ? "Скрыть остров" : "Показать остров");
-            Native.MenuItem(menu, 3, "Настройки");
+            Native.MenuItem(menu, 3, "Сквозной режим", _clickThrough);
             Native.MenuSeparator(menu);
-            Native.MenuItem(menu, 4, "Выход");
+            Native.MenuItem(menu, 4, "Настройки");
+            Native.MenuItem(menu, 5, "Выход");
             switch (Native.ShowTrayMenu(_hwnd, menu))
             {
                 case 1: RevealIsland(); break;
                 case 2: ToggleIsland(); break;
-                case 3: RevealSettings(); break;
-                case 4: Exit(); break;
+                case 3: ToggleClickThrough(); break;
+                case 4: RevealSettings(); break;
+                case 5: Exit(); break;
             }
         }
         finally
@@ -82,6 +84,11 @@ public partial class MainWindow
     void RevealSettings()
     {
         SetIslandShown(true);
+        if (_clickThrough)
+        {
+            Settings.ClickThrough = false;
+            ApplyClickThrough(false);
+        }
         ShowPanel(Panel.Settings);
     }
 

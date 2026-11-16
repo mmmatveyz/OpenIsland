@@ -103,9 +103,11 @@ public partial class MainWindow : Window
     IntPtr _hwnd;
     int _ticks;
 
-    const int OpenCodeHotkeyId = 0x4F49;
+    const int OpenCodeHotkeyId = 0x4F49, ClickThroughHotkeyId = 0x4F4A;
     HwndSource? _windowSource;
     bool _hotkeyRegistered;
+    bool _clickThroughHotkeyRegistered;
+    bool _clickThrough;
 
     public MainWindow()
     {
@@ -233,6 +235,10 @@ public partial class MainWindow : Window
             App.LogDebug(_hotkeyRegistered
                 ? "Global hotkey Ctrl+Alt+O registered."
                 : "Global hotkey Ctrl+Alt+O is unavailable (already in use).");
+            _clickThroughHotkeyRegistered = Native.RegisterClickThroughHotkey(_hwnd, ClickThroughHotkeyId);
+            App.LogDebug(_clickThroughHotkeyRegistered
+                ? "Global hotkey Ctrl+Alt+I registered."
+                : "Global hotkey Ctrl+Alt+I is unavailable (already in use).");
         }
     }
 
@@ -242,6 +248,11 @@ public partial class MainWindow : Window
         {
             Native.UnregisterOpenCodeHotkey(_hwnd, OpenCodeHotkeyId);
             _hotkeyRegistered = false;
+        }
+        if (_clickThroughHotkeyRegistered && _hwnd != IntPtr.Zero)
+        {
+            Native.UnregisterHotkey(_hwnd, ClickThroughHotkeyId);
+            _clickThroughHotkeyRegistered = false;
         }
         _windowSource?.RemoveHook(OnHotkeyMessage);
         _windowSource?.RemoveHook(OnClipboardMessage);
@@ -255,11 +266,47 @@ public partial class MainWindow : Window
 
     IntPtr OnHotkeyMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (!Native.IsHotkeyMessage(msg, wParam, OpenCodeHotkeyId)) return IntPtr.Zero;
+        if (Native.IsHotkeyMessage(msg, wParam, OpenCodeHotkeyId))
+        {
+            handled = true;
+            ToggleOpenCodeFromHotkey();
+            return IntPtr.Zero;
+        }
 
-        handled = true;
-        ToggleOpenCodeFromHotkey();
+        if (Native.IsHotkeyMessage(msg, wParam, ClickThroughHotkeyId))
+        {
+            handled = true;
+            ToggleClickThrough();
+            return IntPtr.Zero;
+        }
+
         return IntPtr.Zero;
+    }
+
+    void ToggleClickThrough()
+    {
+        bool on = !_clickThrough;
+        Settings.ClickThrough = on;
+        ApplyClickThrough(on);
+        Notify(Glyph.Pointer, on ? _indigo : _dim, "Сквозной режим", on ? "Клики проходят сквозь остров" : "Остров снова ловит клики", force: true);
+    }
+
+    /// <summary>Сквозной режим: остров перестаёт быть интерактивным, пока не выключить его хоткеем или из трея.</summary>
+    void ApplyClickThrough(bool on)
+    {
+        if (_clickThrough == on) return;
+        _clickThrough = on;
+        if (_hwnd != IntPtr.Zero) Native.SetClickThrough(_hwnd, on);
+        if (on)
+        {
+            // Мышь больше не приходит в окно: сами снимаем наведение и захват,
+            // иначе пилюля останется раскрытой под неподвижным курсором.
+            _hovered = false;
+            CancelGrab();
+            CollapseNow();
+            UpdateTargets();
+        }
+        App.LogDebug(on ? "Click-through mode enabled." : "Click-through mode disabled.");
     }
 
     void ToggleOpenCodeFromHotkey()
@@ -286,6 +333,8 @@ public partial class MainWindow : Window
         int at = Array.IndexOf(args, name);
         return at >= 0 && at + 1 < args.Length ? args[at + 1] : null;
     }
+
+    static bool Switch(string name) => Array.IndexOf(Environment.GetCommandLineArgs(), name) >= 0;
 
     SolidColorBrush BrushResource(string key) => (SolidColorBrush)FindResource(key);
 
@@ -325,6 +374,7 @@ public partial class MainWindow : Window
         SyncGlass(false);
         PlayIntro();
         InitTray();
+        ApplyClickThrough(Settings.ClickThrough || Switch("--clickthrough"));
         _ticker.Start();
         if (_forcedTimerSeconds > 0) StartTimer(TimeSpan.FromSeconds(_forcedTimerSeconds));
         if (_forcedView == View.Update) _ = _updater.CheckAsync();
@@ -591,7 +641,8 @@ public partial class MainWindow : Window
     /// <summary>Пере-проверяет наведение курсора, когда островок сдвинулся под неподвижной мышью.</summary>
     void RefreshHover()
     {
-        bool over = Island.IsMouseOver;
+        // В сквозном режиме окно не получает мышь, и IsMouseOver «залипает» на последнем значении.
+        bool over = !_clickThrough && Island.IsMouseOver;
         if (over == _hovered) return;
         _hovered = over;
         if (over) _collapseTimeout.Cancel();
