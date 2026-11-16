@@ -50,7 +50,7 @@ OpenIsland/
 │   ├── MainWindow.OpenCode.cs     # UI OpenCode AI Hub, звук и тост завершения задачи
 │   ├── MainWindow.Perf.cs         # Карточка мониторинга ПК
 │   ├── MainWindow.Clipboard.cs    # Карточка истории буфера обмена
-│   ├── OpenCodeService.cs         # REST/SSE клиент OpenCode, пейринг, DPAPI-токен
+│   ├── OpenCodeService*.cs        # REST/SSE клиент OpenCode (partial): ядро, пейринг+DPAPI, HTTP, сессии, команды, SSE
 │   ├── OpenCodeSelfTest.cs        # Диагностический прогон (--selftest)
 │   ├── SessionList.cs             # Чистая логика списка сессий (порядок, поиск, время)
 │   ├── PerfService.cs             # CPU/ядра/диск, RAM, сеть, GPU, температура (опрос по требованию)

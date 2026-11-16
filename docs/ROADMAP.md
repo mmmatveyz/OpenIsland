@@ -22,7 +22,7 @@
 - [x] Автоматическое обнаружение демона OpenCode (`opencode service status`, проверка `/api/info`, повторный поиск при смене порта).
 - [x] Автоматический пейринг (`opencode pair`) и получение токена без ручного ввода.
 - [x] Шифрованное хранение токена через Windows DPAPI (`%LOCALAPPDATA%\OpenIsland\opencode-token.bin`), миграция старого plaintext-файла.
-- [x] Нативный клиент `OpenCodeService.cs` (REST + SSE).
+- [x] Нативный клиент `OpenCodeService` (REST + SSE) — partial-класс: ядро + `OpenCodeService.Discovery/Http/Sessions/Commands/Stream.cs`.
 - [x] Список сессий и активного статуса (`/api/session`, `/api/session/active`).
 - [x] Список моделей и переключение модели сессии (`/api/model`, `/api/session/{id}/model`).
 - [x] Отправка промптов/задач агенту из островка (`/api/session/{id}/prompt`).
@@ -30,6 +30,7 @@
 - [x] Создание, переключение и удаление сессий из карточки OpenCode.
 - [x] Остановка выполнения (`/api/session/{id}/interrupt`).
 - [x] Диагностический прогон `--selftest` (сессии, модели, промпт, ответ).
+- [x] Надёжность: мок-тесты HTTP (`OpenCodeHttpTests` + `StubHttpHandler`: успех, `401`, офлайн, таймаут, маппинг статусов) и разбиение `OpenCodeService.cs` на partial-файлы (v1.2.0).
 
 ---
 

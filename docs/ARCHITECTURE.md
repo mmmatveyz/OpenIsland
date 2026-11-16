@@ -126,7 +126,7 @@
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер: пресеты, точная настройка, кольцо прогресса, звонок |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
 | Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
-| OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
+| OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService*.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
 | Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs`, `PerfMath.cs` | CPU (`GetSystemTimes`), загрузка ядер (PDH), RAM (`GlobalMemoryStatusEx`), диск (PDH `% Disk Time` + свободное место), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта (1 с под курсором, иначе 3 с) |
 | Буфер обмена | `MainWindow.Clipboard.cs`, `ClipboardService.cs` | История последних 30 фрагментов (в памяти), захват по `WM_CLIPBOARDUPDATE`, вставка в один клик |
 | Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка релизов [`mmmatveyz/OpenIsland`](https://github.com/mmmatveyz/OpenIsland), скачивание ассета `OpenIsland.exe`, сверка `sha256`-дайджеста, подмена файла с автоперезапуском |
@@ -166,7 +166,7 @@
 
 ### 4.1. Обнаружение и авторизация
 
-`OpenCodeService.cs`:
+`OpenCodeService` (partial-класс; ядро — в `OpenCodeService.cs`, остальное разнесено по `OpenCodeService.Discovery/Http/Sessions/Commands/Stream.cs`):
 
 1. Находит CLI `opencode-cli.exe` в `%APPDATA%\ai.opencode.desktop\cli\*`, `%LOCALAPPDATA%\Programs\@opencode-aidesktop\resources` или `PATH`.
 2. Выполняет `opencode service status`, извлекает URL демона (обычно `http://127.0.0.1:28894`) и проверяет доступность `/api/info`. Если порт сменился — сервис находится заново.

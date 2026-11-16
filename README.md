@@ -111,7 +111,7 @@ OpenIsland/
 ├── desktop/OpenIsland/         # Основное нативное приложение (C# WPF)
 │   ├── MainWindow.xaml         # Разметка островка, панелей и карточек
 │   ├── MainWindow.*.cs         # Логика по модулям (медиа, таймер, OpenCode, ...)
-│   ├── OpenCodeService.cs      # REST/SSE клиент OpenCode, токен, статусы
+│   ├── OpenCodeService*.cs    # REST/SSE клиент OpenCode: ядро и partial-файлы (Discovery/Http/Sessions/Commands/Stream)
 │   ├── OpenCodeSelfTest.cs     # Диагностика интеграции (--selftest)
 │   ├── Chime.cs                # Звук завершения задачи (staplebops-01, MIT)
 │   ├── SessionList.cs          # Чистая логика списка сессий (порядок, поиск, время)
@@ -146,7 +146,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 # Диагностика интеграции с OpenCode (без UI)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 
-# Юнит-тесты (xUnit): разбор OpenCode, апдейтер, Countdown, буфер, настройки, сессии, мониторинг
+# Юнит-тесты (xUnit): разбор OpenCode, HTTP-ответы OpenCode (мок), апдейтер, Countdown, буфер, настройки, сессии, мониторинг
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 
 # Сборка установщика (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)

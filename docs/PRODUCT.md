@@ -71,7 +71,7 @@
 ### 2.9. OpenCode AI Hub — **наше**
 REST + SSE клиент, список сессий, модели, промпты, стриминг ответа, разрешения, горячая клавиша, self-test, звук завершения задачи и тост при завершении длинной задачи.
 
-- `OpenCodeService.cs` (самый большой модуль), `MainWindow.OpenCode.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs`, XAML-секция OpenCode, `Native.cs` (хоткей + активация).
+- `OpenCodeService` — partial-класс: ядро (`OpenCodeService.cs`) плюс `OpenCodeService.Discovery/Http/Sessions/Commands/Stream.cs`. Рядом — `MainWindow.OpenCode.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs`, XAML-секция OpenCode, `Native.cs` (хоткей + активация).
 - Список сессий: панель-оверлей внутри карточки (клик по заголовку сессии); строки отсортированы по времени последнего обновления (свежие сверху), показывают папку и относительное время, точка отмечает текущую (индиго) и работающую (оранжевая) сессию. При 8+ сессиях появляется поиск по названию и папке. Чистая логика (порядок/фильтр/имя папки/относительное время) — в `SessionList.cs`.
 - Звук завершения: на переходе агента `busy → idle` (при живом соединении) играет `Assets/staplebops-01.mp3` — тот же звук, что у самого OpenCode (лицензия MIT), если включена настройка `Settings.TaskChime` (по умолчанию включена). Файл **встроен в exe** как WPF-ресурс (`Resource`) и при первом использовании выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3` (MediaPlayer играет только с диска). Так звук доезжает и в portable-exe, и после автообновления, где рядом с exe других файлов нет.
 - Тост при завершении задачи: если агент работал дольше `TaskToastAfter` (15 с), вместе со звуком показывается Windows-уведомление («Задача OpenCode завершена») через иконку трея (`Shell_NotifyIcon` + `NIF_INFO`) — без новых зависимостей. Выключается в настройках (`Settings.TaskToast`).
@@ -151,9 +151,9 @@ REST + SSE клиент, список сессий, модели, промпты
 Это ровно та ниша, где островок полезен как «пульт разработчика» и не дублирует апстрим.
 
 ### Шаг 4. Стабильность и тесты
-- ✅ Юнит-тесты (xUnit, `tests/OpenIsland.Tests`): разбор ответов OpenCode (`ParseSessions`/`ParseModels`/`ParseRunningSessions`/`DescribeModel`), версии и changelog апдейтера (`Normalize`/`ParseNotes`), `Countdown`, история буфера обмена (`ClipboardService.Add`: дедуп, лимит, обрезка, события), инварианты настроек (диапазоны `Scale`/`Gap`, перечисления, акцент, round-trip звука завершения), список сессий (`SessionList`: порядок/поиск/имя папки/относительное время) и агрегация ядер CPU (`PerfMath.AggregateCores`). Тесты работают с `internal`-логикой через `InternalsVisibleTo`.
+- ✅ Юнит-тесты (xUnit, `tests/OpenIsland.Tests`): разбор ответов OpenCode (`ParseSessions`/`ParseModels`/`ParseRunningSessions`/`DescribeModel`), HTTP-поведение OpenCode на подменном транспорте (`StubHttpHandler`: успешный опрос `/api/session`+`/api/model`, `401`/офлайн/таймаут, маппинг статусов в `DescribeFailure`), версии и changelog апдейтера (`Normalize`/`ParseNotes`), `Countdown`, история буфера обмена (`ClipboardService.Add`: дедуп, лимит, обрезка, события), инварианты настроек (диапазоны `Scale`/`Gap`, прозрачности, перечисления, акцент, round-trip звука завершения), статус агента в пилюле (`AgentPill.StateOf`), список сессий (`SessionList`: порядок/поиск/имя папки/относительное время) и агрегация ядер CPU (`PerfMath.AggregateCores`). Тесты работают с `internal`-логикой через `InternalsVisibleTo`.
 - ✅ CI-прогон тестов (`dotnet test -warnaserror`) и self-test.
-- [ ] Тесты ретраев и ошибок сети OpenCode (нужны мок-ответы HTTP).
+- ✅ Тесты ошибок сети OpenCode на мок-ответах HTTP (`OpenCodeHttpTests` + `StubHttpHandler`); для этого у сервиса добавлен тестовый конструктор с подменным `HttpMessageHandler` и отключёнными фоновыми циклами/пейрингом.
 - ✅ Диагностика OpenCode: понятные статусы сбоя (`0`/`401`/`404`/`409`) и транзиентная надпись после удаления сессии.
 - ✅ Краш-репорты и кольцевой лог (`%LOCALAPPDATA%\OpenIsland\logs`).
 
@@ -161,7 +161,7 @@ REST + SSE клиент, список сессий, модели, промпты
 
 ## 6. Технический долг (мелочи, но стоит знать)
 
-- `OpenCodeService.cs` — крупный модуль в одном файле, стоит разбить на `OpenCode.Client/Events/Sessions/Models`.
+- `OpenCodeService` был крупным модулем в одном файле — разбит на partial-части `OpenCodeService.Discovery/Http/Sessions/Commands/Stream.cs` (§2.9).
 - Дублирование логики таймеров OpenCode было (устранено при правке «0:00»): теперь единый `UpdateOpenCodeTimer`.
 - Репозиторий переведён под git в корне проекта; `desktop/` и `scripts/` теперь под версионным контролем.
 - Пространство имён, имя файла проекта и XAML переведены с `DynamicIsland` на `OpenIsland`; легаси-константы миграции реестра и автозапуска (`Software\DynamicIsland`, Run-значение `DynamicIsland`) намеренно сохранены.
