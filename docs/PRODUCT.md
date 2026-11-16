@@ -102,7 +102,7 @@ REST + SSE клиент, список сессий, модели, промпты
 | `Updater.cs` | чужой GitHub-репозиторий и ассет `DynamicIsland.exe` | наш репозиторий `mmmatveyz/OpenIsland`, ассет `OpenIsland.exe`, сверка `sha256`-дайджеста | ✅ |
 | `Settings.cs` | реестр `HKCU\Software\DynamicIsland` | `HKCU\Software\OpenIsland` + авто-миграция значений при первом чтении | ✅ |
 | `Autostart.cs` | Run-значение `DynamicIsland` | `OpenIsland` (+ миграция и удаление старого) | ✅ |
-| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.1.0), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
+| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.2.0), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
 | `app.manifest` | `name="DynamicIsland.app"` | `OpenIsland.app` | ✅ |
 | Иконка приложения | отсутствовала | `Assets/OpenIsland.ico` (7 кадров 16–256, тёмная капсула + индиго-циан ободок + искра) | ✅ |
 | Трей | кода не было вообще | `MainWindow.Tray.cs` + `Native.cs`: `Shell_NotifyIcon`, меню (Открыть / Скрыть-Показать / Настройки / Выход), двойной клик — показать | ✅ |
