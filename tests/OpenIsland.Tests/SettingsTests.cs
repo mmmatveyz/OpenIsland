@@ -14,7 +14,14 @@ public class SettingsTests
     [Fact]
     public void Scale_StaysWithinSupportedRange()
     {
-        Assert.InRange(Settings.Scale, 85, 130);
+        Assert.InRange(Settings.Scale, 80, 200);
+    }
+
+    [Fact]
+    public void Opacities_StayWithinSupportedRange()
+    {
+        Assert.InRange(Settings.PillOpacity, 30, 100);
+        Assert.InRange(Settings.OpenOpacity, 30, 100);
     }
 
     [Fact]

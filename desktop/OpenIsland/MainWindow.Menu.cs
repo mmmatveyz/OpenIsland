@@ -14,7 +14,7 @@ public partial class MainWindow
     const int MegabyteShift = 20;
     const double LookHeight = 430, LookTilesHeight = 72, LookWheelStep = 80;
     const double LookEdgeZone = 70, LookEdgeScale = 0.8;
-    const int LargestScale = 130, ScaleStep = 5;
+    const int LargestScale = 200, ScaleStep = 5;
     const int LargestGap = 24, GapStep = 2;
 
     Border? _openLookTiles;
@@ -200,6 +200,10 @@ public partial class MainWindow
 
     void GapSlider_Changed(object? sender, EventArgs e) => SetGap((int)GapSlider.Value);
 
+    void PillOpacitySlider_Changed(object? sender, EventArgs e) => SetPillOpacity((int)PillOpacitySlider.Value);
+
+    void OpenOpacitySlider_Changed(object? sender, EventArgs e) => SetOpenOpacity((int)OpenOpacitySlider.Value);
+
     void SetScale(int percent)
     {
         int was = Settings.Scale;
@@ -212,6 +216,20 @@ public partial class MainWindow
         int was = Settings.Gap;
         Settings.Gap = px;
         if (Settings.Gap != was) ApplyLook();
+    }
+
+    void SetPillOpacity(int percent)
+    {
+        int was = Settings.PillOpacity;
+        Settings.PillOpacity = percent;
+        if (Settings.PillOpacity != was) ApplyLook();
+    }
+
+    void SetOpenOpacity(int percent)
+    {
+        int was = Settings.OpenOpacity;
+        Settings.OpenOpacity = percent;
+        if (Settings.OpenOpacity != was) ApplyLook();
     }
 
     void Dots_Click(object sender, RoutedEventArgs e)
@@ -336,6 +354,10 @@ public partial class MainWindow
         GapText.Text = Settings.Gap + " px";
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
+        PillOpacityText.Text = Settings.PillOpacity + "%";
+        OpenOpacityText.Text = Settings.OpenOpacity + "%";
+        PillOpacitySlider.Set(Settings.PillOpacity, LookView.IsVisible);
+        OpenOpacitySlider.Set(Settings.OpenOpacity, LookView.IsVisible);
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);

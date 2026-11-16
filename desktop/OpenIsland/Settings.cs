@@ -29,8 +29,9 @@ static class Settings
 {
     const string Key = @"Software\OpenIsland";
     const string LegacyKey = @"Software\DynamicIsland";
-    const int MinScale = 85, MaxScale = 130, MaxGap = 24;
+    const int MinScale = 80, MaxScale = 200, MaxGap = 24;
     const int DefaultScale = 100, DefaultGap = 8;
+    const int MinOpacity = 30, MaxOpacity = 100, DefaultOpacity = 100;
 
     static bool _migrated;
 
@@ -39,6 +40,8 @@ static class Settings
     static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
     static bool _clickThrough = ReadSwitch(nameof(ClickThrough), false);
+    static int _pillOpacity = Math.Clamp(Read(nameof(PillOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
+    static int _openOpacity = Math.Clamp(Read(nameof(OpenOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static bool _dots = ReadSwitch(nameof(Dots), false);
     static bool _glass = ReadSwitch(nameof(Glass), false);
     static Backdrop _backdrop = (Backdrop)Math.Clamp(Read(nameof(Backdrop), 0), 0, (int)Backdrop.MatrixAndStars);
@@ -133,6 +136,20 @@ static class Settings
     {
         get => _scale;
         set => Write(nameof(Scale), _scale = Math.Clamp(value, MinScale, MaxScale));
+    }
+
+    /// <summary>Непрозрачность свёрнутой пилюли, % (30–100).</summary>
+    public static int PillOpacity
+    {
+        get => _pillOpacity;
+        set => Write(nameof(PillOpacity), _pillOpacity = Math.Clamp(value, MinOpacity, MaxOpacity));
+    }
+
+    /// <summary>Непрозрачность раскрытой карточки, % (30–100).</summary>
+    public static int OpenOpacity
+    {
+        get => _openOpacity;
+        set => Write(nameof(OpenOpacity), _openOpacity = Math.Clamp(value, MinOpacity, MaxOpacity));
     }
 
     public static int Gap

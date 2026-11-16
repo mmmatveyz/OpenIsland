@@ -25,6 +25,7 @@ public partial class MainWindow
     readonly Spring _width = new(34), _height = new(34), _radius = new(17);
     readonly Spring _scale = new(1, 320, 20), _offsetY = new(0, 260, 26), _leanX = new(0);
     readonly Spring _userScale = new(Settings.Scale / 100.0, 240, 26), _topGap = new(Settings.Gap, 240, 26);
+    readonly Spring _opacity = new(Settings.PillOpacity / 100.0, 240, 26);
     readonly Spring _bubbleSplit = new(0), _bubbleScale = new(1, 320, 20);
     readonly Spring _bubbleTimer = new(0, 260, 24);
     readonly BlurEffect _motionBlur = new() { Radius = 0, RenderingBias = RenderingBias.Performance };
@@ -55,6 +56,7 @@ public partial class MainWindow
         UpdateBubbleTargets(compact);
         _offsetY.Target = (_hiddenByFullscreen || _sentAway) && !_ringing ? -(shape.Height + OffscreenMargin + Settings.Gap * 100.0 / Settings.Scale) : 0;
         _scale.Target = dragging ? 1 : _pressed ? (compact ? PressedScale : PressedOpenScale) : _hovered && compact ? HoverScale : 1;
+        _opacity.Target = (compact ? Settings.PillOpacity : Settings.OpenOpacity) / 100.0;
         _bubbleScale.Target = _bubblePressed ? PressedScale : _bubbleHovered ? HoverScale : 1;
         StartShapeLoop();
     }
@@ -125,6 +127,7 @@ public partial class MainWindow
         StretchVolumeBar();
 
         IslandScale.ScaleX = IslandScale.ScaleY = scale;
+        Island.Opacity = _opacity.Value;
         RootSize.ScaleX = RootSize.ScaleY = size;
         RootMove.Y = _offsetY.Value + _topGap.Value / size;
         RootLean.X = Math.Round(_leanX.Value * size * dpi) / (size * dpi);

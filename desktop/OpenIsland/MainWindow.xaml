@@ -1025,7 +1025,7 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Size"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Размер"/>
                                         <local:Scrubber x:Name="SizeSlider" Style="{StaticResource RowSlider}"
-                                                        Minimum="85" Maximum="130" Step="5" Changed="SizeSlider_Changed"/>
+                                                        Minimum="80" Maximum="200" Step="5" Changed="SizeSlider_Changed"/>
                                         <local:Digits x:Name="SizeText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
@@ -1037,6 +1037,27 @@
                                         <local:Scrubber x:Name="GapSlider" Style="{StaticResource RowSlider}"
                                                         Minimum="0" Maximum="24" Step="2" Changed="GapSlider_Changed"/>
                                         <local:Digits x:Name="GapText" Foreground="{StaticResource Dim}"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <TextBlock Style="{StaticResource Caption}" Text="ПРОЗРАЧНОСТЬ" Margin="12,8,0,6"/>
+                                <Button x:Name="PillOpacityRow" Style="{StaticResource RowButton}">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Свёрнутый"/>
+                                        <local:Scrubber x:Name="PillOpacitySlider" Style="{StaticResource RowSlider}"
+                                                        Minimum="30" Maximum="100" Step="5" Changed="PillOpacitySlider_Changed"/>
+                                        <local:Digits x:Name="PillOpacityText" Foreground="{StaticResource Dim}"
+                                                      HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="OpenOpacityRow" Style="{StaticResource RowButton}">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Раскрытый"/>
+                                        <local:Scrubber x:Name="OpenOpacitySlider" Style="{StaticResource RowSlider}"
+                                                        Minimum="30" Maximum="100" Step="5" Changed="OpenOpacitySlider_Changed"/>
+                                        <local:Digits x:Name="OpenOpacityText" Foreground="{StaticResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>

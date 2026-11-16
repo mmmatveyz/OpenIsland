@@ -150,7 +150,7 @@ public partial class MainWindow : Window
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
         [
-            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _bubbleSplit, _bubbleScale, _bubbleTimer,
+            _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _opacity, _bubbleSplit, _bubbleScale, _bubbleTimer,
             _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, .. _spotSprings,
         ];
         _timerTint = new SolidColorBrush(_orange.Color);
