@@ -135,6 +135,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 
 # Диагностика интеграции с OpenCode
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
+
+# Юнит-тесты
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 ```
 
 Если .NET 8 SDK не установлен в системе, `scripts\build.ps1` скачает его в локальную папку `.dotnet/`.

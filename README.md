@@ -64,7 +64,8 @@ OpenIsland/
 │   ├── Fonts/ Gadgets/ Assets/ # Шрифты, графика виджетов, иконка и звук
 │   └── OpenIsland.csproj
 ├── installer/OpenIsland.iss    # Скрипт Inno Setup (per-user установщик)
-├── scripts/build.ps1           # Сборка, запуск, self-test и установщик
+├── scripts/build.ps1           # Сборка, запуск, self-test, тесты и установщик
+├── tests/OpenIsland.Tests/     # Юнит-тесты (xUnit): логика без UI
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
 ├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации
 └── Запуск_OpenIsland.bat       # Запуск в один клик (собирает при необходимости)
@@ -85,6 +86,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 
 # Диагностика интеграции с OpenCode (без UI)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
+
+# Юнит-тесты (xUnit): разбор OpenCode, апдейтер, Countdown, настройки
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 
 # Сборка установщика (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Installer

@@ -579,7 +579,7 @@ public sealed partial class OpenCodeService : IDisposable
         }
     }
 
-    static HashSet<string> ParseRunningSessions(JsonElement active)
+    internal static HashSet<string> ParseRunningSessions(JsonElement active)
     {
         HashSet<string> running = [];
         if (active.ValueKind != JsonValueKind.Object) return running;
@@ -595,7 +595,7 @@ public sealed partial class OpenCodeService : IDisposable
         return running;
     }
 
-    static List<OpenCodeSessionInfo> ParseSessions(JsonElement data, HashSet<string> running)
+    internal static List<OpenCodeSessionInfo> ParseSessions(JsonElement data, HashSet<string> running)
     {
         List<OpenCodeSessionInfo> sessions = [];
         if (data.ValueKind != JsonValueKind.Array) return sessions;
@@ -640,7 +640,7 @@ public sealed partial class OpenCodeService : IDisposable
         return sessions;
     }
 
-    static List<OpenCodeModelInfo> ParseModels(JsonElement data)
+    internal static List<OpenCodeModelInfo> ParseModels(JsonElement data)
     {
         List<OpenCodeModelInfo> models = [];
         if (data.ValueKind != JsonValueKind.Array) return models;
@@ -666,7 +666,7 @@ public sealed partial class OpenCodeService : IDisposable
         return models;
     }
 
-    static string DescribeModel(string modelId, string providerId, IReadOnlyList<OpenCodeModelInfo> models)
+    internal static string DescribeModel(string modelId, string providerId, IReadOnlyList<OpenCodeModelInfo> models)
     {
         if (string.IsNullOrEmpty(modelId)) return "Модель не выбрана";
 
@@ -1393,7 +1393,7 @@ public sealed partial class OpenCodeService : IDisposable
         }
     }
 
-    static string GetString(JsonElement element, string property)
+    internal static string GetString(JsonElement element, string property)
     {
         if (element.ValueKind != JsonValueKind.Object) return "";
         if (!element.TryGetProperty(property, out JsonElement value)) return "";
@@ -1433,7 +1433,7 @@ public sealed partial class OpenCodeService : IDisposable
         return string.IsNullOrEmpty(message) ? "Ошибка выполнения задачи" : Shorten(message, 140);
     }
 
-    static string Shorten(string value, int maxLength)
+    internal static string Shorten(string value, int maxLength)
         => value.Length <= maxLength ? value : value[..Math.Max(0, maxLength - 1)] + "…";
 }
 

@@ -68,6 +68,7 @@ OpenIsland/
 │   └── OpenIsland.csproj
 ├── installer/OpenIsland.iss       # Скрипт Inno Setup (per-user установщик)
 ├── scripts/build.ps1              # Сборка, запуск, self-test и установщик
+├── tests/OpenIsland.Tests/        # Юнит-тесты (xUnit): логика без UI
 ├── bin/OpenIsland/                # Результат сборки (OpenIsland.exe)
 ├── Запуск_OpenIsland.bat          # Запуск в один клик (собирает при необходимости)
 └── .dotnet/                       # Локально установленный SDK (в git не попадает)
@@ -118,9 +119,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
 
 # Сборка установщика Inno Setup в bin\installer-out (нужен Inno Setup 6)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Installer
+
+# Юнит-тесты (xUnit): разбор ответов OpenCode, версии/changelog апдейтера,
+# Countdown, инварианты настроек
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Test
 ```
 
 - Сборка должна проходить с **0 ошибок и 0 предупреждений**.
+- Юнит-тесты должны проходить; в CI они гоняются с `-warnaserror` на каждый push/PR.
 - Перед пересборкой скрипт останавливает запущенный `OpenIsland.exe` (флаг `-NoStop` отключает это).
 - Если .NET SDK отсутствует, скрипт ставит его локально в `.dotnet/`.
 - Установщик собирается per-user (`%LOCALAPPDATA%\Programs\OpenIsland`), чтобы встроенный апдейтер мог подменять exe без UAC; `.iss` валидируется в CI на каждый push.

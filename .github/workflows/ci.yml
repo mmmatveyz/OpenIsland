@@ -19,6 +19,11 @@ jobs:
       - name: Build
         run: dotnet build desktop/OpenIsland/OpenIsland.csproj -c Release -warnaserror --nologo
 
+      # Unit tests over the pure logic: OpenCode parsing, updater versions/changelog,
+      # countdown and settings invariants. Also builds with warnings as errors.
+      - name: Unit tests
+        run: dotnet test tests/OpenIsland.Tests/OpenIsland.Tests.csproj -c Release -warnaserror --nologo
+
       - name: Verify produced binary
         shell: pwsh
         run: |

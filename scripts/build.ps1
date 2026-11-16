@@ -1,6 +1,7 @@
 param(
     [switch]$Run,
     [switch]$SelfTest,
+    [switch]$Test,
     [switch]$Installer,
     [switch]$NoStop,
     [switch]$Clean
@@ -76,6 +77,12 @@ Write-Host 'Building OpenIsland (Release) ...' -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE" }
 
 Write-Host "Ready: $exe" -ForegroundColor Green
+
+if ($Test) {
+    Write-Host 'Running unit tests ...' -ForegroundColor Cyan
+    & $dotnet test (Join-Path $root 'tests\OpenIsland.Tests\OpenIsland.Tests.csproj') -c Release -warnaserror --nologo
+    if ($LASTEXITCODE -ne 0) { throw "Tests failed with exit code $LASTEXITCODE" }
+}
 
 if ($Installer) {
     $version = (Select-String -Path $project -Pattern '<Version>([^<]+)</Version>').Matches[0].Groups[1].Value

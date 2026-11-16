@@ -35,4 +35,10 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
+  <!-- Юнит-тесты (tests/OpenIsland.Tests) работают с internal-логикой: парсинг
+       ответов OpenCode, нормализация версий и разбор changelog апдейтера. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="OpenIsland.Tests" />
+  </ItemGroup>
+
 </Project>

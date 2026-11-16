@@ -184,7 +184,7 @@ sealed class Updater
         Changed?.Invoke();
     }
 
-    static string[] ParseNotes(string notes) => notes.Split('\n')
+    internal static string[] ParseNotes(string notes) => notes.Split('\n')
         .Select(line => line.Trim())
         .Where(line => line.Length > 2 && line[0] is '-' or '*' or '•' && line[1] == ' ')
         .Select(line => line[2..].Replace("**", "").Replace("`", "").Trim())
@@ -192,7 +192,7 @@ sealed class Updater
         .Take(MaxNotes)
         .ToArray();
 
-    static Version Normalize(Version version) => new(version.Major, version.Minor, Math.Max(version.Build, 0));
+    internal static Version Normalize(Version version) => new(version.Major, version.Minor, Math.Max(version.Build, 0));
 
     static HttpClient CreateClient(Version current)
     {

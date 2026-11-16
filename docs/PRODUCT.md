@@ -148,8 +148,9 @@ REST + SSE клиент, сессии, модели, промпты, стрим�
 Это ровно та ниша, где островок полезен как «пульт разработчика» и не дублирует апстрим.
 
 ### Шаг 4. Стабильность и тесты
-- [ ] Юнит-тесты на критичное: `Settings` (реестр/миграция), `OpenCodeService` (парсинг, ретраи, `Esc`), `Updater` (хеш), `Countdown`.
-- [ ] CI-прогон тестов и self-test.
+- ✅ Юнит-тесты (xUnit, `tests/OpenIsland.Tests`): разбор ответов OpenCode (`ParseSessions`/`ParseModels`/`ParseRunningSessions`/`DescribeModel`), версии и changelog апдейтера (`Normalize`/`ParseNotes`), `Countdown`, инварианты настроек (диапазоны `Scale`/`Gap`, перечисления, акцент). Тесты работают с `internal`-логикой через `InternalsVisibleTo`.
+- ✅ CI-прогон тестов (`dotnet test -warnaserror`) и self-test.
+- [ ] Тесты ретраев и ошибок сети OpenCode (нужны мок-ответы HTTP).
 - [ ] Диагностика OpenCode: демон недоступен, сменился порт, истёк токен, сессия удалена.
 - ✅ Краш-репорты и кольцевой лог (`%LOCALAPPDATA%\OpenIsland\logs`).
 
