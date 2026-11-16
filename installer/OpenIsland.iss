@@ -1,11 +1,11 @@
 ﻿; Inno Setup 6 script for OpenIsland.
-; Build: ISCC.exe OpenIsland.iss /DMyAppVersion=1.0.2
+; Build: ISCC.exe OpenIsland.iss /DMyAppVersion=1.0.3
 ; By default it packages the portable build from ..\bin\installer-input\OpenIsland.exe.
 ; The app is per-user (localappdata), so the built-in updater can replace the exe
 ; without elevation, and no admin rights are required to install.
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.0.2"
+  #define MyAppVersion "1.0.3"
 #endif
 
 #ifndef SourceExe
