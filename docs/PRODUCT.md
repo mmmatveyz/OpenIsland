@@ -27,7 +27,7 @@
 - `MainWindow.xaml` (+ `.Shape.cs`, `.Transitions.cs`, `.Notices.cs`), `Spring.cs`, `Motion.cs`, `Liquid.cs`, `Goo.cs`, `Glass.cs`, `Squircle.cs`, `Aura.cs`, `StarField.cs`, `DotMatrix.cs`, `Visuals.cs`, `DrawingSurfaces.cs`, `DesktopComposition.cs`, `Native.cs`, `FrameLoop.cs`, `DelayedAction.cs`, `App.xaml(.cs)`.
 
 ### 2.2. Системный статус (апстрим, `ок`)
-Громкость, заряд, индикатор наушников, сеть, DND.
+Громкость, заряд, индикатор наушников; краткие уведомления о подключении/потере сети и VPN, капсула «Не беспокоить».
 
 - `MainWindow.Status.cs`, `MainWindow.Headset.cs`, `Headset.cs`, `AudioService.cs`, `CoreAudio.cs`, `NetworkService.cs`.
 
@@ -39,7 +39,7 @@
 ### 2.4. Мини-эквалайзер на любой звук — **наше**
 Когда в системе есть звук, но активной медиасессии нет (видео в браузере, игра, голосовой чат), свёрнутый островок разворачивается в компактную капсулу `View.Sound` с одними полосками эквалайзера. Реагирует на **любой** системный вывод, а не только на треки GSMTC.
 
-- `MainWindow.Media.cs` (`PollSound`, `SyncEq`, `AdvanceEq`), `AudioService.cs`/`CoreAudio.cs` (`IAudioMeterInformation` — дешёвый master peak, опрос 100 мс), `SpectrumService.cs` (тяжёлый WASAPI-loopback включается только пока капсула видна).
+- `MainWindow.Media.cs` (`PollSound`, `SyncEq`, `AdvanceEq`), `AudioService.cs`/`CoreAudio.cs` (`IAudioMeterInformation` — дешёвый master peak, опрос 100 мс), `SpectrumService.cs` (тяжёлый WASAPI-loopback включается только пока остров реально виден: не в трее, не за полноэкранным приложением и не «спрятан на 5 секунд»).
 - Порог детекта `SoundPeak = 0.004`, удержание `SoundHoldSeconds = 2.2`. Полоски рисует тот же `Equalizer`, что и в плеере.
 - Если в это время занят агент OpenCode, полоски не пропадают: они живут и в компактной капсуле агента (`View.OpenCode`) — справа от статуса, пока есть системный звук; таймер задачи сдвигается левее. Без звука капсула агента остаётся обычной (статус + таймер).
 
@@ -83,7 +83,7 @@ REST + SSE клиент, сессии, модели, промпты, стрим�
 - **Приватность**: история живёт только в памяти процесса, ничего не пишется на диск и в логи; выключатель `Settings.Clipboard` (по умолчанию включён) очищает историю при выключении.
 
 ### 2.11. Мониторинг ПК — **наше, `ок`**
-Карточка «Мониторинг ПК»: CPU (общая нагрузка), память (занято/всего и %), видеокарта, сеть (↓/↑ в реальном времени) и температура, с полосками-индикаторами.
+Карточка «Мониторинг ПК»: CPU (общая нагрузка), память (занято/всего и %), видеокарта, сеть (↓/↑ в реальном времени) и температура, с полосками-индикаторами; недоступные GPU/температура показываются как «н/д».
 
 - `PerfService.cs`, `MainWindow.Perf.cs`, XAML-карточка `PerfView`, пункт меню с текущим CPU%.
 - **Дёшево в фоне**: опрос идёт только пока карточка открыта (`SetActive` из `UpdateView`), считается на фоновом потоке; CPU — `GetSystemTimes`, память — `GlobalMemoryStatusEx`, сеть — `NetworkInterface` (1 с), GPU — PDH `\GPU Engine(*)\Utilization Percentage` (раз в 2 с, берётся максимум по движкам), температура — WMI `MSAcpi_ThermalZoneTemperature` (раз в 5 с). Недоступные значения показываются как «н/д» (частая картина для температуры на десктопах).

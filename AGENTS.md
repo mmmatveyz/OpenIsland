@@ -44,7 +44,7 @@ OpenIsland/
 │   ├── MainWindow.Shape.cs        # Пружинная геометрия, стекло, морфинг
 │   ├── MainWindow.Pointer.cs      # Мышь, drag, hover, контекстное меню
 │   ├── MainWindow.Media.cs        # Плеер, эквалайзер, обложки
-│   ├── MainWindow.Timer.cs        # Таймер и секундомер
+│   ├── MainWindow.Timer.cs        # Таймер
 │   ├── MainWindow.Menu.cs         # Меню и настройки
 │   ├── MainWindow.Status.cs       # Громкость, заряд, наушники, сеть
 │   ├── MainWindow.OpenCode.cs     # UI OpenCode AI Hub, звук и тост завершения задачи
