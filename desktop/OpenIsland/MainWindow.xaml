@@ -198,6 +198,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="PlainButton" TargetType="Button">
@@ -212,6 +218,12 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4"/>
+                    <Setter Property="Cursor" Value="Arrow"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="Swatch" TargetType="RadioButton">
@@ -1031,7 +1043,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="30"/>
                                     </Grid.ColumnDefinitions>
-                                    <Button Style="{StaticResource ChipButton}" Width="26" Height="26" Padding="0" Grid.Column="0" Content="&lt;" Click="OpenCodePrevSession_Click" ToolTip="Предыдущая сессия"/>
+                                    <Button x:Name="OpenCodePrevSession" Style="{StaticResource ChipButton}" Width="26" Height="26" Padding="0" Grid.Column="0" Content="&lt;" Click="OpenCodePrevSession_Click" ToolTip="Предыдущая сессия"/>
                                     <StackPanel Grid.Column="1" Margin="6,0" VerticalAlignment="Center">
                                         <TextBlock x:Name="OpenCodeTaskTitle" Text="Нет активной сессии" FontSize="13" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis"/>
                                         <Grid Margin="0,2,0,0">
@@ -1039,7 +1051,7 @@
                                             <TextBlock x:Name="OpenCodeSessionCounter" Text="0 / 0" FontSize="10.5" Foreground="#636366" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                         </Grid>
                                     </StackPanel>
-                                    <Button Style="{StaticResource ChipButton}" Width="26" Height="26" Padding="0" Grid.Column="2" Content="&gt;" Click="OpenCodeNextSession_Click" ToolTip="Следующая сессия"/>
+                                    <Button x:Name="OpenCodeNextSession" Style="{StaticResource ChipButton}" Width="26" Height="26" Padding="0" Grid.Column="2" Content="&gt;" Click="OpenCodeNextSession_Click" ToolTip="Следующая сессия"/>
                                 </Grid>
                             </Border>
                             <TextBlock x:Name="OpenCodeTaskTimer" Text="? 0:00" FontSize="10" Foreground="#FF9F0A" HorizontalAlignment="Right" Margin="0,0,4,6" Visibility="Collapsed"/>
@@ -1047,11 +1059,11 @@
                             <Grid Margin="2,0,2,8">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <TextBlock Text="МОДЕЛЬ" FontSize="9.5" FontWeight="SemiBold" Foreground="#636366" VerticalAlignment="Center" Margin="2,0,8,0"/>
-                                    <Button Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&lt;" Click="OpenCodeModelPrev_Click"/>
+                                    <Button x:Name="OpenCodeModelPrev" Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&lt;" Click="OpenCodeModelPrev_Click"/>
                                     <TextBlock x:Name="OpenCodeModelName" Text="Модель не выбрана" FontSize="11.5" Foreground="#AEAEB2" VerticalAlignment="Center" Margin="6,0" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
-                                    <Button Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&gt;" Click="OpenCodeModelNext_Click"/>
+                                    <Button x:Name="OpenCodeModelNext" Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&gt;" Click="OpenCodeModelNext_Click"/>
                                 </StackPanel>
-                                <Button Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="+ Сессия" Click="OpenCodeNewSession_Click"/>
+                                <Button x:Name="OpenCodeNewSession" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="+ Сессия" Click="OpenCodeNewSession_Click"/>
                             </Grid>
 
                             <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="14" Padding="10,6" Margin="0,0,0,8">
@@ -1061,7 +1073,7 @@
                                              KeyDown="OpenCodePromptBox_KeyDown" TextChanged="OpenCodePromptBox_TextChanged"
                                              GotFocus="OpenCodePromptBox_GotFocus" LostFocus="OpenCodePromptBox_LostFocus" PreviewMouseLeftButtonDown="OpenCodePromptBox_MouseDown"
                                              Text="Дать задачу агенту..."/>
-                                    <Button Style="{StaticResource PlainButton}" HorizontalAlignment="Right" Width="24" Height="24" Click="OpenCodeSend_Click">
+                                    <Button x:Name="OpenCodeSendIcon" Style="{StaticResource PlainButton}" HorizontalAlignment="Right" Width="24" Height="24" Click="OpenCodeSend_Click">
                                         <local:Icon Kind="Sparkle" Width="13" Height="13" Fill="{StaticResource Indigo}"/>
                                     </Button>
                                 </Grid>
@@ -1112,10 +1124,10 @@
                             </Border>
 
                             <Grid Margin="0,2,0,0">
-                                <Button Style="{StaticResource ChipButton}" Height="30" HorizontalAlignment="Left" Padding="12,0" Content="OpenCode Desktop" Click="OpenCodeApp_Click"/>
+                                <Button x:Name="OpenCodeAppButton" Style="{StaticResource ChipButton}" Height="30" HorizontalAlignment="Left" Padding="12,0" Content="OpenCode Desktop" Click="OpenCodeApp_Click"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Style="{StaticResource ChipButton}" Height="30" Padding="10,0" Margin="0,0,6,0" Content="Стоп" Click="OpenCodeStop_Click"/>
-                                    <Button Style="{StaticResource ChipButton}" Height="30" Padding="14,0" Background="{StaticResource Indigo}" Foreground="White" Content="Отправить" Click="OpenCodeSend_Click"/>
+                                    <Button x:Name="OpenCodeStopButton" Style="{StaticResource ChipButton}" Height="30" Padding="10,0" Margin="0,0,6,0" Content="Стоп" Click="OpenCodeStop_Click"/>
+                                    <Button x:Name="OpenCodeSendButton" Style="{StaticResource ChipButton}" Height="30" Padding="14,0" Background="{StaticResource Indigo}" Foreground="White" Content="Отправить" Click="OpenCodeSend_Click"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>

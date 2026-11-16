@@ -11,11 +11,22 @@ public partial class MainWindow
 {
     const string PromptPlaceholder = "Дать задачу агенту...";
 
+    static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
+    static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
+
     readonly OpenCodeService _openCode = new();
     readonly Chime _chime = new();
     string _openCodeUiSignature = "";
     bool _openCodeReady;
     bool _openCodeBusy;
+    bool _openCodeSending;
+
+    static Brush Frozen(Color color)
+    {
+        SolidColorBrush brush = new(color);
+        brush.Freeze();
+        return brush;
+    }
 
     void InitOpenCode()
     {
@@ -41,20 +52,21 @@ public partial class MainWindow
     {
         if (!_openCodeReady) return;
 
+        bool online = _openCode.IsConnected;
         bool busy = _openCode.IsBusy;
-        if (_openCodeBusy && !busy && _openCode.IsConnected) _chime.Play();
+        if (_openCodeBusy && !busy && online) _chime.Play();
         _openCodeBusy = busy;
 
         OpenCodeCompactText.Text = _openCode.StatusText;
 
         string title = _openCode.SessionTitle;
         OpenCodeTaskTitle.Text = string.IsNullOrWhiteSpace(title)
-            ? (_openCode.IsConnected ? "Нет активной сессии" : "OpenCode офлайн")
+            ? (online ? "Нет активной сессии" : "OpenCode не запущен")
             : title;
 
-        string subtitle = string.IsNullOrWhiteSpace(_openCode.LastError)
-            ? _openCode.StatusText
-            : _openCode.LastError;
+        string subtitle = !online && string.IsNullOrWhiteSpace(_openCode.LastError)
+            ? "Нажмите «Запустить OpenCode»"
+            : (string.IsNullOrWhiteSpace(_openCode.LastError) ? _openCode.StatusText : _openCode.LastError);
         OpenCodeSubText.Text = subtitle;
         OpenCodeSubText.Foreground = string.IsNullOrWhiteSpace(_openCode.LastError)
             ? _dim
@@ -86,31 +98,52 @@ public partial class MainWindow
             OpenCodePermissionText.Text = $"{permission.Action}: {Shorten(message, 90)}";
         }
 
-        OpenCodeStatusDot.Fill = _openCode.IsConnected
-            ? (_openCode.IsBusy ? _orange : _green)
+        OpenCodeStatusDot.Fill = online
+            ? (busy ? _orange : _green)
             : _dim;
 
         if (MenuOpenCodeStatus != null)
         {
-            MenuOpenCodeStatus.Text = _openCode.IsConnected
-                ? (_openCode.IsBusy ? "В работе" : "В сети")
+            MenuOpenCodeStatus.Text = online
+                ? (busy ? "В работе" : "В сети")
                 : "Офлайн";
-            MenuOpenCodeStatus.Foreground = _openCode.IsConnected
-                ? (_openCode.IsBusy ? _orange : _green)
+            MenuOpenCodeStatus.Foreground = online
+                ? (busy ? _orange : _green)
                 : _dim;
         }
+
+        SetOpenCodeAvailable(online);
 
         string signature = string.Join('|',
             _openCode.SelectedSessionId,
             _openCode.IsBusy,
             permission?.Id,
             _openCode.Sessions.Count,
-            _openCode.IsConnected);
+            online);
 
         if (signature == _openCodeUiSignature) return;
         _openCodeUiSignature = signature;
         UpdateTargets();
         UpdateView();
+    }
+
+    /// <summary>Офлайн-состояние: недоступные действия отключаем, а кнопку запуска переименовываем.</summary>
+    void SetOpenCodeAvailable(bool online)
+    {
+        bool editable = online && !_openCodeSending;
+
+        OpenCodePrevSession.IsEnabled = online;
+        OpenCodeNextSession.IsEnabled = online;
+        OpenCodeModelPrev.IsEnabled = online;
+        OpenCodeModelNext.IsEnabled = online;
+        OpenCodeNewSession.IsEnabled = online;
+        OpenCodeStopButton.IsEnabled = online;
+        OpenCodeSendIcon.IsEnabled = editable;
+        OpenCodeSendButton.IsEnabled = editable;
+        OpenCodePromptBox.IsEnabled = editable;
+
+        OpenCodeAppButton.Content = online ? "OpenCode Desktop" : "Запустить OpenCode";
+        OpenCodeAppButton.Background = online ? ChipBackground : AccentBackground;
     }
 
     static string Shorten(string value, int maxLength)
@@ -211,10 +244,12 @@ public partial class MainWindow
     async void OpenCodeSend_Click(object sender, RoutedEventArgs e)
     {
         if (OpenCodePromptBox == null) return;
+        if (!_openCode.IsConnected) return;
 
         string text = OpenCodePromptBox.Text.Trim();
         if (string.IsNullOrEmpty(text) || text == PromptPlaceholder) return;
 
+        _openCodeSending = true;
         OpenCodePromptBox.IsEnabled = false;
         OpenCodePromptBox.Text = "Отправка...";
 
@@ -225,7 +260,7 @@ public partial class MainWindow
         }
         finally
         {
-            OpenCodePromptBox.IsEnabled = true;
+            _openCodeSending = false;
             OpenCodePromptBox_LostFocus(OpenCodePromptBox, new RoutedEventArgs());
             SyncOpenCodeUI();
         }
