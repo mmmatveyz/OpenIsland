@@ -399,6 +399,7 @@ public partial class MainWindow : Window
             Safely(UpdateClock);
             Safely(PollPower);
             Safely(StayOnTop);
+            Safely(SyncAgentPill);
             if (_media.IsPlaying) _lastPlayedAt = DateTime.UtcNow;
             Safely(UpdateView);
         }

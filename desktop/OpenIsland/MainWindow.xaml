@@ -485,6 +485,9 @@
                 <Grid x:Name="IdleView" Width="118" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:Digits x:Name="IdleClock" Text="00:00" FontSize="13.5" FontWeight="SemiBold"
                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <local:Icon x:Name="IdleAgentIcon" Kind="Sparkle" Width="13" Height="13"
+                                Fill="{StaticResource Indigo}" Visibility="Collapsed"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,11,0"/>
                 </Grid>
 
                 <Grid x:Name="SoundView" Width="110" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top"/>
@@ -708,6 +711,12 @@
                             <TextBlock x:Name="BigDate" FontSize="13" Foreground="{StaticResource Dim}"/>
                             <local:Icon x:Name="InfoFocus" Kind="Moon" Width="13" Height="13" Fill="{StaticResource Indigo}"
                                         Margin="6,1,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <StackPanel x:Name="BigAgentRow" Orientation="Horizontal" Margin="2,3,0,0" Visibility="Collapsed">
+                            <local:Icon x:Name="BigAgentIcon" Kind="Check" Width="13" Height="13" Fill="{StaticResource Green}"
+                                        VerticalAlignment="Center"/>
+                            <TextBlock x:Name="BigAgentText" FontSize="13" Foreground="{StaticResource Green}"
+                                       Margin="5,-1,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Margin="0,0,24,0" HorizontalAlignment="Right" VerticalAlignment="Center">

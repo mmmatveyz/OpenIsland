@@ -33,6 +33,10 @@ public partial class MainWindow
     DispatcherTimer? _openCodeNoticeTimeout;
     DispatcherTimer? _openCodeDeleteTimeout;
     DateTime _openCodeBusySinceUtc;
+    DateTime _openCodeDoneAtUtc;
+    AgentPillState _agentPill = AgentPillState.Hidden;
+    Glyph _compactGlyph = Glyph.Sparkle;
+    Brush? _compactTint;
 
     static Brush Frozen(Color color)
     {
@@ -69,11 +73,16 @@ public partial class MainWindow
 
         bool online = _openCode.IsConnected;
         bool busy = _openCode.IsBusy;
-        if (busy && !_openCodeBusy) _openCodeBusySinceUtc = DateTime.UtcNow;
+        if (busy && !_openCodeBusy)
+        {
+            _openCodeBusySinceUtc = DateTime.UtcNow;
+            _openCodeDoneAtUtc = default;
+        }
         if (_openCodeBusy && !busy && online)
         {
             if (Settings.TaskChime) _chime.Play();
             NotifyTaskDone(DateTime.UtcNow - _openCodeBusySinceUtc);
+            _openCodeDoneAtUtc = DateTime.UtcNow;
         }
         _openCodeBusy = busy;
 
@@ -121,6 +130,23 @@ public partial class MainWindow
             ? (busy ? _orange : _green)
             : _dim;
 
+        // В компактной капсуле иконка сразу говорит, чего ждёт агент:
+        // искра — работа, колокольчик — разрешение.
+        Glyph compactGlyph = permission != null ? Glyph.Bell : Glyph.Sparkle;
+        Brush compactTint = permission != null ? _orange : _indigo;
+        if (compactGlyph != _compactGlyph)
+        {
+            _compactGlyph = compactGlyph;
+            OpenCodeCompactIcon.Kind = compactGlyph;
+        }
+        if (!ReferenceEquals(compactTint, _compactTint))
+        {
+            _compactTint = compactTint;
+            OpenCodeCompactIcon.Fill = compactTint;
+        }
+
+        SyncAgentPill();
+
         if (MenuOpenCodeStatus != null)
         {
             MenuOpenCodeStatus.Text = online
@@ -145,6 +171,41 @@ public partial class MainWindow
         _openCodeUiSignature = signature;
         UpdateTargets();
         UpdateView();
+    }
+
+    /// <summary>
+    /// Свёрнутая пилюля должна говорить о состоянии агента, даже когда остров
+    /// не раскрыт: идёт работа, нужно разрешение или задача только что завершилась.
+    /// Состояние меняется редко, поэтому UI трогаем только при реальном переходе.
+    /// </summary>
+    void SyncAgentPill()
+    {
+        bool asks = _openCode.PendingPermission != null;
+        TimeSpan sinceDone = _openCodeDoneAtUtc == default
+            ? TimeSpan.MaxValue
+            : DateTime.UtcNow - _openCodeDoneAtUtc;
+        AgentPillState state = AgentPill.StateOf(_openCode.IsConnected, _openCode.IsBusy, asks, sinceDone);
+        if (state == _agentPill) return;
+        _agentPill = state;
+
+        (Glyph glyph, Brush brush, string text) = state switch
+        {
+            AgentPillState.Asks => (Glyph.Bell, (Brush)_orange, "Требуется разрешение"),
+            AgentPillState.Busy => (Glyph.Sparkle, _indigo, "Агент работает"),
+            AgentPillState.Done => (Glyph.Check, (Brush)_green, "Задача выполнена"),
+            _ => (Glyph.Sparkle, (Brush)_dim, ""),
+        };
+        Visibility shown = state == AgentPillState.Hidden ? Visibility.Collapsed : Visibility.Visible;
+
+        if (IdleAgentIcon.Kind != glyph) IdleAgentIcon.Kind = glyph;
+        IdleAgentIcon.Fill = brush;
+        IdleAgentIcon.Visibility = shown;
+
+        if (BigAgentIcon.Kind != glyph) BigAgentIcon.Kind = glyph;
+        BigAgentIcon.Fill = brush;
+        BigAgentText.Text = text;
+        BigAgentText.Foreground = brush;
+        BigAgentRow.Visibility = shown;
     }
 
     /// <summary>Офлайн-состояние: недоступные действия отключаем, а кнопку запуска переименовываем.</summary>
