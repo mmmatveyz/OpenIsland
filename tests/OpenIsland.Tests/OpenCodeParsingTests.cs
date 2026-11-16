@@ -131,6 +131,119 @@ public sealed class OpenCodeParsingTests : IDisposable
     }
 
     [Fact]
+    public void ParseMessages_ProjectsOpenCodeMessagePartsAndSkipsToolCalls()
+    {
+        JsonElement data = Parse("""
+            [
+              { "info": { "role": "user" }, "parts": [{ "type": "text", "text": "Почини баг" }] },
+              { "info": { "role": "assistant" }, "parts": [
+                { "type": "reasoning", "text": "скрытые рассуждения" },
+                { "type": "text", "text": "Готово" },
+                { "type": "tool", "name": "edit" }
+              ] },
+              { "info": { "role": "assistant" }, "parts": [{ "type": "tool", "name": "read" }] },
+              { "info": { "role": "system" }, "parts": [{ "type": "text", "text": "не показывать" }] }
+            ]
+            """);
+
+        List<OpenCodeMessage> messages = OpenCodeService.ParseMessages(data);
+
+        Assert.Collection(messages,
+            message => Assert.Equal(new OpenCodeMessage("user", "Почини баг"), message),
+            message => Assert.Equal(new OpenCodeMessage("assistant", "Готово"), message));
+    }
+
+    [Fact]
+    public void ParseMessages_SupportsLegacyContentAndLimitsLargeText()
+    {
+        string longText = new('я', 12020);
+        string json = "[{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Старый формат\"}]},"
+            + "{\"role\":\"user\",\"content\":[{\"type\":\"image\"},{\"type\":\"text\",\"text\":\"" + longText + "\"}]}]";
+        JsonElement data = Parse(json);
+
+        List<OpenCodeMessage> messages = OpenCodeService.ParseMessages(data);
+
+        Assert.Equal(2, messages.Count);
+        Assert.Equal("Старый формат", messages[0].Text);
+        Assert.Equal(12000, messages[1].Text.Length);
+    }
+
+    [Fact]
+    public void ParseMessages_HandlesNonArray()
+    {
+        Assert.Empty(OpenCodeService.ParseMessages(Parse("{}")));
+    }
+
+    [Fact]
+    public void ParseMessages_ReadsOpenCodeV2TypeAndContent()
+    {
+        // Реальный ответ V2: роль в "type", текст — в "content"; помимо сообщений
+        // приходят непроекционные события (idle, compaction, model-switched).
+        JsonElement data = Parse("""
+            [
+              { "type": "idle", "content": [] },
+              { "type": "model-switched", "agent": "build", "content": [] },
+              { "type": "user", "content": [
+                { "type": "text", "text": "Почини баг" }
+              ] },
+              { "type": "assistant", "content": [
+                { "type": "reasoning", "text": "скрытые рассуждения" },
+                { "type": "text", "text": "Готово" },
+                { "type": "tool", "name": "edit" }
+              ] },
+              { "type": "compaction", "content": [] }
+            ]
+            """);
+
+        List<OpenCodeMessage> messages = OpenCodeService.ParseMessages(data);
+
+        Assert.Collection(messages,
+            message => Assert.Equal(new OpenCodeMessage("user", "Почини баг"), message),
+            message => Assert.Equal(new OpenCodeMessage("assistant", "Готово"), message));
+    }
+
+    [Fact]
+    public void ParseMessages_ReadsV2UserTextAndIgnoresAttachments()
+    {
+        // Сообщение пользователя в V2 не имеет "parts"/"content": текст — в "text",
+        // он же дублируется в "metadata.displayText"; вложение — base64 в "files".
+        JsonElement data = Parse("""
+            [
+              { "type": "user",
+                "text": "Было бы хорошо убирать лишние теги",
+                "metadata": { "displayText": "Было бы хорошо убирать лишние теги" },
+                "files": [ { "name": "shot.png", "data": "AAAABBBBCCCC" } ] },
+              { "type": "user", "files": [ { "name": "shot.png", "data": "AAAABBBB" } ] }
+            ]
+            """);
+
+        List<OpenCodeMessage> messages = OpenCodeService.ParseMessages(data);
+
+        Assert.Collection(messages,
+            message => Assert.Equal(new OpenCodeMessage("user", "Было бы хорошо убирать лишние теги"), message),
+            message => Assert.Equal(new OpenCodeMessage("user", "[вложение]"), message));
+    }
+
+    [Fact]
+    public void MergeMessages_PreservesLocalUserAndAssistantWhenServerHistoryIsStale()
+    {
+        OpenCodeMessage[] staleHistory = [new("user", "старый запрос")];
+        OpenCodeMessage[] current = [
+            new("user", "новый запрос"),
+            new("assistant", "ответ, полученный через SSE")
+        ];
+
+        List<OpenCodeMessage> merged = OpenCodeService.MergeMessages(staleHistory, current);
+
+        Assert.Equal(new[]
+        {
+            new OpenCodeMessage("user", "старый запрос"),
+            new OpenCodeMessage("user", "новый запрос"),
+            new OpenCodeMessage("assistant", "ответ, полученный через SSE")
+        }, merged);
+    }
+
+    [Fact]
     public void DescribeModel_PrefersDisplayNameAndFallsBackToId()
     {
         OpenCodeModelInfo[] models = [new("gpt-5", "GPT-5", "openai")];

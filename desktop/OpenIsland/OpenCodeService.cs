@@ -29,6 +29,14 @@ public sealed record OpenCodePermissionInfo(
     string? Message,
     IReadOnlyList<string> Resources);
 
+public sealed record OpenCodeMessage(string Role, string Text)
+{
+    public string Label => Role == "user" ? "Вы" : "OpenCode";
+
+    /// <summary>Текст без markdown-разметки — для обычного <c>TextBlock</c>.</summary>
+    public string DisplayText => MarkdownText.ToPlainText(Text);
+}
+
 /// <summary>
 /// Клиент локального демона OpenCode (REST v2 + SSE).
 /// Вся работа с сетью идёт в фоне; UI подписывается на <see cref="StateChanged"/>.
@@ -56,6 +64,7 @@ public sealed partial class OpenCodeService : IDisposable
 
     List<OpenCodeSessionInfo> _sessions = [];
     List<OpenCodeModelInfo> _models = [];
+    List<OpenCodeMessage> _messages = [];
 
     string _baseUrl = DefaultBaseUrl;
     string? _token;
@@ -73,11 +82,15 @@ public sealed partial class OpenCodeService : IDisposable
     bool _isConnected;
     bool _isBusy;
     bool _needMessages;
+    bool _streamingMessageActive;
+    bool _messagesLoaded;
     readonly bool _enablePairing = true;
     int _refreshing;
     int _syncQueued;
     int _eventsReceived;
+    long _messagesRevision;
     long _executionsStarted;
+    long _messagesLoadGeneration;
     long _lastNotifyAt;
     long _lastDiscoveryAt;
     DateTime? _taskStartedAtUtc;
@@ -120,6 +133,17 @@ public sealed partial class OpenCodeService : IDisposable
     public OpenCodePermissionInfo? PendingPermission => _pendingPermission;
     public IReadOnlyList<OpenCodeSessionInfo> Sessions => Volatile.Read(ref _sessions);
     public IReadOnlyList<OpenCodeModelInfo> Models => Volatile.Read(ref _models);
+    public IReadOnlyList<OpenCodeMessage> Messages
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return [.. _messages];
+            }
+        }
+    }
+    public long MessagesRevision => Interlocked.Read(ref _messagesRevision);
 
     /// <summary>Сколько событий получено по SSE — используется диагностикой.</summary>
     public bool EventsReceived => Volatile.Read(ref _eventsReceived) > 0;

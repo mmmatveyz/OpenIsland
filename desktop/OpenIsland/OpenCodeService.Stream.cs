@@ -135,6 +135,7 @@ public sealed partial class OpenCodeService
                     {
                         _isBusy = true;
                         _streamText.Clear();
+                        _streamingMessageActive = false;
                         _lastError = "";
                         _taskStartedAtUtc = DateTime.UtcNow;
                         UpdateStatusText();
@@ -149,6 +150,14 @@ public sealed partial class OpenCodeService
                         _isBusy = false;
                         _pendingPermission = null;
                         _needMessages = true;
+                        if (_streamingMessageActive && _streamText.Length > 0 && _messages.Count > 0 && _messages[^1].Role == "assistant")
+                        {
+                            List<OpenCodeMessage> messages = [.. _messages];
+                            messages[^1] = new OpenCodeMessage("assistant", _streamText.ToString().Trim());
+                            Volatile.Write(ref _messages, messages);
+                        }
+                        _streamingMessageActive = false;
+                        Interlocked.Increment(ref _messagesRevision);
                         _taskStartedAtUtc = null;
                         UpdateStatusText();
                     }
@@ -162,6 +171,15 @@ public sealed partial class OpenCodeService
                     {
                         _isBusy = false;
                         _pendingPermission = null;
+                        _needMessages = true;
+                        if (_streamingMessageActive && _streamText.Length > 0 && _messages.Count > 0 && _messages[^1].Role == "assistant")
+                        {
+                            List<OpenCodeMessage> messages = [.. _messages];
+                            messages[^1] = new OpenCodeMessage("assistant", _streamText.ToString().Trim());
+                            Volatile.Write(ref _messages, messages);
+                        }
+                        _streamingMessageActive = false;
+                        Interlocked.Increment(ref _messagesRevision);
                         _lastError = DescribeEventError(data);
                         _taskStartedAtUtc = null;
                         UpdateStatusText();
@@ -172,7 +190,15 @@ public sealed partial class OpenCodeService
 
                 case "session.text.started":
                     if (!selected) break;
-                    lock (_gate) _streamText.Clear();
+                    lock (_gate)
+                    {
+                        _streamText.Clear();
+                        _streamingMessageActive = true;
+                        List<OpenCodeMessage> messages = [.. _messages];
+                        messages.Add(new OpenCodeMessage("assistant", ""));
+                        Volatile.Write(ref _messages, messages);
+                        Interlocked.Increment(ref _messagesRevision);
+                    }
                     break;
 
                 case "session.text.delta":
@@ -182,9 +208,24 @@ public sealed partial class OpenCodeService
                     if (delta.Length == 0) break;
                     lock (_gate)
                     {
+                        if (!_streamingMessageActive)
+                        {
+                            _streamText.Clear();
+                            _streamingMessageActive = true;
+                            List<OpenCodeMessage> messages = [.. _messages];
+                            messages.Add(new OpenCodeMessage("assistant", ""));
+                            Volatile.Write(ref _messages, messages);
+                        }
                         if (_streamText.Length > 12000) _streamText.Remove(0, _streamText.Length - 12000);
                         _streamText.Append(delta);
                         _lastAssistantText = _streamText.ToString();
+                        if (_streamingMessageActive && _messages.Count > 0 && _messages[^1].Role == "assistant")
+                        {
+                            List<OpenCodeMessage> messages = [.. _messages];
+                            messages[^1] = new OpenCodeMessage("assistant", _lastAssistantText);
+                            Volatile.Write(ref _messages, messages);
+                        }
+                        Interlocked.Increment(ref _messagesRevision);
                     }
                     Notify();
                     break;
@@ -195,7 +236,37 @@ public sealed partial class OpenCodeService
                     lock (_gate)
                     {
                         string text = _streamText.ToString().Trim();
-                        if (text.Length > 0) _lastAssistantText = text;
+                        if (text.Length > 0)
+                        {
+                            _lastAssistantText = text;
+                            if (_streamingMessageActive && _messages.Count > 0 && _messages[^1].Role == "assistant")
+                            {
+                                List<OpenCodeMessage> messages = [.. _messages];
+                                messages[^1] = new OpenCodeMessage("assistant", text);
+                                Volatile.Write(ref _messages, messages);
+                            }
+                        }
+                        _streamingMessageActive = false;
+                        Interlocked.Increment(ref _messagesRevision);
+                    }
+                    Notify(force: true);
+                    break;
+
+                case "session.text.finished":
+                    if (!selected) break;
+                    lock (_gate)
+                    {
+                        string text = _streamText.ToString().Trim();
+                        if (text.Length > 0 && _streamingMessageActive && _messages.Count > 0 && _messages[^1].Role == "assistant")
+                        {
+                            List<OpenCodeMessage> messages = [.. _messages];
+                            messages[^1] = new OpenCodeMessage("assistant", text);
+                            Volatile.Write(ref _messages, messages);
+                            _lastAssistantText = text;
+                        }
+                        _streamText.Clear();
+                        _streamingMessageActive = false;
+                        Interlocked.Increment(ref _messagesRevision);
                     }
                     Notify(force: true);
                     break;

@@ -33,6 +33,7 @@ public partial class MainWindow
     {
         DateTime now = DateTime.Now;
         IdleClock.Text = BigClock.Text = now.ToString("HH:mm");
+        OpenCodeCompactClock.Text = now.ToString("HH:mm");
         BigDate.Text = now.ToString("dddd, d MMMM", Russian);
     }
 

@@ -33,7 +33,12 @@ public sealed partial class OpenCodeService
             lock (_gate)
             {
                 _streamText.Clear();
+                _streamingMessageActive = false;
                 _lastAssistantText = "";
+                List<OpenCodeMessage> messages = [.. _messages];
+                messages.Add(new OpenCodeMessage("user", prompt));
+                Volatile.Write(ref _messages, messages);
+                Interlocked.Increment(ref _messagesRevision);
                 _lastError = "";
                 _isBusy = true;
                 _needMessages = false;
@@ -103,12 +108,17 @@ public sealed partial class OpenCodeService
             lock (_gate)
             {
                 _sessionId = id;
+                Interlocked.Increment(ref _messagesLoadGeneration);
+                _messagesLoaded = false;
                 _sessionTitle = GetString(data, "title");
                 _sessionDirectory = targetDirectory;
                 _isBusy = false;
                 _pendingPermission = null;
                 _streamText.Clear();
+                _streamingMessageActive = false;
                 _lastAssistantText = "";
+                Volatile.Write(ref _messages, []);
+                Interlocked.Increment(ref _messagesRevision);
                 _lastError = "";
                 UpdateStatusText();
             }
@@ -133,6 +143,8 @@ public sealed partial class OpenCodeService
         lock (_gate)
         {
             _sessionId = selected.Id;
+            Interlocked.Increment(ref _messagesLoadGeneration);
+            _messagesLoaded = false;
             _sessionTitle = selected.Title;
             _sessionDirectory = selected.Directory;
             _sessionModelId = selected.ModelId;
@@ -140,7 +152,10 @@ public sealed partial class OpenCodeService
             _isBusy = selected.IsRunning;
             _pendingPermission = null;
             _streamText.Clear();
+            _streamingMessageActive = false;
             _lastAssistantText = "";
+            Volatile.Write(ref _messages, []);
+            Interlocked.Increment(ref _messagesRevision);
             _lastError = "";
             _needMessages = true;
             UpdateStatusText();
@@ -163,6 +178,8 @@ public sealed partial class OpenCodeService
         {
             OpenCodeSessionInfo selected = sessions[index];
             _sessionId = selected.Id;
+            Interlocked.Increment(ref _messagesLoadGeneration);
+            _messagesLoaded = false;
             _sessionTitle = selected.Title;
             _sessionDirectory = selected.Directory;
             _sessionModelId = selected.ModelId;
@@ -170,7 +187,10 @@ public sealed partial class OpenCodeService
             _isBusy = selected.IsRunning;
             _pendingPermission = null;
             _streamText.Clear();
+            _streamingMessageActive = false;
             _lastAssistantText = "";
+            Volatile.Write(ref _messages, []);
+            Interlocked.Increment(ref _messagesRevision);
             _lastError = "";
             _needMessages = true;
             UpdateStatusText();
@@ -272,6 +292,12 @@ public sealed partial class OpenCodeService
             if (_sessionId == sessionId)
             {
                 _sessionId = null;
+                Interlocked.Increment(ref _messagesLoadGeneration);
+                _messagesLoaded = false;
+                _streamingMessageActive = false;
+                Volatile.Write(ref _messages, []);
+                Interlocked.Increment(ref _messagesRevision);
+                _lastAssistantText = "";
                 _sessionTitle = null;
                 _sessionDirectory = null;
                 _isBusy = false;

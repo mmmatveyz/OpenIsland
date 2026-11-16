@@ -514,17 +514,20 @@
                                   HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,14,0"/>
                 </Grid>
 
-                <Grid x:Name="OpenCodeView" Width="246" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="OpenCodeView" Width="238" Height="34" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <local:Icon x:Name="OpenCodeCompactIcon" Grid.Column="0" Kind="Sparkle" Width="16" Height="16"
-                                Fill="{StaticResource Indigo}" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                    <TextBlock x:Name="OpenCodeCompactText" Grid.Column="1" Text="OpenCode AI" FontSize="12.5" FontWeight="SemiBold"
-                               VerticalAlignment="Center" Margin="6,0,6,0" TextTrimming="CharacterEllipsis"/>
-                    <TextBlock x:Name="OpenCodeCompactTimer" Grid.Column="2" Text="? 0:00" FontSize="10" Foreground="#FF9F0A"
+                    <local:Digits x:Name="OpenCodeCompactClock" Grid.Column="0" Text="00:00" FontSize="13.5" FontWeight="SemiBold"
+                                   HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0,7,0"/>
+                    <local:Icon x:Name="OpenCodeCompactIcon" Grid.Column="1" Kind="Sparkle" Width="15" Height="15"
+                                Fill="{StaticResource Indigo}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="OpenCodeCompactText" Grid.Column="2" Text="Готов" FontSize="10.5" FontWeight="SemiBold"
+                               VerticalAlignment="Center" Margin="0,0,5,0" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock x:Name="OpenCodeCompactTimer" Grid.Column="3" Text="0:00" FontSize="10" Foreground="#FF9F0A"
                                VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed"/>
                 </Grid>
 
@@ -1243,7 +1246,37 @@
                                     <ScrollViewer.Resources>
                                         <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
                                     </ScrollViewer.Resources>
-                                    <TextBlock x:Name="OpenCodeAnswerText" FontSize="12.5" Foreground="#E5E5EA" TextWrapping="Wrap" LineHeight="18" Margin="0,0,6,0"/>
+                                    <ItemsControl x:Name="OpenCodeMessagesList">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="10" Padding="8,6" Margin="0,3,0,3" MaxWidth="310">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Label}" FontSize="9.5" FontWeight="SemiBold"
+                                                                   Foreground="#A1A1AA" Margin="0,0,0,2"/>
+                                                        <TextBlock Text="{Binding DisplayText}" FontSize="12" Foreground="#E5E5EA"
+                                                                   TextWrapping="Wrap" LineHeight="17"/>
+                                                    </StackPanel>
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="HorizontalAlignment" Value="Left"/>
+                                                            <Setter Property="Background" Value="#38383B"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Role}" Value="user">
+                                                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                                    <Setter Property="Background" Value="#403A72"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </ScrollViewer>
                             </Border>
 

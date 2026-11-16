@@ -27,6 +27,12 @@ public class OpenCodeHttpTests
             "/api/session" => StubHttpHandler.Json(
                 """{"data":[{"id":"ses_1","title":"Починить баг","location":{"directory":"C:\\work"},"model":{"id":"m1","providerID":"p1"}}]}"""),
             "/api/model" => StubHttpHandler.Json("""{"data":[{"id":"m1","name":"Model One","providerID":"p1"}]}"""),
+            "/api/session/ses_1/message" => StubHttpHandler.Json("""
+                {"data":[
+                  {"info":{"role":"assistant"},"parts":[{"type":"text","text":"Ответ агента"}]},
+                  {"info":{"role":"user"},"parts":[{"type":"text","text":"Запрос пользователя"}]}
+                ]}
+                """),
             _ => StubHttpHandler.Json("""{"data":{}}"""),
         });
 
@@ -38,6 +44,9 @@ public class OpenCodeHttpTests
         Assert.Equal("Model One", service.ModelName);
         Assert.Single(service.Sessions);
         Assert.Single(service.Models);
+        Assert.Collection(service.Messages,
+            message => Assert.Equal(new OpenCodeMessage("user", "Запрос пользователя"), message),
+            message => Assert.Equal(new OpenCodeMessage("assistant", "Ответ агента"), message));
     }
 
     [Fact]

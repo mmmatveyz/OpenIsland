@@ -41,8 +41,8 @@ public partial class MainWindow : Window
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
-        [View.OpenCode] = new(246, 34, 17),
-        [View.OpenCodeBig] = new(380, 406, 36),
+        [View.OpenCode] = new(238, 34, 17),
+        [View.OpenCodeBig] = new(380, 426, 36),
         [View.Perf] = new(340, 410, 34),
         [View.Clipboard] = new(340, 430, 34),
     };
@@ -438,7 +438,6 @@ public partial class MainWindow : Window
         if (_ticks % 2 == 0) Safely(RefreshHover);
         if (_ticks % HeadsetReadTicks == 1) Safely(() => ReadHeadset(_audio.Device));
         Safely(UpdateTimer);
-        if (_panel == Panel.OpenCode || _view == View.OpenCode) Safely(UpdateOpenCodeTimer);
         if (_ticks % FullscreenCheckTicks == 0)
         {
             Safely(CheckFullscreen);
@@ -453,6 +452,7 @@ public partial class MainWindow : Window
             if (_media.IsPlaying) _lastPlayedAt = DateTime.UtcNow;
             Safely(UpdateView);
         }
+        if (_ticks % 2 == 0 && (_panel == Panel.OpenCode || _view == View.OpenCode)) Safely(UpdateOpenCodeTimer);
     }
 
     View TargetView()

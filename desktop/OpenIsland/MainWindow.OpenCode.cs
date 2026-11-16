@@ -34,6 +34,7 @@ public partial class MainWindow
     DispatcherTimer? _openCodeDeleteTimeout;
     DateTime _openCodeBusySinceUtc;
     DateTime _openCodeDoneAtUtc;
+    long _openCodeMessagesRevision = -1;
     AgentPillState _agentPill = AgentPillState.Hidden;
     Glyph _compactGlyph = Glyph.Sparkle;
     Brush? _compactTint;
@@ -84,10 +85,12 @@ public partial class MainWindow
             NotifyTaskDone(DateTime.UtcNow - _openCodeBusySinceUtc);
             _openCodeDoneAtUtc = DateTime.UtcNow;
         }
+        if (!online) _openCodeDoneAtUtc = default;
         _openCodeBusy = busy;
+        if (_openCodeBusySinceUtc != default && !busy) _openCodeBusySinceUtc = default;
 
-        OpenCodeCompactText.Text = _openCode.StatusText;
-
+        OpenCodePermissionInfo? permission = _openCode.PendingPermission;
+        SyncAgentPill();
         string title = _openCode.SessionTitle;
         OpenCodeTaskTitle.Text = string.IsNullOrWhiteSpace(title)
             ? (online ? "Нет активной сессии" : "OpenCode не запущен")
@@ -109,15 +112,10 @@ public partial class MainWindow
         int sessionCount = _openCode.Sessions.Count;
         OpenCodeSessionCounter.Text = sessionCount > 1 ? sessionCount.ToString() : "";
 
-        string answer = _openCode.LastAssistantText.Trim();
-        OpenCodeAnswerBox.Visibility = answer.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (answer.Length > 12000) answer = answer[..12000];
-        OpenCodeAnswerText.Text = answer;
-        if (answer.Length > 0 && _openCode.IsBusy) Dispatcher.BeginInvoke(() => OpenCodeAnswerScroll.ScrollToEnd(), DispatcherPriority.Render);
+        SyncOpenCodeMessages();
 
         UpdateOpenCodeTimer();
 
-        OpenCodePermissionInfo? permission = _openCode.PendingPermission;
         OpenCodePermissionPanel.Visibility = permission != null ? Visibility.Visible : Visibility.Collapsed;
         if (permission != null)
         {
@@ -129,23 +127,6 @@ public partial class MainWindow
         OpenCodeStatusDot.Fill = online
             ? (busy ? _orange : _green)
             : _dim;
-
-        // В компактной капсуле иконка сразу говорит, чего ждёт агент:
-        // искра — работа, колокольчик — разрешение.
-        Glyph compactGlyph = permission != null ? Glyph.Bell : Glyph.Sparkle;
-        Brush compactTint = permission != null ? _orange : _indigo;
-        if (compactGlyph != _compactGlyph)
-        {
-            _compactGlyph = compactGlyph;
-            OpenCodeCompactIcon.Kind = compactGlyph;
-        }
-        if (!ReferenceEquals(compactTint, _compactTint))
-        {
-            _compactTint = compactTint;
-            OpenCodeCompactIcon.Fill = compactTint;
-        }
-
-        SyncAgentPill();
 
         if (MenuOpenCodeStatus != null)
         {
@@ -173,6 +154,17 @@ public partial class MainWindow
         UpdateView();
     }
 
+    void SyncOpenCodeMessages()
+    {
+        long revision = _openCode.MessagesRevision;
+        if (revision == _openCodeMessagesRevision) return;
+        _openCodeMessagesRevision = revision;
+        IReadOnlyList<OpenCodeMessage> messages = _openCode.Messages;
+        OpenCodeMessagesList.ItemsSource = messages;
+        OpenCodeAnswerBox.Visibility = messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        if (_openCode.IsBusy) Dispatcher.BeginInvoke(() => OpenCodeAnswerScroll.ScrollToEnd(), DispatcherPriority.Render);
+    }
+
     /// <summary>
     /// Свёрнутая пилюля должна говорить о состоянии агента, даже когда остров
     /// не раскрыт: идёт работа, нужно разрешение или задача только что завершилась.
@@ -185,6 +177,7 @@ public partial class MainWindow
             ? TimeSpan.MaxValue
             : DateTime.UtcNow - _openCodeDoneAtUtc;
         AgentPillState state = AgentPill.StateOf(_openCode.IsConnected, _openCode.IsBusy, asks, sinceDone);
+        SyncCompactOpenCodeState(state);
         if (state == _agentPill) return;
         _agentPill = state;
 
@@ -206,6 +199,31 @@ public partial class MainWindow
         BigAgentText.Text = text;
         BigAgentText.Foreground = brush;
         BigAgentRow.Visibility = shown;
+    }
+
+    void SyncCompactOpenCodeState(AgentPillState state)
+    {
+        (Glyph glyph, Brush tint, string label) = state switch
+        {
+            AgentPillState.Asks => (Glyph.Bell, (Brush)_orange, "Разрешение"),
+            AgentPillState.Busy => (Glyph.Sparkle, _indigo, "Работает"),
+            AgentPillState.Done => (Glyph.Check, (Brush)_green, "Готово"),
+            _ when !_openCode.IsConnected => (Glyph.Sparkle, (Brush)_dim, "Офлайн"),
+            _ => (Glyph.Sparkle, (Brush)_dim, "Готов"),
+        };
+
+        if (glyph != _compactGlyph)
+        {
+            _compactGlyph = glyph;
+            OpenCodeCompactIcon.Kind = glyph;
+        }
+        if (!ReferenceEquals(tint, _compactTint))
+        {
+            _compactTint = tint;
+            OpenCodeCompactIcon.Fill = tint;
+        }
+        OpenCodeCompactText.Text = label;
+        OpenCodeCompactText.Foreground = tint;
     }
 
     /// <summary>Офлайн-состояние: недоступные действия отключаем, а кнопку запуска переименовываем.</summary>
@@ -249,9 +267,12 @@ public partial class MainWindow
 
     void UpdateOpenCodeTimer()
     {
-        if (_openCode.IsBusy && _openCode.TaskStartedAtUtc.HasValue)
+        DateTime? startedAt = _openCode.TaskStartedAtUtc;
+        if (!startedAt.HasValue && _openCode.IsBusy && _openCodeBusySinceUtc != default)
+            startedAt = _openCodeBusySinceUtc;
+        if (_openCode.IsBusy && startedAt.HasValue && startedAt.Value != default)
         {
-            string elapsed = $"\u23F1 {FormatElapsed(DateTime.UtcNow - _openCode.TaskStartedAtUtc.Value)}";
+            string elapsed = $"\u23F1 {FormatElapsed(DateTime.UtcNow - startedAt.Value)}";
             OpenCodeTaskTimer.Visibility = Visibility.Visible;
             OpenCodeTaskTimer.Text = elapsed;
             OpenCodeCompactTimer.Visibility = Visibility.Visible;

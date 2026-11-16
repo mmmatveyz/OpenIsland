@@ -36,6 +36,13 @@ public sealed partial class OpenCodeService
                 if (sessions.Count == 0)
                 {
                     _sessionId = null;
+                    Interlocked.Increment(ref _messagesLoadGeneration);
+                    _messagesLoaded = false;
+                    Volatile.Write(ref _messages, []);
+                    Interlocked.Increment(ref _messagesRevision);
+                    _streamText.Clear();
+                    _streamingMessageActive = false;
+                    _lastAssistantText = "";
                     _sessionTitle = null;
                     _sessionDirectory = null;
                     _isBusy = false;
@@ -53,6 +60,10 @@ public sealed partial class OpenCodeService
                         if (selected.Id != _sessionId)
                         {
                             _sessionId = selected.Id;
+                            Interlocked.Increment(ref _messagesLoadGeneration);
+                            _messagesLoaded = false;
+                            Volatile.Write(ref _messages, []);
+                            Interlocked.Increment(ref _messagesRevision);
                             _needMessages = true;
                             _pendingPermission = null;
                         }
@@ -81,11 +92,14 @@ public sealed partial class OpenCodeService
                 UpdateStatusText();
             }
 
-            if (_needMessages && _sessionId != null)
+            string? sessionId;
+            bool shouldLoadMessages;
+            lock (_gate)
             {
-                _needMessages = false;
-                await LoadMessagesAsync(_sessionId);
+                sessionId = _sessionId;
+                shouldLoadMessages = sessionId != null && (_needMessages || !_messagesLoaded);
             }
+            if (shouldLoadMessages && sessionId != null) await LoadMessagesAsync(sessionId);
 
             if (_sessionId != null && (_isBusy || _pendingPermission != null))
             {
@@ -249,42 +263,108 @@ public sealed partial class OpenCodeService
 
     async Task LoadMessagesAsync(string sessionId)
     {
+        long generation = Interlocked.Read(ref _messagesLoadGeneration);
         try
         {
-            JsonElement data = await GetDataAsync($"/api/session/{Esc(sessionId)}/message?limit=8&order=desc");
-            if (data.ValueKind != JsonValueKind.Array) return;
-
-            foreach (JsonElement message in data.EnumerateArray())
+            JsonElement data = await GetDataAsync($"/api/session/{Esc(sessionId)}/message?limit=40&order=desc");
+            List<OpenCodeMessage> messages = ParseMessages(data);
+            messages.Reverse();
+            lock (_gate)
             {
-                if (GetString(message, "type") != "assistant") continue;
-                if (!message.TryGetProperty("content", out JsonElement content)
-                    || content.ValueKind != JsonValueKind.Array)
+                if (_sessionId != sessionId || generation != Interlocked.Read(ref _messagesLoadGeneration)) return;
+                messages = MergeMessages(messages, _messages);
+                Volatile.Write(ref _messages, messages);
+                _messagesLoaded = true;
+                _needMessages = false;
+                if (!_isBusy)
                 {
-                    continue;
+                    _streamText.Clear();
+                    _streamingMessageActive = false;
                 }
-
-                StringBuilder text = new();
-                foreach (JsonElement part in content.EnumerateArray())
-                {
-                    if (GetString(part, "type") == "text")
-                    {
-                        text.Append(GetString(part, "text"));
-                    }
-                }
-
-                string result = text.ToString().Trim();
-                if (result.Length > 0)
-                {
-                    if (result.Length > 12000) result = result[..12000];
-                    lock (_gate) _lastAssistantText = result;
-                    return;
-                }
+                Interlocked.Increment(ref _messagesRevision);
+                OpenCodeMessage? lastAssistant = messages.LastOrDefault(message => message.Role == "assistant");
+                if (!_streamingMessageActive && lastAssistant != null) _lastAssistantText = lastAssistant.Text;
             }
+            Notify(force: true);
         }
         catch (Exception ex)
         {
             App.LogDebug($"OpenCode: message load failed: {ex.Message}");
         }
+    }
+
+    internal static List<OpenCodeMessage> MergeMessages(
+        IReadOnlyList<OpenCodeMessage> history,
+        IReadOnlyList<OpenCodeMessage> current)
+    {
+        List<OpenCodeMessage> merged = [.. history];
+        foreach (OpenCodeMessage message in current)
+        {
+            if (!merged.Contains(message)) merged.Add(message);
+        }
+
+        if (merged.Count > 40) merged.RemoveRange(0, merged.Count - 40);
+        return merged;
+    }
+
+    internal static List<OpenCodeMessage> ParseMessages(JsonElement data)
+    {
+        List<OpenCodeMessage> messages = [];
+        if (data.ValueKind != JsonValueKind.Array) return messages;
+
+        foreach (JsonElement item in data.EnumerateArray())
+        {
+            string role = GetString(item, "role");
+            if (string.IsNullOrEmpty(role) && item.TryGetProperty("info", out JsonElement info))
+            {
+                role = GetString(info, "role");
+            }
+            // OpenCode V2 кладёт роль сообщения в поле "type" (user/assistant),
+            // а не в "role"/"info.role"; непроекционные события (idle, compaction,
+            // model-switched и т.п.) тоже приходят как элементы истории.
+            if (string.IsNullOrEmpty(role)) role = GetString(item, "type");
+            if (role is not ("user" or "assistant")) continue;
+
+            StringBuilder text = new();
+            if (item.TryGetProperty("parts", out JsonElement parts) && parts.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement part in parts.EnumerateArray())
+                {
+                    if (GetString(part, "type") == "text") text.Append(GetString(part, "text"));
+                }
+            }
+            else if (item.TryGetProperty("content", out JsonElement content) && content.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement part in content.EnumerateArray())
+                {
+                    if (GetString(part, "type") == "text") text.Append(GetString(part, "text"));
+                }
+            }
+
+            // В V2 сообщение пользователя приходит без "parts"/"content": его текст
+            // лежит в "text" (дублируется в "metadata.displayText"), а вложения —
+            // в "files" (base64, в интерфейсе не показываем и не храним).
+            if (text.Length == 0) text.Append(GetString(item, "text"));
+            if (text.Length == 0 && item.TryGetProperty("metadata", out JsonElement metadata)
+                && metadata.ValueKind == JsonValueKind.Object)
+            {
+                text.Append(GetString(metadata, "displayText"));
+            }
+
+            string value = text.ToString().Trim();
+            if (value.Length == 0
+                && item.TryGetProperty("files", out JsonElement files)
+                && files.ValueKind == JsonValueKind.Array
+                && files.GetArrayLength() > 0)
+            {
+                value = "[вложение]";
+            }
+            if (value.Length == 0) continue;
+            if (value.Length > 12000) value = value[..12000];
+            messages.Add(new OpenCodeMessage(role, value));
+        }
+
+        return messages;
     }
 
     async Task RefreshPermissionAsync(string sessionId)
