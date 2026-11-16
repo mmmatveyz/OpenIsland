@@ -62,7 +62,8 @@ OpenIsland/
 │   ├── Gadgets/                   # PNG-графика виджетов
 │   ├── Assets/                    # Иконка приложения и звук завершения задачи
 │   └── OpenIsland.csproj
-├── scripts/build.ps1              # Сборка, запуск и self-test
+├── installer/OpenIsland.iss       # Скрипт Inno Setup (per-user установщик)
+├── scripts/build.ps1              # Сборка, запуск, self-test и установщик
 ├── bin/OpenIsland/                # Результат сборки (OpenIsland.exe)
 ├── Запуск_OpenIsland.bat          # Запуск в один клик (собирает при необходимости)
 └── .dotnet/                       # Локально установленный SDK (в git не попадает)
@@ -110,11 +111,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 
 # Диагностика OpenCode (создаёт временную сессию, шлёт промпт, ждёт ответ)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
+
+# Сборка установщика Inno Setup в bin\installer-out (нужен Inno Setup 6)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Installer
 ```
 
 - Сборка должна проходить с **0 ошибок и 0 предупреждений**.
 - Перед пересборкой скрипт останавливает запущенный `OpenIsland.exe` (флаг `-NoStop` отключает это).
 - Если .NET SDK отсутствует, скрипт ставит его локально в `.dotnet/`.
+- Установщик собирается per-user (`%LOCALAPPDATA%\Programs\OpenIsland`), чтобы встроенный апдейтер мог подменять exe без UAC; `.iss` валидируется в CI на каждый push.
 - После изменений, затрагивающих OpenCode, полезно прогнать `--selftest` и посмотреть `%LOCALAPPDATA%\OpenIsland\logs\app.log`.
 
 ---

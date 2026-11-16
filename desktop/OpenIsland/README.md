@@ -97,7 +97,7 @@
 - **Задачи и ответ.** Поле ввода («Enter» — отправить), живой стриминг ответа агента через SSE, кнопка «Стоп» для прерывания.
 - **Разрешения.** Запросы доступа агента («Разрешить» / «Отклонить») без переключения в OpenCode Desktop.
 - **Задача агенту.** Текст уходит в выбранную сессию OpenCode как есть; роль и контекст задаются промптом.
-- **Звук завершения.** Когда агент заканчивает задачу, играет тот же короткий звук, что и в самом OpenCode — `staplebops-01` (лицензия MIT, проект [sst/opencode](https://github.com/sst/opencode)). Файл лежит в `Assets/staplebops-01.mp3` и копируется рядом с exe.
+- **Звук завершения.** Когда агент заканчивает задачу, играет тот же короткий звук, что и в самом OpenCode — `staplebops-01` (лицензия MIT, проект [sst/opencode](https://github.com/sst/opencode)). Файл лежит в `Assets/staplebops-01.mp3`, встроен в exe и один раз выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3`.
 - **Хоткей.** Глобальный **Ctrl+Alt+O** мгновенно открывает или сворачивает карточку OpenCode из любого приложения.
 - **Офлайн.** Если демон OpenCode не запущен, карточка честно сообщает «OpenCode не запущен»: навигация по сессиям/моделям, ввод и «Отправить» отключаются, а акцентная кнопка «Запустить OpenCode» поднимает приложение. После старта демона островок подключается сам. Клик по островку при закрытом OpenCode открывает меню, а не пустую карточку агента.
 
@@ -156,7 +156,7 @@ dotnet publish desktop\OpenIsland\OpenIsland.csproj -c Release -r win-x64 --self
   - вкладыши — [«AirPods (3ᵉ génération)»](https://sketchfab.com/3d-models/airpods-3e-generation-ed331e742ab944e683dcddd59ab0713e), автор [polyman](https://sketchfab.com/Polyman_3D); кейс убран;
   - накладные — [«Airpods max sky blue»](https://sketchfab.com/3d-models/airpods-max-sky-blue-3d0643db08fc4ef89bda55a74077ece4), автор [polyman](https://sketchfab.com/ely.haddad); перекрашены в серебро;
   - колонка — [«JBL Charge 3 speaker»](https://sketchfab.com/3d-models/jbl-charge-3-speaker-661f85fe3e4048f59785b2a75ffa52f8), автор [Aleksei Rozumnyi](https://sketchfab.com/Aleksei.Rozumnyi).
-- **Звук завершения.** `Assets/staplebops-01.mp3` — звук завершения задачи из [OpenCode](https://github.com/sst/opencode) (sst), лицензия MIT.
+- **Звук завершения.** `Assets/staplebops-01.mp3` — звук завершения задачи из [OpenCode](https://github.com/sst/opencode) (sst), лицензия MIT. Встроен в exe как WPF-ресурс и выгружается в кэш при первом обращении.
 
 ## Конфиденциальность
 

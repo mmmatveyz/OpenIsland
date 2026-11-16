@@ -24,10 +24,7 @@
   <ItemGroup>
     <Resource Include="Fonts\*.otf;Fonts\*.ttf" />
     <Resource Include="Gadgets\*.png" />
-    <Resource Include="Assets\*.ico" />
-    <Content Include="Assets\*.mp3">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\*.ico;Assets\*.mp3" />
   </ItemGroup>
 
   <ItemGroup>

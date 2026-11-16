@@ -59,7 +59,8 @@ OpenIsland/
 │   ├── Native.cs               # Win32-вызовы (topmost, toolwindow, DWM)
 │   ├── Fonts/ Gadgets/ Assets/ # Шрифты, графика виджетов, иконка и звук
 │   └── OpenIsland.csproj
-├── scripts/build.ps1           # Сборка, запуск и self-test
+├── installer/OpenIsland.iss    # Скрипт Inno Setup (per-user установщик)
+├── scripts/build.ps1           # Сборка, запуск, self-test и установщик
 ├── bin/OpenIsland/             # Результат сборки (OpenIsland.exe)
 ├── docs/                       # Архитектура, product map, roadmap, заметки по авторизации
 └── Запуск_OpenIsland.bat       # Запуск в один клик (собирает при необходимости)
@@ -80,11 +81,22 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Run
 
 # Диагностика интеграции с OpenCode (без UI)
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -SelfTest
+
+# Сборка установщика (нужен Inno Setup 6: winget install JRSoftware.InnoSetup)
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Installer
 ```
 
 Либо двойной клик по `Запуск_OpenIsland.bat` — скрипт соберёт приложение, если `bin\OpenIsland\OpenIsland.exe` ещё нет.
 
 Если .NET SDK не установлен в системе, `scripts\build.ps1` автоматически скачает SDK 8.0 в локальную папку `.dotnet/` (она исключена из git).
+
+### Установка
+
+Для обычных пользователей публикуется установщик `OpenIslandSetup-<версия>.exe` (Inno Setup) рядом с portable-сборкой `OpenIsland.exe` в [GitHub Releases](https://github.com/mmmatveyz/OpenIsland/releases).
+
+- Ставится **для текущего пользователя** в `%LOCALAPPDATA%\Programs\OpenIsland` — права администратора не нужны, а встроенный апдейтер может подменять exe без UAC.
+- Ярлык в «Пуск», запись в «Программы и компоненты» и корректное удаление; ярлык на рабочем столе и автозапуск — по желанию.
+- Сборка установщика: `scripts\build.ps1 -Installer` (требует установленный Inno Setup 6). Скрипт установщика — [`installer/OpenIsland.iss`](./installer/OpenIsland.iss).
 
 ### Требования
 

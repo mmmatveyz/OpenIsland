@@ -25,3 +25,44 @@ jobs:
           $exe = Get-ChildItem -Recurse -Filter OpenIsland.exe -Path desktop/OpenIsland/bin | Select-Object -First 1
           if (-not $exe) { throw 'OpenIsland.exe was not produced.' }
           Write-Host "Built $($exe.FullName) ($([math]::Round($exe.Length / 1MB, 1)) MB)"
+
+      # The portable exe must be self-contained: no loose assets next to it.
+      - name: Publish portable exe
+        shell: pwsh
+        run: >
+          dotnet publish desktop/OpenIsland/OpenIsland.csproj -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:DebugType=none
+          -o out
+
+      - name: Check single-file output
+        shell: pwsh
+        run: |
+          $extra = @(Get-ChildItem out -Recurse -File | Where-Object { $_.Name -ne 'OpenIsland.exe' })
+          if ($extra.Count -gt 0) {
+            $extra | ForEach-Object { Write-Host "Unexpected: $($_.FullName)" }
+            throw 'Portable publish produced files besides OpenIsland.exe.'
+          }
+          Write-Host 'Portable output is a single OpenIsland.exe.'
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      # Builds the installer on every push so a broken .iss fails fast, not on release.
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = @(
+            (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
+            (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe')
+            (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+          ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+          if (-not $iscc) { throw 'ISCC.exe not found.' }
+          & $iscc 'installer\OpenIsland.iss' '/DMyAppVersion=0.0.0-ci' '/DSourceExe=..\out\OpenIsland.exe'
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+          $setup = Get-ChildItem 'bin/installer-out/*.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'Installer was not produced.' }
+          Write-Host "Installer: $($setup.Name) ($([math]::Round($setup.Length / 1MB, 1)) MB)"

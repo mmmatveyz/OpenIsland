@@ -19,7 +19,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Publish
+      - name: Publish portable exe
         shell: pwsh
         run: >
           dotnet publish desktop/OpenIsland/OpenIsland.csproj -c Release -r win-x64 --self-contained true
@@ -30,6 +30,23 @@ jobs:
           -p:Version=$($env:TAG.TrimStart('v'))
           -o out
 
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $version = $env:TAG.TrimStart('v')
+          $iscc = @(
+            (Get-Command ISCC.exe -ErrorAction SilentlyContinue).Source
+            (Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe')
+            (Join-Path $env:ProgramFiles 'Inno Setup 6\ISCC.exe')
+          ) | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+          if (-not $iscc) { throw 'ISCC.exe not found.' }
+          & $iscc 'installer\OpenIsland.iss' "/DMyAppVersion=$version" '/DSourceExe=..\out\OpenIsland.exe'
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+
       - name: Create release
         shell: pwsh
         env:
@@ -38,9 +55,11 @@ jobs:
           git fetch origin "+refs/tags/${env:TAG}:refs/tags/${env:TAG}"
           $notes = @()
           if ((git cat-file -t $env:TAG) -eq 'tag') { $notes = @(git tag -l --format='%(contents)' $env:TAG) }
+          $assets = @('out/OpenIsland.exe')
+          $assets += @(Get-ChildItem 'bin/installer-out/*.exe' | ForEach-Object { $_.FullName })
           if ("$notes".Trim()) {
             $notes | Set-Content notes.md -Encoding utf8
-            gh release create $env:TAG out/OpenIsland.exe --title "Open Island $env:TAG" --notes-file notes.md
+            gh release create $env:TAG $assets --title "Open Island $env:TAG" --notes-file notes.md
           } else {
-            gh release create $env:TAG out/OpenIsland.exe --title "Open Island $env:TAG" --generate-notes
+            gh release create $env:TAG $assets --title "Open Island $env:TAG" --generate-notes
           }

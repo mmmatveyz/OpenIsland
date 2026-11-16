@@ -1,6 +1,7 @@
 param(
     [switch]$Run,
     [switch]$SelfTest,
+    [switch]$Installer,
     [switch]$NoStop,
     [switch]$Clean
 )
@@ -35,6 +36,18 @@ function Resolve-Dotnet {
     return $local
 }
 
+function Find-Iscc {
+    $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+
+    foreach ($candidate in @(
+        "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+        "$env:ProgramFiles\Inno Setup 6\ISCC.exe")) {
+        if (Test-Path $candidate) { return $candidate }
+    }
+    return $null
+}
+
 function Stop-RunningApp {
     $running = @(Get-Process OpenIsland -ErrorAction SilentlyContinue)
     foreach ($process in $running) {
@@ -63,6 +76,29 @@ Write-Host 'Building OpenIsland (Release) ...' -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE" }
 
 Write-Host "Ready: $exe" -ForegroundColor Green
+
+if ($Installer) {
+    $version = (Select-String -Path $project -Pattern '<Version>([^<]+)</Version>').Matches[0].Groups[1].Value
+    $portable = Join-Path $root 'bin\installer-input'
+
+    Write-Host 'Publishing portable single-file exe ...' -ForegroundColor Cyan
+    & $dotnet publish $project -c Release -r win-x64 --self-contained true `
+        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+        -p:EnableCompressionInSingleFile=true -p:DebugType=none -o $portable --nologo
+    if ($LASTEXITCODE -ne 0) { throw "Publish failed with exit code $LASTEXITCODE" }
+
+    $iscc = Find-Iscc
+    if (-not $iscc) {
+        throw 'Inno Setup (ISCC.exe) not found. Install it: winget install JRSoftware.InnoSetup'
+    }
+
+    Write-Host "Building installer v$version ..." -ForegroundColor Cyan
+    & $iscc (Join-Path $root 'installer\OpenIsland.iss') "/DMyAppVersion=$version" "/DSourceExe=$portable\OpenIsland.exe"
+    if ($LASTEXITCODE -ne 0) { throw "ISCC failed with exit code $LASTEXITCODE" }
+
+    $setup = Join-Path $root "bin\installer-out\OpenIslandSetup-$version.exe"
+    Write-Host "Installer ready: $setup" -ForegroundColor Green
+}
 
 if ($SelfTest) {
     Write-Host 'Running OpenCode self-test ...' -ForegroundColor Cyan
