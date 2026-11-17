@@ -128,6 +128,7 @@
 | Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
 | OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService*.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
 | Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs`, `PerfMath.cs` | CPU (`GetSystemTimes`), загрузка ядер (PDH), RAM (`GlobalMemoryStatusEx`), диск (PDH `% Disk Time` + свободное место), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта (1 с под курсором, иначе 3 с) |
+| Процессы и порты | `MainWindow.Processes.cs`, `DevProcessService.cs`, `DevProcesses.cs`, `PortScanner.cs` | Dev-процессы и владельцы слушающих портов, режимы «Dev»/«Все», завершение в два шага. Порты — IP Helper API (`GetExtendedTcpTable`/`GetExtendedUdpTable`), опрос — только пока карточка открыта (2,5 с) |
 | Буфер обмена | `MainWindow.Clipboard.cs`, `ClipboardService.cs` | История последних 30 фрагментов (в памяти), захват по `WM_CLIPBOARDUPDATE`, вставка в один клик |
 | Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка релизов [`mmmatveyz/OpenIsland`](https://github.com/mmmatveyz/OpenIsland), скачивание ассета `OpenIsland.exe`, сверка `sha256`-дайджеста, подмена файла с автоперезапуском |
 
@@ -239,6 +240,7 @@
 - Тяжёлые визуальные эффекты включаются только для видимых состояний; фоновые таймеры останавливаются при скрытии островка.
 - `PerfService` опрашивается **только пока открыта карточка мониторинга**: `UpdateView` вызывает `SetActive(target == View.Perf, PerfView.IsMouseOver)`, и пока карточка закрыта, таймер спит (`Timeout.Infinite`). Под курсором интервал — 1 с, стоит увести мышь — 3 с (`FastIntervalMs`/`SlowIntervalMs`). Ядра и диск читаются PDH-счётчиками (`PdhAddEnglishCounter`, локаль-независимо), загрузка ядер сжимается до 16 столбиков в `PerfMath.AggregateCores`. Замеры идут на фоновом потоке, готовые значения приходят в UI через `Dispatcher`.
 - Захват буфера обмена — это событие `WM_CLIPBOARDUPDATE`, а не опрос: окно получает сообщение из системы (`Native.WatchClipboard`) и только тогда читает текст. Подписка снимается в `OnClosed`.
+- `DevProcessService` опрашивается **только пока открыта карточка «Процессы и порты»** (`SetActive(target == View.Processes)`, интервал 2,5 с); список портов читается через IP Helper API, завершение процесса — `Process.Kill`, сервис освобождается в `OnClosed`.
 - Логирование (`App.LogDebug`) — в `%LOCALAPPDATA%\OpenIsland\logs\app.log` с ротацией при 1 МБ; в релизе — только значимые события и ошибки.
 
 ---
@@ -263,4 +265,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
 - Проект: `desktop/OpenIsland/OpenIsland.csproj`, имя сборки — `OpenIsland`, пространство имён — `OpenIsland`.
 - Вывод: `bin/OpenIsland/OpenIsland.exe`.
 - Если .NET 8 SDK не найден, `scripts/build.ps1` устанавливает его в `.dotnet/`.
-- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--view Perf` / `--view Clipboard` (карточки мониторинга и буфера), `--selftest` (диагностика).
+- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--view Perf` / `--view Clipboard` / `--view Processes` (карточки мониторинга, буфера и процессов), `--selftest` (диагностика).
