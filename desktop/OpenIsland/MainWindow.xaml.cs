@@ -14,9 +14,9 @@ namespace OpenIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 384, 34),
+        [View.Menu] = new(300, 424, 34),
         [View.Settings] = new(320, 416, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
@@ -45,6 +45,7 @@ public partial class MainWindow : Window
         [View.OpenCodeBig] = new(380, 486, 36),
         [View.Perf] = new(340, 410, 34),
         [View.Clipboard] = new(340, 430, 34),
+        [View.Processes] = new(340, 470, 34),
     };
 
     readonly record struct MediaSpot(
@@ -63,7 +64,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes];
 
     static readonly View[] SettingsPages = [View.Update];
 
@@ -146,6 +147,7 @@ public partial class MainWindow : Window
             [View.OpenCodeBig] = OpenCodeBigView,
             [View.Perf] = PerfView,
             [View.Clipboard] = ClipboardView,
+            [View.Processes] = ProcessesView,
         };
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
@@ -174,12 +176,14 @@ public partial class MainWindow : Window
         _network.Changed += OnNetworkChanged;
         _perf = new PerfService(Dispatcher);
         _perf.Changed += OnPerfChanged;
+        _devProcesses = new DevProcessService(Dispatcher);
         _updater.Changed += RefreshUpdatePage;
 
         PrepareViews();
         InitOpenCode();
         InitClipboard();
         InitPerf();
+        InitProcesses();
         ApplyTimerTint();
         TuneDragSprings(false);
         _ticker.Tick += (_, _) => OnTick();
@@ -260,6 +264,7 @@ public partial class MainWindow : Window
         _openCodeReady = false;
         _openCode.Dispose();
         _perf.Dispose();
+        _devProcesses.Dispose();
         DisposeTray();
         base.OnClosed(e);
     }
@@ -467,6 +472,7 @@ public partial class MainWindow : Window
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Perf => View.Perf,
             Panel.Clipboard => View.Clipboard,
+            Panel.Processes => View.Processes,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
             Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (_openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
@@ -483,6 +489,8 @@ public partial class MainWindow : Window
         View target = TargetView();
         bool changed = target != _view;
         _perf.SetActive(target == View.Perf, PerfView.IsMouseOver);
+        _devProcesses.SetActive(target == View.Processes);
+        if (target != View.Processes && _killPid != 0) ClearKill();
         if (changed) MorphTo(target);
 
         SyncEq();
@@ -545,6 +553,7 @@ public partial class MainWindow : Window
     {
         View.Update => PillShapes[view] with { Height = UpdatePage.Height },
         View.Look => PillShapes[view] with { Height = LookView.Height },
+        View.Processes => PillShapes[view] with { Height = ProcessesView.Height > 0 ? ProcessesView.Height : PillShapes[view].Height },
         _ => PillShapes[view],
     };
 

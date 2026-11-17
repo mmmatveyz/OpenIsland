@@ -807,7 +807,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="MenuView" Width="300" Height="384" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="MenuView" Width="300" Height="424" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,14,10,0">
                         <TextBlock Style="{StaticResource Caption}" Text="OPENISLAND" Margin="12,0,0,6"/>
                         <Button Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
@@ -847,6 +847,16 @@
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Мониторинг ПК"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                     <TextBlock x:Name="MenuPerfCpu" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="ProcessesRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Процессы и порты"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MenuProcesses" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -1520,6 +1530,60 @@
                                 <TextBlock x:Name="PerfTempText" Text="—" FontSize="12.5" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="ProcessesView" Width="340" Height="470" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="ProcessesBack_Click" ToolTip="Назад"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="ПРОЦЕССЫ И ПОРТЫ" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button x:Name="ProcessesDevChip" Style="{StaticResource ChipButton}" Width="40" Height="22" Padding="0" FontSize="10.5"
+                                            Content="Dev" Click="ProcessesDev_Click" ToolTip="Только инструменты разработки"/>
+                                    <Button x:Name="ProcessesAllChip" Style="{StaticResource ChipButton}" Width="40" Height="22" Padding="0" FontSize="10.5"
+                                            Content="Все" Margin="4,0,2,0" Click="ProcessesAll_Click" ToolTip="Все, кто занимает локальные порты"/>
+                                </StackPanel>
+                            </Grid>
+                            <Grid Grid.Row="1">
+                                <ScrollViewer x:Name="ProcessesScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <ScrollViewer.Resources>
+                                        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                    </ScrollViewer.Resources>
+                                    <local:RowList x:Name="ProcessesList"/>
+                                </ScrollViewer>
+                                <TextBlock x:Name="ProcessesEmpty" Text="Сканирую процессы и порты…" FontSize="12"
+                                           Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                           MaxWidth="240" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           IsHitTestVisible="False"/>
+                            </Grid>
+                            <Border x:Name="ProcessesConfirm" Grid.Row="2" Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1"
+                                    CornerRadius="12" Padding="10,8" Margin="0,8,0,0" Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="ProcessesConfirmText" FontSize="11" Foreground="{StaticResource Dim}"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource ChipButton}" Height="26" Padding="10,0"
+                                                Content="Отмена" Click="ProcessesCancel_Click"/>
+                                        <Button Style="{StaticResource ChipButton}" Height="26" Padding="10,0" Margin="6,0,2,0"
+                                                Background="{StaticResource Red}" Foreground="White"
+                                                Content="Завершить" Click="ProcessesKill_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
                     </Border>
                 </Grid>
 
