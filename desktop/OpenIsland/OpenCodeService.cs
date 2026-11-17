@@ -65,6 +65,7 @@ public sealed partial class OpenCodeService : IDisposable
     List<OpenCodeSessionInfo> _sessions = [];
     List<OpenCodeModelInfo> _models = [];
     List<OpenCodeMessage> _messages = [];
+    List<OpenCodeFileDiff> _diffs = [];
 
     string _baseUrl = DefaultBaseUrl;
     string? _token;
@@ -76,6 +77,7 @@ public sealed partial class OpenCodeService : IDisposable
     string _modelName = "Модель не выбрана";
     string _lastAssistantText = "";
     string _lastError = "";
+    string _diffError = "";
     string _statusText = "Поиск OpenCode...";
     OpenCodePermissionInfo? _pendingPermission;
 
@@ -84,11 +86,14 @@ public sealed partial class OpenCodeService : IDisposable
     bool _needMessages;
     bool _streamingMessageActive;
     bool _messagesLoaded;
+    bool _diffLoading;
     readonly bool _enablePairing = true;
     int _refreshing;
     int _syncQueued;
     int _eventsReceived;
     long _messagesRevision;
+    long _diffRevision;
+    long _diffLoadGeneration;
     long _executionsStarted;
     long _messagesLoadGeneration;
     long _lastNotifyAt;

@@ -1294,7 +1294,15 @@
                             </Border>
 
                             <Grid Margin="0,2,0,0">
-                                <Button x:Name="OpenCodeAppButton" Style="{StaticResource ChipButton}" Height="30" HorizontalAlignment="Left" Padding="12,0" Content="OpenCode Desktop" Click="OpenCodeApp_Click"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <Button x:Name="OpenCodeDiffButton" Style="{StaticResource ChipButton}" Height="30" Padding="10,0" Margin="0,0,6,0" Click="OpenCodeDiffs_Click" ToolTip="Что агент изменил в файлах">
+                                        <StackPanel Orientation="Horizontal">
+                                            <local:Icon x:Name="OpenCodeDiffIcon" Kind="Lines" Width="12" Height="12" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <TextBlock x:Name="OpenCodeDiffButtonText" Text="Изменения" FontSize="11" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="OpenCodeAppButton" Style="{StaticResource ChipButton}" Height="30" HorizontalAlignment="Left" Padding="12,0" Content="OpenCode Desktop" Click="OpenCodeApp_Click"/>
+                                </StackPanel>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button x:Name="OpenCodeStopButton" Style="{StaticResource ChipButton}" Height="30" Padding="10,0" Margin="0,0,6,0" Content="Стоп" Click="OpenCodeStop_Click"/>
                                     <Button x:Name="OpenCodeSendButton" Style="{StaticResource ChipButton}" Height="30" Padding="14,0" Background="{StaticResource Indigo}" Foreground="White" Content="Отправить" Click="OpenCodeSend_Click"/>
@@ -1314,13 +1322,13 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <Grid Grid.Row="0" Height="30" Margin="12,8,8,4">
+                                <Grid Grid.Row="0" Height="32" Margin="12,8,8,4">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <local:Icon Kind="Segments" Width="13" Height="13" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Style="{StaticResource Caption}" Text="СЕССИИ" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <Button Style="{StaticResource PlainButton}" Width="24" Height="24" HorizontalAlignment="Right" Click="OpenCodeSessionClose_Click" ToolTip="Закрыть список">
-                                        <local:Icon Kind="Cross" Width="11" Height="11" Fill="{StaticResource Dim}"/>
+                                    <Button Style="{StaticResource PlainButton}" Width="30" Height="30" HorizontalAlignment="Right" Click="OpenCodeSessionClose_Click" ToolTip="Закрыть список">
+                                        <local:Icon Kind="Cross" Width="14" Height="14" Fill="{StaticResource Dim}"/>
                                     </Button>
                                 </Grid>
 
@@ -1347,6 +1355,47 @@
                                 <TextBlock x:Name="OpenCodeSessionEmpty" Grid.Row="2" Text="Сессий пока нет" FontSize="12"
                                            Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                            Margin="0,0,0,8" Visibility="Collapsed"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <Grid x:Name="OpenCodeDiffOverlay" Visibility="Collapsed">
+                        <Border Background="#99000000" CornerRadius="22" MouseLeftButtonDown="OpenCodeDiffScrim_MouseDown"/>
+                        <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="16"
+                                Margin="10,58,10,10" VerticalAlignment="Top" MaxHeight="352">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0" Height="32" Margin="12,8,8,4">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <local:Icon Kind="Lines" Width="13" Height="13" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Style="{StaticResource Caption}" Text="ИЗМЕНЕНИЯ" VerticalAlignment="Center"/>
+                                        <TextBlock x:Name="OpenCodeDiffSummary" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Name="OpenCodeDiffRefresh" Style="{StaticResource PlainButton}" Width="30" Height="30" Margin="0,0,4,0" Click="OpenCodeDiffRefresh_Click" ToolTip="Обновить">
+                                            <local:Icon Kind="Update" Width="14" Height="14" Fill="{StaticResource Dim}"/>
+                                        </Button>
+                                        <Button Style="{StaticResource PlainButton}" Width="30" Height="30" Click="OpenCodeDiffClose_Click" ToolTip="Закрыть">
+                                            <local:Icon Kind="Cross" Width="14" Height="14" Fill="{StaticResource Dim}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+
+                                <ScrollViewer Grid.Row="1" MaxHeight="286" Margin="6,0,6,8"
+                                              VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <ScrollViewer.Resources>
+                                        <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                    </ScrollViewer.Resources>
+                                    <StackPanel x:Name="OpenCodeDiffList"/>
+                                </ScrollViewer>
+
+                                <TextBlock x:Name="OpenCodeDiffEmpty" Grid.Row="1" Text="Нет изменений" FontSize="12"
+                                           Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           TextAlignment="Center" TextWrapping="Wrap" Margin="24,0,24,8" Visibility="Collapsed"/>
                             </Grid>
                         </Border>
                     </Grid>

@@ -46,6 +46,7 @@ public sealed partial class OpenCodeService
                     _sessionTitle = null;
                     _sessionDirectory = null;
                     _isBusy = false;
+                    ResetDiffState();
                 }
                 else
                 {
@@ -66,6 +67,7 @@ public sealed partial class OpenCodeService
                             Interlocked.Increment(ref _messagesRevision);
                             _needMessages = true;
                             _pendingPermission = null;
+                            ResetDiffState();
                         }
 
                         _sessionTitle = selected.Title;

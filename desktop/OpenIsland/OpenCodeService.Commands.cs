@@ -158,6 +158,7 @@ public sealed partial class OpenCodeService
             Interlocked.Increment(ref _messagesRevision);
             _lastError = "";
             _needMessages = true;
+            ResetDiffState();
             UpdateStatusText();
         }
 
@@ -193,6 +194,7 @@ public sealed partial class OpenCodeService
             Interlocked.Increment(ref _messagesRevision);
             _lastError = "";
             _needMessages = true;
+            ResetDiffState();
             UpdateStatusText();
         }
 
@@ -305,6 +307,7 @@ public sealed partial class OpenCodeService
                 _pendingPermission = null;
                 _lastAssistantText = "";
                 _needMessages = false;
+                ResetDiffState();
             }
             UpdateStatusText();
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,6 +19,9 @@ public partial class MainWindow
     static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
     static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
     static readonly Brush DangerBackground = Frozen(Color.FromArgb(0xFF, 0xFF, 0x45, 0x3A));
+    static readonly Brush DiffPatchBackground = Frozen(Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1E));
+    static readonly Brush DiffAddedLine = Frozen(Color.FromArgb(0x2E, 0x32, 0xD7, 0x4B));
+    static readonly Brush DiffRemovedLine = Frozen(Color.FromArgb(0x2E, 0xFF, 0x45, 0x3A));
 
     readonly OpenCodeService _openCode = new();
     readonly Chime _chime = new();
@@ -29,6 +33,9 @@ public partial class MainWindow
     bool _openCodeSessionsOpen;
     bool _openCodeSessionsBuilding;
     string _openCodeSessionsSignature = "";
+    bool _openCodeDiffsOpen;
+    string? _openCodeDiffSelected;
+    long _openCodeDiffsRevision = -1;
     string _openCodeNotice = "";
     DispatcherTimer? _openCodeNoticeTimeout;
     DispatcherTimer? _openCodeDeleteTimeout;
@@ -84,6 +91,7 @@ public partial class MainWindow
             if (Settings.TaskChime) _chime.Play();
             NotifyTaskDone(DateTime.UtcNow - _openCodeBusySinceUtc);
             _openCodeDoneAtUtc = DateTime.UtcNow;
+            if (_openCodeDiffsOpen) _ = RefreshOpenCodeDiffsAsync();
         }
         if (!online) _openCodeDoneAtUtc = default;
         _openCodeBusy = busy;
@@ -112,7 +120,14 @@ public partial class MainWindow
         int sessionCount = _openCode.Sessions.Count;
         OpenCodeSessionCounter.Text = sessionCount > 1 ? sessionCount.ToString() : "";
 
+        int diffCount = _openCode.Diffs.Count;
+        OpenCodeDiffIcon.Fill = diffCount > 0 ? _indigo : _dim;
+        OpenCodeDiffButton.ToolTip = diffCount > 0
+            ? $"Что агент изменил в файлах: {diffCount}"
+            : "Что агент изменил в файлах";
+
         SyncOpenCodeMessages();
+        SyncOpenCodeDiffs();
 
         UpdateOpenCodeTimer();
 
@@ -242,6 +257,10 @@ public partial class MainWindow
         OpenCodeSendButton.IsEnabled = editable;
         OpenCodePromptBox.IsEnabled = editable;
 
+        OpenCodeDiffButton.Visibility = online ? Visibility.Visible : Visibility.Collapsed;
+        OpenCodeDiffButton.IsEnabled = online && !string.IsNullOrWhiteSpace(_openCode.SelectedSessionId);
+        if (!OpenCodeDiffButton.IsEnabled && _openCodeDiffsOpen) CloseOpenCodeDiffs();
+
         OpenCodeAppButton.Content = online ? "OpenCode Desktop" : "Запустить OpenCode";
         OpenCodeAppButton.Background = online ? ChipBackground : AccentBackground;
     }
@@ -298,6 +317,7 @@ public partial class MainWindow
     void OpenCodeBack_Click(object sender, RoutedEventArgs e)
     {
         CloseOpenCodeSessions();
+        CloseOpenCodeDiffs();
         ShowPanel(Panel.Menu);
     }
 
@@ -457,6 +477,236 @@ public partial class MainWindow
         };
         row.Click += OpenCodeSessionRow_Click;
         return row;
+    }
+
+    // ---------------------------------------------------------------- diffs
+
+    void OpenCodeDiffs_Click(object sender, RoutedEventArgs e)
+    {
+        if (_openCodeDiffsOpen) CloseOpenCodeDiffs();
+        else _ = OpenOpenCodeDiffsAsync();
+    }
+
+    void OpenCodeDiffClose_Click(object sender, RoutedEventArgs e) => CloseOpenCodeDiffs();
+
+    void OpenCodeDiffScrim_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        CloseOpenCodeDiffs();
+        e.Handled = true;
+    }
+
+    async void OpenCodeDiffRefresh_Click(object sender, RoutedEventArgs e) => await RefreshOpenCodeDiffsAsync();
+
+    async Task OpenOpenCodeDiffsAsync()
+    {
+        if (!_openCode.IsConnected) return;
+        _openCodeDiffsOpen = true;
+        _openCodeDiffSelected = null;
+        _openCodeDiffsRevision = -1;
+        OpenCodeDiffOverlay.Visibility = Visibility.Visible;
+        OpenCodeDiffEmpty.Text = "Загрузка…";
+        OpenCodeDiffEmpty.Visibility = Visibility.Visible;
+        OpenCodeDiffList.Visibility = Visibility.Collapsed;
+        await RefreshOpenCodeDiffsAsync();
+    }
+
+    void CloseOpenCodeDiffs()
+    {
+        _openCodeDiffsOpen = false;
+        _openCodeDiffSelected = null;
+        OpenCodeDiffOverlay.Visibility = Visibility.Collapsed;
+    }
+
+    async Task RefreshOpenCodeDiffsAsync()
+    {
+        if (!_openCodeDiffsOpen || !_openCode.IsConnected) return;
+
+        OpenCodeDiffRefresh.IsEnabled = false;
+        try
+        {
+            await _openCode.RefreshDiffAsync();
+        }
+        finally
+        {
+            OpenCodeDiffRefresh.IsEnabled = true;
+            SyncOpenCodeDiffs();
+        }
+    }
+
+    /// <summary>Перестраивает оверлей, только пока он открыт и данные успели обновиться.</summary>
+    void SyncOpenCodeDiffs()
+    {
+        if (!_openCodeDiffsOpen) return;
+        long revision = _openCode.DiffsRevision;
+        if (revision == _openCodeDiffsRevision) return;
+        _openCodeDiffsRevision = revision;
+        RebuildDiffRows();
+    }
+
+    void RebuildDiffRows()
+    {
+        if (OpenCodeDiffList == null) return;
+
+        OpenCodeDiffList.Children.Clear();
+        IReadOnlyList<OpenCodeFileDiff> diffs = _openCode.Diffs;
+
+        int additions = 0, deletions = 0;
+        foreach (OpenCodeFileDiff diff in diffs)
+        {
+            additions += diff.Additions;
+            deletions += diff.Deletions;
+        }
+
+        OpenCodeDiffSummary.Text = diffs.Count == 0
+            ? ""
+            : $"{diffs.Count} \u00B7 +{additions} \u2212{deletions}";
+
+        if (diffs.Count == 0)
+        {
+            string error = _openCode.DiffError;
+            OpenCodeDiffEmpty.Text = error.Length > 0
+                ? error
+                : _openCode.IsDiffLoading ? "Загрузка…" : "Агент ещё не менял файлы в этой сессии";
+            OpenCodeDiffEmpty.Visibility = Visibility.Visible;
+            OpenCodeDiffList.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        OpenCodeDiffEmpty.Visibility = Visibility.Collapsed;
+        OpenCodeDiffList.Visibility = Visibility.Visible;
+
+        foreach (OpenCodeFileDiff diff in diffs)
+        {
+            OpenCodeDiffList.Children.Add(BuildDiffRow(diff));
+            if (diff.File == _openCodeDiffSelected) OpenCodeDiffList.Children.Add(BuildDiffPatch(diff));
+        }
+    }
+
+    void OpenCodeDiffRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string file }) return;
+        _openCodeDiffSelected = _openCodeDiffSelected == file ? null : file;
+        RebuildDiffRows();
+    }
+
+    Button BuildDiffRow(OpenCodeFileDiff diff)
+    {
+        (string sign, Brush tint) = diff.Status switch
+        {
+            "added" => ("+", _green),
+            "deleted" => ("\u2212", _red),
+            _ => ("\u00B1", _indigo),
+        };
+
+        TextBlock badge = new()
+        {
+            Text = sign,
+            Width = 12,
+            FontSize = 12,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = tint,
+            TextAlignment = TextAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 9, 0),
+        };
+
+        StackPanel text = new() { VerticalAlignment = VerticalAlignment.Center };
+        text.Children.Add(new TextBlock
+        {
+            Text = diff.Name,
+            FontSize = 12.5,
+            Foreground = Brushes.White,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        string detail = diff.Folder.Length > 0 ? diff.Folder : diff.StatusLabel;
+        text.Children.Add(new TextBlock
+        {
+            Text = detail,
+            FontSize = 10.5,
+            Foreground = _dim,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            Margin = new Thickness(0, 1, 0, 0),
+        });
+
+        TextBlock stats = new()
+        {
+            Text = diff.Stats,
+            FontSize = 11,
+            Foreground = _dim,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(8, 0, 0, 0),
+        };
+
+        Grid content = new();
+        content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        content.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        content.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        Grid.SetColumn(badge, 0);
+        Grid.SetColumn(text, 1);
+        Grid.SetColumn(stats, 2);
+        content.Children.Add(badge);
+        content.Children.Add(text);
+        content.Children.Add(stats);
+
+        Button row = new()
+        {
+            Style = (Style)FindResource("SessionRowButton"),
+            Tag = diff.File,
+            Content = content,
+            Margin = new Thickness(0, 0, 0, 2),
+        };
+        row.Click += OpenCodeDiffRow_Click;
+        return row;
+    }
+
+    Border BuildDiffPatch(OpenCodeFileDiff diff)
+    {
+        StackPanel lines = new();
+        List<OpenCodeDiffLine> patch = OpenCodeService.SplitPatch(diff.Patch);
+        if (patch.Count == 0)
+        {
+            lines.Children.Add(new TextBlock
+            {
+                Text = "Патч недоступен",
+                FontSize = 10.5,
+                Foreground = _dim,
+                Margin = new Thickness(8, 6, 8, 6),
+            });
+        }
+
+        foreach (OpenCodeDiffLine line in patch)
+        {
+            (Brush foreground, Brush? background) = line.Kind switch
+            {
+                "added" => (_green, DiffAddedLine),
+                "removed" => (_red, DiffRemovedLine),
+                "hunk" => (_indigo, null),
+                "more" => (_dim, null),
+                _ => (_dim, null),
+            };
+
+            lines.Children.Add(new Border
+            {
+                Background = background,
+                Padding = new Thickness(8, 0, 8, 0),
+                Child = new TextBlock
+                {
+                    Text = line.Text,
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 10.5,
+                    Foreground = foreground,
+                    TextWrapping = TextWrapping.Wrap,
+                },
+            });
+        }
+
+        return new Border
+        {
+            Background = DiffPatchBackground,
+            CornerRadius = new CornerRadius(8),
+            Margin = new Thickness(2, 0, 2, 6),
+            Child = lines,
+        };
     }
 
     void ArmDeleteSession()

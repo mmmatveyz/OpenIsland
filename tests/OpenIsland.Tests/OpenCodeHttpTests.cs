@@ -50,6 +50,47 @@ public class OpenCodeHttpTests
     }
 
     [Fact]
+    public async Task RefreshDiff_LoadsChangesForSelectedSession()
+    {
+        bool diffRequested = false;
+        using OpenCodeService service = Service(request =>
+        {
+            string path = request.RequestUri!.AbsolutePath;
+            if (path.EndsWith("/diff", StringComparison.Ordinal))
+            {
+                diffRequested = true;
+                Assert.Contains("ses_1", path);
+                return StubHttpHandler.Json("""
+                    {"data":[
+                      {"file":"src/App.xaml.cs","patch":"@@ -1 +1 @@\n-old\n+new","additions":1,"deletions":1,"status":"modified"}
+                    ]}
+                    """);
+            }
+
+            return path switch
+            {
+                "/api/session/active" => StubHttpHandler.Json("""{"data":{"ses_1":{"type":"running"}}}"""),
+                "/api/session" => StubHttpHandler.Json(
+                    """{"data":[{"id":"ses_1","title":"Починить баг","location":{"directory":"C:\\work"},"model":{"id":"m1","providerID":"p1"}}]}"""),
+                "/api/model" => StubHttpHandler.Json("""{"data":[{"id":"m1","name":"Model One","providerID":"p1"}]}"""),
+                "/api/session/ses_1/message" => StubHttpHandler.Json("""{"data":[]}"""),
+                "/api/session/ses_1/permission" => StubHttpHandler.Json("""{"data":[]}"""),
+                _ => StubHttpHandler.Json("""{"data":{}}"""),
+            };
+        });
+
+        await service.RefreshAsync();
+        Assert.True(await service.RefreshDiffAsync());
+
+        Assert.True(diffRequested);
+        OpenCodeFileDiff diff = Assert.Single(service.Diffs);
+        Assert.Equal("src/App.xaml.cs", diff.File);
+        Assert.Equal("App.xaml.cs", diff.Name);
+        Assert.Equal("+1 \u22121", diff.Stats);
+        Assert.Equal("modified", diff.Status);
+    }
+
+    [Fact]
     public async Task Refresh_OnUnauthorized_ReportsAuthRequired()
     {
         using OpenCodeService service = Service(

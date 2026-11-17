@@ -71,8 +71,9 @@
 ### 2.9. OpenCode AI Hub — **наше**
 REST + SSE клиент, список сессий, прокручиваемая история последних 40 сообщений, модели, промпты, живой стриминг ответа, разрешения, горячая клавиша, self-test, звук завершения задачи и тост при завершении длинной задачи.
 
-- `OpenCodeService` — partial-класс: ядро (`OpenCodeService.cs`) плюс `OpenCodeService.Discovery/Http/Sessions/Commands/Stream.cs`. Рядом — `MainWindow.OpenCode.cs`, `SessionList.cs`, `MarkdownText.cs`, `OpenCodeSelfTest.cs`, `Chime.cs`, XAML-секция OpenCode, `Native.cs` (хоткей + активация). История выбранной сессии показывает последние 40 сообщений с живым обновлением ответа; разбор понимает формат V2 (роль в `type`, текст ответа в `content`, текст пользователя в `text`) и легаси `role`/`parts`. Markdown-разметка (`**жирный**`, код, ссылки, списки) убирается для отображения — чистая логика в `MarkdownText.cs`.
+- `OpenCodeService` — partial-класс: ядро (`OpenCodeService.cs`) плюс `OpenCodeService.Discovery/Http/Sessions/Commands/Stream/Diff.cs`. Рядом — `MainWindow.OpenCode.cs`, `SessionList.cs`, `MarkdownText.cs`, `OpenCodeSelfTest.cs`, `Chime.cs`, XAML-секция OpenCode, `Native.cs` (хоткей + активация). История выбранной сессии показывает последние 40 сообщений с живым обновлением ответа; разбор понимает формат V2 (роль в `type`, текст ответа в `content`, текст пользователя в `text`) и легаси `role`/`parts`. Markdown-разметка (`**жирный**`, код, ссылки, списки) убирается для отображения — чистая логика в `MarkdownText.cs`.
 - Список сессий: панель-оверлей внутри карточки (клик по заголовку сессии); строки отсортированы по времени последнего обновления (свежие сверху), показывают папку и относительное время, точка отмечает текущую (индиго) и работающую (оранжевая) сессию. При 8+ сессиях появляется поиск по названию и папке. Чистая логика (порядок/фильтр/имя папки/относительное время) — в `SessionList.cs`.
+- Изменения агента: кнопка «Изменения» открывает оверлей со списком файлов (`added`/`modified`/`deleted`, `+`/`−`); клик по файлу раскрывает unified-патч с подсветкой добавленных и удалённых строк. Данные (`GET /api/session/{id}/diff`) грузятся по требованию, а не по таймеру; патч ограничен `MaxPatchLines`/`MaxPatchLineLength`, чтобы 100-килобайтные диффы не тормозили UI. Разбор — `OpenCodeService.Diff.cs`.
 - Звук завершения: на переходе агента `busy → idle` (при живом соединении) играет `Assets/staplebops-01.mp3` — тот же звук, что у самого OpenCode (лицензия MIT), если включена настройка `Settings.TaskChime` (по умолчанию включена). Файл **встроен в exe** как WPF-ресурс (`Resource`) и при первом использовании выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3` (MediaPlayer играет только с диска). Так звук доезжает и в portable-exe, и после автообновления, где рядом с exe других файлов нет.
 - Тост при завершении задачи: если агент работал дольше `TaskToastAfter` (15 с), вместе со звуком показывается Windows-уведомление («Задача OpenCode завершена») через иконку трея (`Shell_NotifyIcon` + `NIF_INFO`) — без новых зависимостей. Выключается в настройках (`Settings.TaskToast`).
 - Компактная капсула статуса (`View.OpenCode`, 246×34): «◈ Агент: …» слева и живой эквалайзер справа, пока в системе есть звук; эквалайзер общий с плеером (`Shared.Eq`), поэтому не пропадает во время работы агента.
@@ -102,7 +103,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 | `Updater.cs` | чужой GitHub-репозиторий и ассет `DynamicIsland.exe` | наш репозиторий `mmmatveyz/OpenIsland`, ассет `OpenIsland.exe`, сверка `sha256`-дайджеста | ✅ |
 | `Settings.cs` | реестр `HKCU\Software\DynamicIsland` | `HKCU\Software\OpenIsland` + авто-миграция значений при первом чтении | ✅ |
 | `Autostart.cs` | Run-значение `DynamicIsland` | `OpenIsland` (+ миграция и удаление старого) | ✅ |
-| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.2.1), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
+| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.2.2), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
 | `app.manifest` | `name="DynamicIsland.app"` | `OpenIsland.app` | ✅ |
 | Иконка приложения | отсутствовала | `Assets/OpenIsland.ico` (7 кадров 16–256, тёмная капсула + индиго-циан ободок + искра) | ✅ |
 | Трей | кода не было вообще | `MainWindow.Tray.cs` + `Native.cs`: `Shell_NotifyIcon`, меню (Открыть / Скрыть-Показать / Настройки / Выход), двойной клик — показать | ✅ |
@@ -120,7 +121,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 - **Мониторинг ПК**: сделаны CPU (общая и по ядрам), RAM, GPU, диск, сеть и температура с адаптивным интервалом 1–3 с (§2.11); в планах — только dev-процессы и порты.
 - **Dev-процессы и порты**: список Node/Python/Docker/Go и занятых локальных портов.
 - **Быстрые действия**: история буфера обмена готова (§2.10); осталось — запуск утилит прямо с островка.
-- **OpenCode**: история сообщений сессии с прокруткой реализована; следующий кандидат — просмотр диффов (`/api/session/{id}/diff`). Быстрое переключение сессий списком, звук завершения задачи и тост о её окончании уже есть (§2.9).
+- **OpenCode**: история сообщений сессии с прокруткой и просмотр диффов изменений (`/api/session/{id}/diff`) реализованы. Быстрое переключение сессий списком, звук завершения задачи и тост о её окончании уже есть (§2.9).
 - **Релиз**: portable-сборка и установщик Inno Setup готовы (§2.8); подпись exe не планируется (нужен платный сертификат).
 
 ---

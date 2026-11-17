@@ -187,6 +187,7 @@
 | Смена модели | `POST /api/session/{id}/model` (`{"model": {"id", "providerID"}}`) |
 | Остановка агента | `POST /api/session/{id}/interrupt` |
 | Сообщения сессии | `GET /api/session/{id}/message?limit=40&order=desc` (роль в `type`, текст в `content`; поддерживается и легаси `role`/`info.role` + `parts`) |
+| Изменения агента | `GET /api/session/{id}/diff` (`{file, patch, additions, deletions, status}`; грузится по требованию) |
 | Разрешения | `GET /api/session/{id}/permission`, `POST /api/session/{id}/permission/{requestID}/reply` (`decision`: `once` / `always` / `reject`) |
 | Поток событий | `GET /api/event` (SSE) |
 
@@ -211,6 +212,7 @@
 - выбор модели (`‹ МОДЕЛЬ ›`);
 - поле ввода задачи (`Enter` — отправить);
 - блок ответа агента (живой текст и финальный ответ из истории сообщений). Текст выводится простым `TextBlock`, поэтому markdown-разметка ответа снимается через `MarkdownText.ToPlainText` (свойство `OpenCodeMessage.DisplayText`); сообщения пользователя берутся из поля `text`/`metadata.displayText` ответа V2, а вложения (`files`, base64) не показываются и не сохраняются;
+- оверлей «Изменения» (`OpenCodeDiffOverlay`): список изменённых агентом файлов с `+`/`−`, раскрытие unified-патча по клику, кнопка обновления. `RefreshDiffAsync` вызывается только по требованию (открытие оверлея, ручное обновление, завершение задачи при открытом оверлее), а не в общем опросе;
 - панель разрешений «Разрешить / Отклонить»;
 - кнопка «Стоп» для прерывания выполнения;
 - звук завершения: при переходе агента из «работает» в «готово» играет `Chime` (звук OpenCode, MIT), если включена настройка `Settings.TaskChime` (по умолчанию включена). MP3 встроен в exe (`Resource`) и один раз выгружается в `%LOCALAPPDATA%\OpenIsland\staplebops-01.mp3`, потому что `MediaPlayer` умеет открывать только файл на диске;
