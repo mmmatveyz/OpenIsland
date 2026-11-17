@@ -1248,7 +1248,7 @@
                                         <TextBlock x:Name="OpenCodeOlderText" Text="Показать раньше" FontSize="10.5"
                                                    Foreground="{StaticResource Dim}" HorizontalAlignment="Center"/>
                                     </Button>
-                                    <ScrollViewer x:Name="OpenCodeAnswerScroll" MaxHeight="190" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                    <ScrollViewer x:Name="OpenCodeAnswerScroll" MaxHeight="172" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                                                   ScrollChanged="OpenCodeAnswerScroll_ScrollChanged">
                                     <ScrollViewer.Resources>
                                         <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
