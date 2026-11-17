@@ -6,6 +6,9 @@ using System.Text.Json;
 
 namespace OpenIsland;
 
+/// <summary>Страница пагинируемого списка OpenCode: сообщения и курсоры соседних страниц.</summary>
+internal sealed record OpenCodePage(JsonElement Data, string NextCursor, string PreviousCursor);
+
 public sealed partial class OpenCodeService
 {
     // ---------------------------------------------------------------- HTTP
@@ -67,6 +70,31 @@ public sealed partial class OpenCodeService
             return data.Clone();
         }
         return default;
+    }
+
+    /// <summary>Страница списка OpenCode: данные и курсоры соседних страниц (пагинация сообщений).</summary>
+    internal async Task<OpenCodePage> GetPageAsync(string path)
+    {
+        (int status, string body) = await SendAsync(HttpMethod.Get, path);
+        if (status != (int)HttpStatusCode.OK)
+        {
+            throw new OpenCodeApiException(status, body);
+        }
+
+        using JsonDocument document = JsonDocument.Parse(body);
+        JsonElement root = document.RootElement;
+        JsonElement data = root.ValueKind == JsonValueKind.Object
+            && root.TryGetProperty("data", out JsonElement value)
+                ? value.Clone()
+                : default;
+        return new OpenCodePage(data, ReadCursor(root, "next"), ReadCursor(root, "previous"));
+    }
+
+    static string ReadCursor(JsonElement root, string name)
+    {
+        if (root.ValueKind != JsonValueKind.Object) return "";
+        if (!root.TryGetProperty("cursor", out JsonElement cursor) || cursor.ValueKind != JsonValueKind.Object) return "";
+        return GetString(cursor, name);
     }
 
     // ---------------------------------------------------------------- helpers

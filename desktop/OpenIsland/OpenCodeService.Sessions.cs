@@ -38,6 +38,7 @@ public sealed partial class OpenCodeService
                     _sessionId = null;
                     Interlocked.Increment(ref _messagesLoadGeneration);
                     _messagesLoaded = false;
+                    ResetMessagePaging();
                     Volatile.Write(ref _messages, []);
                     Interlocked.Increment(ref _messagesRevision);
                     _streamText.Clear();
@@ -63,6 +64,7 @@ public sealed partial class OpenCodeService
                             _sessionId = selected.Id;
                             Interlocked.Increment(ref _messagesLoadGeneration);
                             _messagesLoaded = false;
+                            ResetMessagePaging();
                             Volatile.Write(ref _messages, []);
                             Interlocked.Increment(ref _messagesRevision);
                             _needMessages = true;
@@ -268,14 +270,22 @@ public sealed partial class OpenCodeService
         long generation = Interlocked.Read(ref _messagesLoadGeneration);
         try
         {
-            JsonElement data = await GetDataAsync($"/api/session/{Esc(sessionId)}/message?limit=40&order=desc");
-            List<OpenCodeMessage> messages = ParseMessages(data);
+            OpenCodePage page = await GetPageAsync(
+                $"/api/session/{Esc(sessionId)}/message?limit={MessagePageSize}&order=desc");
+            List<OpenCodeMessage> messages = ParseMessages(page.Data);
             messages.Reverse();
             lock (_gate)
             {
                 if (_sessionId != sessionId || generation != Interlocked.Read(ref _messagesLoadGeneration)) return;
                 messages = MergeMessages(messages, _messages);
                 Volatile.Write(ref _messages, messages);
+                // Курсор берём только с первой загрузки сессии: при обновлении после задачи
+                // нельзя откатывать уже догруженную историю к самому свежему краю.
+                if (!_messagesLoaded)
+                {
+                    _olderCursor = page.NextCursor.Length > 0 ? page.NextCursor : null;
+                    _hasOlderMessages = _olderCursor != null;
+                }
                 _messagesLoaded = true;
                 _needMessages = false;
                 if (!_isBusy)
@@ -295,18 +305,127 @@ public sealed partial class OpenCodeService
         }
     }
 
+    /// <summary>
+    /// Догружает страницу сообщений старше показанных — вызывается при прокрутке
+    /// истории вверх. Курсор — из ответа <c>cursor.next</c> (в порядке desc он ведёт вглубь).
+    /// </summary>
+    public async Task<bool> LoadOlderMessagesAsync()
+    {
+        string? sessionId;
+        string? cursor;
+        lock (_gate)
+        {
+            sessionId = _sessionId;
+            cursor = _olderCursor;
+            if (sessionId == null || string.IsNullOrEmpty(cursor) || _loadingOlderMessages) return false;
+            _loadingOlderMessages = true;
+        }
+        Notify(force: true);
+
+        try
+        {
+            OpenCodePage page = await GetPageAsync(
+                $"/api/session/{Esc(sessionId)}/message?limit={MessagePageSize}&cursor={Esc(cursor)}");
+            List<OpenCodeMessage> older = ParseMessages(page.Data);
+            older.Reverse();
+
+            lock (_gate)
+            {
+                _loadingOlderMessages = false;
+                if (_sessionId != sessionId) return false;
+
+                _olderCursor = page.NextCursor.Length > 0 ? page.NextCursor : null;
+                _hasOlderMessages = _olderCursor != null;
+                if (older.Count > 0) Volatile.Write(ref _messages, MergeOlder(older, _messages));
+                // Ревизия растёт и на пустой странице: интерфейс должен спрятать кнопку догрузки.
+                Interlocked.Increment(ref _messagesRevision);
+            }
+
+            Notify(force: true);
+            return older.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            lock (_gate) _loadingOlderMessages = false;
+            App.LogDebug($"OpenCode: older messages load failed: {ex.Message}");
+            Notify(force: true);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Свежая страница (последние <see cref="MessagePageSize"/> сообщений) плюс уже показанное:
+    /// сохраняем догруженный старый префикс и живой хвост из SSE, тело берём из страницы.
+    /// </summary>
     internal static List<OpenCodeMessage> MergeMessages(
-        IReadOnlyList<OpenCodeMessage> history,
+        IReadOnlyList<OpenCodeMessage> newest,
         IReadOnlyList<OpenCodeMessage> current)
     {
-        List<OpenCodeMessage> merged = [.. history];
+        if (newest.Count == 0) return TrimMessages([.. current]);
+
+        int first = IndexOfMessage(current, newest[0]);
+        if (first < 0)
+        {
+            // Пересечения нет — доверяем странице, но не теряем живой ответ из SSE.
+            List<OpenCodeMessage> fresh = [.. newest];
+            foreach (OpenCodeMessage message in current)
+            {
+                if (!fresh.Contains(message)) fresh.Add(message);
+            }
+            return TrimMessages(fresh);
+        }
+
+        int last = IndexOfMessage(current, newest[^1]);
+        List<OpenCodeMessage> merged = [.. current.Take(first), .. newest];
+        if (last >= 0)
+        {
+            foreach (OpenCodeMessage message in current.Skip(last + 1))
+            {
+                if (!merged.Contains(message)) merged.Add(message);
+            }
+        }
+        return TrimMessages(merged);
+    }
+
+    /// <summary>Ставит страницу старой истории перед уже показанной, убирая дубли на стыке.</summary>
+    internal static List<OpenCodeMessage> MergeOlder(
+        IReadOnlyList<OpenCodeMessage> older,
+        IReadOnlyList<OpenCodeMessage> current)
+    {
+        List<OpenCodeMessage> merged = [.. older];
         foreach (OpenCodeMessage message in current)
         {
             if (!merged.Contains(message)) merged.Add(message);
         }
+        return TrimMessages(merged, keepOldest: true);
+    }
 
-        if (merged.Count > 40) merged.RemoveRange(0, merged.Count - 40);
-        return merged;
+    static int IndexOfMessage(IReadOnlyList<OpenCodeMessage> list, OpenCodeMessage message)
+    {
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list[i].Id.Length > 0 ? list[i].Id == message.Id : list[i].Equals(message)) return i;
+        }
+        return -1;
+    }
+
+    static List<OpenCodeMessage> TrimMessages(List<OpenCodeMessage> messages, bool keepOldest = false)
+    {
+        if (messages.Count <= MaxMessages) return messages;
+
+        // Догрузка старых страниц не должна выбрасывать только что загруженное:
+        // в этом случае жертвуем самым свежим краем, к которому можно вернуться обновлением.
+        if (keepOldest) messages.RemoveRange(MaxMessages, messages.Count - MaxMessages);
+        else messages.RemoveRange(0, messages.Count - MaxMessages);
+        return messages;
+    }
+
+    /// <summary>Сбрасывает постраничную историю при смене или удалении сессии.</summary>
+    void ResetMessagePaging()
+    {
+        _olderCursor = null;
+        _hasOlderMessages = false;
+        _loadingOlderMessages = false;
     }
 
     internal static List<OpenCodeMessage> ParseMessages(JsonElement data)
@@ -328,19 +447,14 @@ public sealed partial class OpenCodeService
             if (role is not ("user" or "assistant")) continue;
 
             StringBuilder text = new();
+            List<string> tools = [];
             if (item.TryGetProperty("parts", out JsonElement parts) && parts.ValueKind == JsonValueKind.Array)
             {
-                foreach (JsonElement part in parts.EnumerateArray())
-                {
-                    if (GetString(part, "type") == "text") text.Append(GetString(part, "text"));
-                }
+                CollectParts(parts, text, tools);
             }
             else if (item.TryGetProperty("content", out JsonElement content) && content.ValueKind == JsonValueKind.Array)
             {
-                foreach (JsonElement part in content.EnumerateArray())
-                {
-                    if (GetString(part, "type") == "text") text.Append(GetString(part, "text"));
-                }
+                CollectParts(content, text, tools);
             }
 
             // В V2 сообщение пользователя приходит без "parts"/"content": его текст
@@ -354,6 +468,13 @@ public sealed partial class OpenCodeService
             }
 
             string value = text.ToString().Trim();
+            // Ход без текста — это работа агента: показываем её компактной строкой,
+            // иначе история сессии выглядит почти пустой, хотя сообщений много.
+            if (value.Length == 0 && tools.Count > 0)
+            {
+                role = "tool";
+                value = DescribeTools(tools);
+            }
             if (value.Length == 0
                 && item.TryGetProperty("files", out JsonElement files)
                 && files.ValueKind == JsonValueKind.Array
@@ -363,10 +484,69 @@ public sealed partial class OpenCodeService
             }
             if (value.Length == 0) continue;
             if (value.Length > 12000) value = value[..12000];
-            messages.Add(new OpenCodeMessage(role, value));
+            messages.Add(new OpenCodeMessage(role, value, GetString(item, "id")));
         }
 
         return messages;
+    }
+
+    static readonly string[] ToolDetailKeys = ["command", "filePath", "path", "pattern", "description", "query", "url"];
+
+    static void CollectParts(JsonElement parts, StringBuilder text, List<string> tools)
+    {
+        foreach (JsonElement part in parts.EnumerateArray())
+        {
+            string type = GetString(part, "type");
+            if (type == "text")
+            {
+                text.Append(GetString(part, "text"));
+                continue;
+            }
+            if (type != "tool") continue;
+
+            string name = GetString(part, "name");
+            if (name.Length == 0) continue;
+            string detail = ToolDetail(part);
+            tools.Add(detail.Length > 0 ? $"{name}: {detail}" : name);
+        }
+    }
+
+    /// <summary>Короткая суть вызова инструмента: команда, путь или шаблон поиска.</summary>
+    static string ToolDetail(JsonElement part)
+    {
+        if (!part.TryGetProperty("state", out JsonElement state) || state.ValueKind != JsonValueKind.Object) return "";
+        if (!state.TryGetProperty("input", out JsonElement input) || input.ValueKind != JsonValueKind.Object) return "";
+
+        foreach (string key in ToolDetailKeys)
+        {
+            string value = GetString(input, key);
+            if (value.Length > 0) return ShortenLine(value, 48);
+        }
+        return "";
+    }
+
+    static string DescribeTools(IReadOnlyList<string> tools)
+    {
+        StringBuilder description = new("⚙ ");
+        for (int i = 0; i < tools.Count; i++)
+        {
+            if (i > 0) description.Append(" · ");
+            description.Append(tools[i]);
+            if (description.Length > 150)
+            {
+                description.Length = 150;
+                description.Append('…');
+                break;
+            }
+        }
+        return description.ToString();
+    }
+
+    static string ShortenLine(string value, int limit)
+    {
+        value = value.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        if (value.Length <= limit) return value;
+        return value[..limit] + "…";
     }
 
     async Task RefreshPermissionAsync(string sessionId)

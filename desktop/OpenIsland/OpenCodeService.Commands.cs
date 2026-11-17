@@ -110,6 +110,7 @@ public sealed partial class OpenCodeService
                 _sessionId = id;
                 Interlocked.Increment(ref _messagesLoadGeneration);
                 _messagesLoaded = false;
+                ResetMessagePaging();
                 _sessionTitle = GetString(data, "title");
                 _sessionDirectory = targetDirectory;
                 _isBusy = false;
@@ -145,6 +146,7 @@ public sealed partial class OpenCodeService
             _sessionId = selected.Id;
             Interlocked.Increment(ref _messagesLoadGeneration);
             _messagesLoaded = false;
+            ResetMessagePaging();
             _sessionTitle = selected.Title;
             _sessionDirectory = selected.Directory;
             _sessionModelId = selected.ModelId;
@@ -181,6 +183,7 @@ public sealed partial class OpenCodeService
             _sessionId = selected.Id;
             Interlocked.Increment(ref _messagesLoadGeneration);
             _messagesLoaded = false;
+            ResetMessagePaging();
             _sessionTitle = selected.Title;
             _sessionDirectory = selected.Directory;
             _sessionModelId = selected.ModelId;
@@ -296,6 +299,7 @@ public sealed partial class OpenCodeService
                 _sessionId = null;
                 Interlocked.Increment(ref _messagesLoadGeneration);
                 _messagesLoaded = false;
+                ResetMessagePaging();
                 _streamingMessageActive = false;
                 Volatile.Write(ref _messages, []);
                 Interlocked.Increment(ref _messagesRevision);

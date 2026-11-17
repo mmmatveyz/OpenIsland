@@ -77,7 +77,7 @@ public sealed partial class OpenCodeService
         }
     }
 
-    void HandleEvent(string json)
+    internal void HandleEvent(string json)
     {
         try
         {

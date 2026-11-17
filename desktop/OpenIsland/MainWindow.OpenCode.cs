@@ -36,6 +36,8 @@ public partial class MainWindow
     bool _openCodeDiffsOpen;
     string? _openCodeDiffSelected;
     long _openCodeDiffsRevision = -1;
+    bool _openCodeOlderScrollTop;
+    bool _openCodeScrollGuard;
     string _openCodeNotice = "";
     DispatcherTimer? _openCodeNoticeTimeout;
     DispatcherTimer? _openCodeDeleteTimeout;
@@ -175,9 +177,80 @@ public partial class MainWindow
         if (revision == _openCodeMessagesRevision) return;
         _openCodeMessagesRevision = revision;
         IReadOnlyList<OpenCodeMessage> messages = _openCode.Messages;
+
+        bool olderAvailable = _openCode.HasOlderMessages;
+        OpenCodeOlderButton.Visibility = olderAvailable ? Visibility.Visible : Visibility.Collapsed;
+        if (!_openCode.IsLoadingOlderMessages) OpenCodeOlderText.Text = "Показать раньше";
+
+        // Держим позицию относительно конца списка: догрузка старых сообщений
+        // не должна перебрасывать пользователя, а свежий ответ остаётся видимым.
+        double fromBottom = Math.Max(0, OpenCodeAnswerScroll.ScrollableHeight - OpenCodeAnswerScroll.VerticalOffset);
+        bool scrollTop = _openCodeOlderScrollTop;
+        _openCodeOlderScrollTop = false;
+
         OpenCodeMessagesList.ItemsSource = messages;
         OpenCodeAnswerBox.Visibility = messages.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (_openCode.IsBusy) Dispatcher.BeginInvoke(() => OpenCodeAnswerScroll.ScrollToEnd(), DispatcherPriority.Render);
+
+        if (scrollTop)
+        {
+            ScrollOpenCodeHistory(OpenCodeAnswerScroll.ScrollToTop);
+            return;
+        }
+
+        if (_openCode.IsBusy)
+        {
+            ScrollOpenCodeHistory(OpenCodeAnswerScroll.ScrollToEnd, DispatcherPriority.Render);
+            return;
+        }
+
+        double offset = Math.Max(0, OpenCodeAnswerScroll.ScrollableHeight - fromBottom);
+        ScrollOpenCodeHistory(() => OpenCodeAnswerScroll.ScrollToVerticalOffset(offset));
+    }
+
+    /// <summary>
+    /// Программная прокрутка истории не должна считаться действием пользователя:
+    /// иначе прокрутка в начало после кнопки «Показать раньше» сразу догружает ещё страницу.
+    /// </summary>
+    void ScrollOpenCodeHistory(Action scroll, DispatcherPriority priority = DispatcherPriority.Loaded)
+    {
+        Dispatcher.BeginInvoke(
+            () =>
+            {
+                _openCodeScrollGuard = true;
+                scroll();
+                Dispatcher.BeginInvoke(
+                    () => _openCodeScrollGuard = false,
+                    DispatcherPriority.ContextIdle);
+            },
+            priority);
+    }
+
+    /// <summary>Кнопка над историей: догружает более ранние сообщения и показывает их.</summary>
+    async void OpenCodeOlder_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_openCode.HasOlderMessages || _openCode.IsLoadingOlderMessages) return;
+
+        OpenCodeOlderText.Text = "Загрузка…";
+        _openCodeOlderScrollTop = true;
+        if (!await _openCode.LoadOlderMessagesAsync())
+        {
+            _openCodeOlderScrollTop = false;
+            OpenCodeOlderText.Text = "Показать раньше";
+        }
+    }
+
+    /// <summary>Прокрутка истории вверх догружает более ранние сообщения сессии.</summary>
+    async void OpenCodeAnswerScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        // Только жест пользователя: программная прокрутка и рост списка не в счёт.
+        if (_openCodeScrollGuard) return;
+        if (e.ExtentHeightChange != 0) return;
+        if (!OpenCodeAnswerScroll.IsMouseOver) return;
+        if (_openCode.IsBusy || _openCode.IsLoadingOlderMessages) return;
+        if (!_openCode.HasOlderMessages) return;
+        if (OpenCodeAnswerScroll.VerticalOffset > 1) return;
+
+        await _openCode.LoadOlderMessagesAsync();
     }
 
     /// <summary>

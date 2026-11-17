@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 using OpenIsland;
 using Xunit;
@@ -88,6 +89,48 @@ public class OpenCodeHttpTests
         Assert.Equal("App.xaml.cs", diff.Name);
         Assert.Equal("+1 \u22121", diff.Stats);
         Assert.Equal("modified", diff.Status);
+    }
+
+    [Fact]
+    public async Task LoadOlderMessages_PrependsEarlierPageAndConsumesCursor()
+    {
+        bool olderRequested = false;
+        using OpenCodeService service = Service(request =>
+        {
+            string path = request.RequestUri!.AbsolutePath;
+            string query = request.RequestUri.Query;
+
+            if (path == "/api/session/ses_1/message")
+            {
+                if (query.Contains("cursor=", StringComparison.Ordinal))
+                {
+                    olderRequested = true;
+                    Assert.Contains("limit=40", query);
+                    return StubHttpHandler.Json(
+                        """{"data":[{"id":"m1","type":"user","text":"Старое"}],"cursor":{"next":""}}""");
+                }
+
+                return StubHttpHandler.Json(
+                    """{"data":[{"id":"m2","type":"user","text":"Свежее"}],"cursor":{"next":"CUR"}}""");
+            }
+
+            return path switch
+            {
+                "/api/session/active" => StubHttpHandler.Json("""{"data":{}}"""),
+                "/api/session" => StubHttpHandler.Json(
+                    """{"data":[{"id":"ses_1","title":"Починить баг","location":{"directory":"C:\\work"},"model":{"id":"m1","providerID":"p1"}}]}"""),
+                "/api/model" => StubHttpHandler.Json("""{"data":[{"id":"m1","name":"Model One","providerID":"p1"}]}"""),
+                _ => StubHttpHandler.Json("""{"data":{}}"""),
+            };
+        });
+
+        await service.RefreshAsync();
+
+        Assert.True(service.HasOlderMessages);
+        Assert.True(await service.LoadOlderMessagesAsync());
+        Assert.True(olderRequested);
+        Assert.Equal(new[] { "Старое", "Свежее" }, service.Messages.Select(message => message.Text));
+        Assert.False(service.HasOlderMessages);
     }
 
     [Fact]

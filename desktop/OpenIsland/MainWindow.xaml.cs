@@ -42,7 +42,7 @@ public partial class MainWindow : Window
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(238, 34, 17),
-        [View.OpenCodeBig] = new(380, 426, 36),
+        [View.OpenCodeBig] = new(380, 486, 36),
         [View.Perf] = new(340, 410, 34),
         [View.Clipboard] = new(340, 430, 34),
     };

@@ -29,12 +29,20 @@ public sealed record OpenCodePermissionInfo(
     string? Message,
     IReadOnlyList<string> Resources);
 
-public sealed record OpenCodeMessage(string Role, string Text)
+public sealed record OpenCodeMessage(string Role, string Text, string Id = "")
 {
-    public string Label => Role == "user" ? "Вы" : "OpenCode";
+    /// <summary>Ход ассистента без текста: только вызовы инструментов (shell, edit, read…).</summary>
+    public bool IsActivity => Role == "tool";
+
+    public string Label => Role switch
+    {
+        "user" => "Вы",
+        "tool" => "",
+        _ => "OpenCode",
+    };
 
     /// <summary>Текст без markdown-разметки — для обычного <c>TextBlock</c>.</summary>
-    public string DisplayText => MarkdownText.ToPlainText(Text);
+    public string DisplayText => IsActivity ? Text : MarkdownText.ToPlainText(Text);
 }
 
 /// <summary>
@@ -47,6 +55,10 @@ public sealed partial class OpenCodeService : IDisposable
     const int PollingIntervalMs = 2000;
     const int CliTimeoutMs = 4000;
     const int NotificationThrottleMs = 120;
+    /// <summary>Сколько сообщений тянем за одну страницу истории.</summary>
+    const int MessagePageSize = 40;
+    /// <summary>Потолок хранимой истории: догрузка старых сообщений не растёт бесконечно.</summary>
+    const int MaxMessages = 400;
 
     static readonly byte[] TokenEntropy = Encoding.UTF8.GetBytes("OpenIsland.OpenCode.v1");
 
@@ -78,6 +90,7 @@ public sealed partial class OpenCodeService : IDisposable
     string _lastAssistantText = "";
     string _lastError = "";
     string _diffError = "";
+    string? _olderCursor;
     string _statusText = "Поиск OpenCode...";
     OpenCodePermissionInfo? _pendingPermission;
 
@@ -86,6 +99,8 @@ public sealed partial class OpenCodeService : IDisposable
     bool _needMessages;
     bool _streamingMessageActive;
     bool _messagesLoaded;
+    bool _hasOlderMessages;
+    bool _loadingOlderMessages;
     bool _diffLoading;
     readonly bool _enablePairing = true;
     int _refreshing;
@@ -149,6 +164,17 @@ public sealed partial class OpenCodeService : IDisposable
         }
     }
     public long MessagesRevision => Interlocked.Read(ref _messagesRevision);
+
+    /// <summary>Есть ли в сессии сообщения старше загруженных — их можно догрузить прокруткой вверх.</summary>
+    public bool HasOlderMessages
+    {
+        get { lock (_gate) return _hasOlderMessages; }
+    }
+
+    public bool IsLoadingOlderMessages
+    {
+        get { lock (_gate) return _loadingOlderMessages; }
+    }
 
     /// <summary>Сколько событий получено по SSE — используется диагностикой.</summary>
     public bool EventsReceived => Volatile.Read(ref _eventsReceived) > 0;

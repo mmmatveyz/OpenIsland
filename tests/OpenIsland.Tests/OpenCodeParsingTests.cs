@@ -131,7 +131,7 @@ public sealed class OpenCodeParsingTests : IDisposable
     }
 
     [Fact]
-    public void ParseMessages_ProjectsOpenCodeMessagePartsAndSkipsToolCalls()
+    public void ParseMessages_ShowsToolOnlyTurnsAsActivityLines()
     {
         JsonElement data = Parse("""
             [
@@ -141,7 +141,10 @@ public sealed class OpenCodeParsingTests : IDisposable
                 { "type": "text", "text": "Готово" },
                 { "type": "tool", "name": "edit" }
               ] },
-              { "info": { "role": "assistant" }, "parts": [{ "type": "tool", "name": "read" }] },
+              { "info": { "role": "assistant" }, "parts": [
+                { "type": "reasoning", "text": "скрытые рассуждения" },
+                { "type": "tool", "name": "read", "state": { "input": { "filePath": "C:\\work\\MainWindow.xaml" } } }
+              ] },
               { "info": { "role": "system" }, "parts": [{ "type": "text", "text": "не показывать" }] }
             ]
             """);
@@ -150,7 +153,33 @@ public sealed class OpenCodeParsingTests : IDisposable
 
         Assert.Collection(messages,
             message => Assert.Equal(new OpenCodeMessage("user", "Почини баг"), message),
-            message => Assert.Equal(new OpenCodeMessage("assistant", "Готово"), message));
+            message => Assert.Equal(new OpenCodeMessage("assistant", "Готово"), message),
+            message =>
+            {
+                Assert.Equal("tool", message.Role);
+                Assert.True(message.IsActivity);
+                Assert.Equal("⚙ read: C:\\work\\MainWindow.xaml", message.Text);
+                Assert.Equal("", message.Label);
+            });
+    }
+
+    [Fact]
+    public void ParseMessages_JoinsSeveralToolCallsIntoOneActivityLine()
+    {
+        JsonElement data = Parse("""
+            [
+              { "type": "assistant", "content": [
+                { "type": "reasoning", "text": "план" },
+                { "type": "tool", "name": "shell", "state": { "status": "completed", "input": { "command": "dotnet build" } } },
+                { "type": "tool", "name": "grep", "state": { "input": { "pattern": "PillShapes" } } }
+              ] },
+              { "type": "assistant", "content": [ { "type": "reasoning", "text": "только рассуждения" } ] }
+            ]
+            """);
+
+        OpenCodeMessage message = Assert.Single(OpenCodeService.ParseMessages(data));
+
+        Assert.Equal("⚙ shell: dotnet build · grep: PillShapes", message.Text);
     }
 
     [Fact]
@@ -241,6 +270,36 @@ public sealed class OpenCodeParsingTests : IDisposable
             new OpenCodeMessage("user", "новый запрос"),
             new OpenCodeMessage("assistant", "ответ, полученный через SSE")
         }, merged);
+    }
+
+    [Fact]
+    public void MergeMessages_KeepsOlderPagesAndLiveTailAroundFreshPage()
+    {
+        OpenCodeMessage older = new("user", "старое", "m1");
+        OpenCodeMessage pageFirst = new("user", "свежее", "m2");
+        OpenCodeMessage pageLast = new("assistant", "ответ", "m3");
+        OpenCodeMessage live = new("assistant", "живой ответ");
+
+        // Свежая страница пересекается с хвостом показанного: старый префикс сохраняется.
+        Assert.Equal(
+            new[] { older, pageFirst, pageLast },
+            OpenCodeService.MergeMessages([pageFirst, pageLast], [older, pageFirst]));
+
+        // Ответ, пришедший по SSE во время запроса, не теряется.
+        Assert.Equal(
+            new[] { older, pageLast, live },
+            OpenCodeService.MergeMessages([pageLast], [older, pageLast, live]));
+    }
+
+    [Fact]
+    public void MergeOlder_PrependsPageAndDropsBoundaryDuplicates()
+    {
+        OpenCodeMessage first = new("user", "первое", "m1");
+        OpenCodeMessage second = new("assistant", "второе", "m2");
+
+        Assert.Equal(
+            new[] { first, second },
+            OpenCodeService.MergeOlder([first, second], [second]));
     }
 
     [Fact]
