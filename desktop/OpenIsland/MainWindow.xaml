@@ -807,7 +807,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="MenuView" Width="300" Height="424" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="MenuView" Width="300" Height="464" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,14,10,0">
                         <TextBlock Style="{StaticResource Caption}" Text="OPENISLAND" Margin="12,0,0,6"/>
                         <Button Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
@@ -859,6 +859,13 @@
                                     <TextBlock x:Name="MenuProcesses" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="QuickLaunchRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bolt"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Быстрый запуск"/>
+                                <local:Icon Style="{StaticResource RowChevron}"/>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RowButton}" Click="TimerRow_Click">
@@ -1583,6 +1590,43 @@
                                     </StackPanel>
                                 </Grid>
                             </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="QuickLaunchView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="QuickLaunchBack_Click" ToolTip="Назад"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="БЫСТРЫЙ ЗАПУСК" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button x:Name="QuickLaunchAdd" Style="{StaticResource ChipButton}" Height="24" Padding="10,0"
+                                        HorizontalAlignment="Right" Content="+ .exe" Click="QuickLaunchAdd_Click"
+                                        ToolTip="Добавить свою программу"/>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                </ScrollViewer.Resources>
+                                <StackPanel>
+                                    <TextBlock Style="{StaticResource Caption}" Text="СИСТЕМНЫЕ" Margin="4,0,0,6"/>
+                                    <UniformGrid x:Name="QuickLaunchTiles" Columns="2" Margin="0,0,0,4"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="СВОИ" Margin="4,8,0,2"/>
+                                    <local:RowList x:Name="QuickLaunchOwn"/>
+                                    <TextBlock x:Name="QuickLaunchEmpty" Text="Добавьте .exe кнопкой «+ .exe» — программа появится здесь"
+                                               FontSize="11" Foreground="{StaticResource Dim}" TextWrapping="Wrap"
+                                               Margin="6,4,6,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                            <TextBlock x:Name="QuickLaunchNotice" Grid.Row="2" FontSize="10.5" Foreground="{StaticResource Orange}"
+                                       Margin="2,4,2,0" TextTrimming="CharacterEllipsis"/>
                         </Grid>
                     </Border>
                 </Grid>

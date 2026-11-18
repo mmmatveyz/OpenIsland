@@ -14,9 +14,9 @@ namespace OpenIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes, QuickLaunch }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes, QuickLaunch }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 424, 34),
+        [View.Menu] = new(300, 464, 34),
         [View.Settings] = new(320, 416, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
@@ -46,6 +46,7 @@ public partial class MainWindow : Window
         [View.Perf] = new(340, 410, 34),
         [View.Clipboard] = new(340, 430, 34),
         [View.Processes] = new(340, 470, 34),
+        [View.QuickLaunch] = new(340, 430, 34),
     };
 
     readonly record struct MediaSpot(
@@ -64,7 +65,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes, View.QuickLaunch];
 
     static readonly View[] SettingsPages = [View.Update];
 
@@ -148,6 +149,7 @@ public partial class MainWindow : Window
             [View.Perf] = PerfView,
             [View.Clipboard] = ClipboardView,
             [View.Processes] = ProcessesView,
+            [View.QuickLaunch] = QuickLaunchView,
         };
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
@@ -184,6 +186,7 @@ public partial class MainWindow : Window
         InitClipboard();
         InitPerf();
         InitProcesses();
+        InitQuickLaunch();
         ApplyTimerTint();
         TuneDragSprings(false);
         _ticker.Tick += (_, _) => OnTick();
@@ -473,6 +476,7 @@ public partial class MainWindow : Window
             Panel.Perf => View.Perf,
             Panel.Clipboard => View.Clipboard,
             Panel.Processes => View.Processes,
+            Panel.QuickLaunch => View.QuickLaunch,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
             Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (_openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
@@ -637,7 +641,7 @@ public partial class MainWindow : Window
     /// <summary>Сворачивает островок, когда окно теряет активацию (клик в другое приложение).</summary>
     void OnDeactivated(object? sender, EventArgs e)
     {
-        if (_panel != Panel.None && !_hovered) CollapseNow();
+        if (_panel != Panel.None && !_hovered && !_quickLaunchDialog) CollapseNow();
     }
 
     /// <summary>Немедленно вернуть островок в компактную таблетку (клик вне окна, горячая клавиша).</summary>

@@ -40,6 +40,7 @@ static class Settings
     static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
     static bool _clickThrough = ReadSwitch(nameof(ClickThrough), false);
+    static string _quickLaunch = Read(nameof(QuickLaunch), "");
     static int _pillOpacity = Math.Clamp(Read(nameof(PillOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static int _openOpacity = Math.Clamp(Read(nameof(OpenOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static bool _dots = ReadSwitch(nameof(Dots), false);
@@ -132,6 +133,13 @@ static class Settings
         set => Write(nameof(ClickThrough), _clickThrough = value);
     }
 
+    /// <summary>Свои программы карточки «Быстрый запуск»: по строке «Имя|Путь|Аргументы» на команду.</summary>
+    public static string QuickLaunch
+    {
+        get => _quickLaunch;
+        set => Write(nameof(QuickLaunch), _quickLaunch = value ?? "");
+    }
+
     public static int Scale
     {
         get => _scale;
@@ -208,6 +216,8 @@ static class Settings
     static void Write(string name, bool value) => Write(name, value ? 1 : 0);
 
     static void Write(string name, int value) => Write(name, value, RegistryValueKind.DWord);
+
+    static void Write(string name, string value) => Write(name, value, RegistryValueKind.String);
 
     static void Write(string name, object value, RegistryValueKind kind)
     {
