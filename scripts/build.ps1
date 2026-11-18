@@ -32,7 +32,9 @@ function Resolve-Dotnet {
         throw "Missing $installer. Install .NET 8 SDK manually: https://dot.net/download"
     }
 
-    & powershell -NoProfile -ExecutionPolicy Bypass -File $installer -Channel 8.0 -InstallDir (Join-Path $root '.dotnet')
+    # Out-Host keeps the installer log on screen instead of returning it from this function:
+    # otherwise $dotnet becomes a multi-line string and the build fails after a fresh install.
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $installer -Channel 8.0 -InstallDir (Join-Path $root '.dotnet') | Out-Host
     if (-not (Test-Path $local)) { throw 'Failed to install .NET SDK.' }
     return $local
 }
