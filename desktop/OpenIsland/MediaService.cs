@@ -21,6 +21,7 @@ sealed class MediaService
 
     readonly Dispatcher _ui;
     readonly PlayerBar _bar = new();
+    readonly WinampIpc _winamp = new();
     Manager? _manager;
     Session? _session;
     Session? _pinned;
@@ -32,6 +33,12 @@ sealed class MediaService
     DateTimeOffset _timelineStamp;
     double _rate = 1;
     Status _status;
+    bool _playing;
+
+    WinampIpc.State _winampState;
+    string _winampArtist = "", _winampTitle = "", _winampSource = "";
+    TimeSpan _winampPosition, _winampDuration;
+    DateTime _winampAt = DateTime.UtcNow;
 
     bool _noTimeline;
     bool _barSearched;
@@ -47,25 +54,34 @@ sealed class MediaService
 
     public event Action? Changed;
 
-    public string Title => _title.Length > 0 ? _title : _barTitle;
-    public string Artist => _title.Length > 0 ? _artist : _barArtist;
+    public string Title => WinampActive
+        ? _winampTitle.Length > 0 ? _winampTitle : _winampArtist
+        : _title.Length > 0 ? _title : _barTitle;
+    public string Artist => WinampActive ? _winampArtist : _title.Length > 0 ? _artist : _barArtist;
     public string Name => Title.Length > 0 ? Title : SourceApp.Name(Source) is { Length: > 0 } app ? app : Untitled;
     public ImageSource? Art { get; private set; }
     public Color[] Palette { get; private set; } = CoverPalette.Plain;
     public Color Accent => Palette[0];
-    public bool IsPlaying { get; private set; }
-    public bool HasTrack => _session != null && (Title.Length > 0 || (_noTimeline && _barSearched && IsLive));
-    public TimeSpan Duration => _duration;
-    public bool HasBarPosition => _noTimeline && _barFound;
-    public bool Seekable => _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
+    public bool IsPlaying => WinampActive ? _winampState == WinampIpc.State.Playing : _playing;
+    public bool HasTrack => WinampActive
+        ? _winampTitle.Length > 0 || _winampArtist.Length > 0
+        : _session != null && (Title.Length > 0 || (_noTimeline && _barSearched && IsLive));
+    public TimeSpan Duration => WinampActive ? _winampDuration : _duration;
+    public bool HasBarPosition => !WinampActive && _noTimeline && _barFound;
+    public bool Seekable => WinampActive
+        ? _winampDuration.TotalSeconds >= 1
+        : _noTimeline ? _barFound : _duration.TotalSeconds >= 1;
 
-    public double Progress => _duration.TotalSeconds >= 1 ? Math.Clamp(Position / _duration, 0, 1)
+    public double Progress => WinampActive
+        ? _winampDuration.TotalSeconds >= 1 ? Math.Clamp(Position / _winampDuration, 0, 1) : 0
+        : _duration.TotalSeconds >= 1 ? Math.Clamp(Position / _duration, 0, 1)
         : HasBarPosition && _barPercent > 0 ? _barPercent / 100.0 : 0;
 
     public string Source
     {
         get
         {
+            if (WinampActive) return _winampSource;
             try { return _session?.SourceAppUserModelId ?? ""; }
             catch { return ""; }
         }
@@ -75,14 +91,32 @@ sealed class MediaService
     {
         get
         {
-            TimeSpan position = RunningPosition;
+            if (WinampActive)
+            {
+                TimeSpan played = _winampState == WinampIpc.State.Playing
+                    ? _winampPosition + (DateTime.UtcNow - _winampAt)
+                    : _winampPosition;
+                if (played < TimeSpan.Zero) return TimeSpan.Zero;
+                return _winampDuration > TimeSpan.Zero && played > _winampDuration ? _winampDuration : played;
+            }
+
+            TimeSpan position = GsmRunningPosition;
             if (position < TimeSpan.Zero || (_noTimeline && !_barFound)) return TimeSpan.Zero;
             bool endless = _noTimeline && _duration <= TimeSpan.Zero;
             return position > _duration && !endless ? _duration : position;
         }
     }
 
-    TimeSpan RunningPosition => IsPlaying ? _position + (DateTime.UtcNow - _positionAt) * _rate : _position;
+    TimeSpan GsmRunningPosition => _playing ? _position + (DateTime.UtcNow - _positionAt) * _rate : _position;
+
+    /// <summary>
+    /// Winamp/AIMP показываем, когда GSMTC не играет: играющий Winamp важнее
+    /// приостановленной системной сессии, а приостановленный — только когда
+    /// живой сессии GSMTC вообще нет (иначе висел бы устаревший трек).
+    /// </summary>
+    bool WinampActive => _winampState == WinampIpc.State.Playing
+        ? _status != Status.Playing
+        : _winampState == WinampIpc.State.Paused && !(_session != null && IsLive);
 
     bool IsLive => _status is Status.Playing or Status.Paused;
 
@@ -94,16 +128,25 @@ sealed class MediaService
 
     public async Task StartAsync()
     {
-        _manager = await Manager.RequestAsync();
-        _manager.CurrentSessionChanged += (_, _) => _ui.InvokeAsync(() =>
+        try
         {
-            UnpinIfAnotherPlays();
-            AttachSession();
-        });
-        _manager.SessionsChanged += (_, _) => _ui.InvokeAsync(AttachSession);
+            _manager = await Manager.RequestAsync();
+            _manager.CurrentSessionChanged += (_, _) => _ui.InvokeAsync(() =>
+            {
+                UnpinIfAnotherPlays();
+                AttachSession();
+            });
+            _manager.SessionsChanged += (_, _) => _ui.InvokeAsync(AttachSession);
+        }
+        catch (Exception ex)
+        {
+            // Без GSMTC остров всё равно должен показывать Winamp/AIMP.
+            App.Log(ex);
+        }
         AttachSession();
         WatchBar();
         WatchPlayback();
+        WatchWinamp();
     }
 
     public bool SwitchSession(int direction)
@@ -127,14 +170,56 @@ sealed class MediaService
         }
     }
 
-    public void TogglePlay() => SendCommand(session => session.TryTogglePlayPauseAsync());
+    public void TogglePlay()
+    {
+        if (WinampActive)
+        {
+            bool playing = _winampState == WinampIpc.State.Playing;
+            if (playing)
+            {
+                _winampPosition = Position;
+                _winampAt = DateTime.UtcNow;
+                _winampState = WinampIpc.State.Paused;
+            }
+            else
+            {
+                _winampAt = DateTime.UtcNow;
+                _winampState = WinampIpc.State.Playing;
+            }
+            _ = Task.Run(() => _winamp.TogglePlay(playing));
+            Changed?.Invoke();
+            return;
+        }
+        SendCommand(session => session.TryTogglePlayPauseAsync());
+    }
 
-    public void Next() => SendCommand(session => session.TrySkipNextAsync());
+    public void Next()
+    {
+        if (WinampActive) { _ = Task.Run(_winamp.Next); return; }
+        SendCommand(session => session.TrySkipNextAsync());
+    }
 
-    public void Previous() => SendCommand(session => session.TrySkipPreviousAsync());
+    public void Previous()
+    {
+        if (WinampActive) { _ = Task.Run(_winamp.Previous); return; }
+        SendCommand(session => session.TrySkipPreviousAsync());
+    }
 
     public async void Seek(double fraction)
     {
+        if (WinampActive)
+        {
+            if (_winampDuration <= TimeSpan.Zero) return;
+            var target = TimeSpan.FromTicks((long)(_winampDuration.Ticks * Math.Clamp(fraction, 0, 1)));
+            if (await Task.Run(() => _winamp.Seek(target)))
+            {
+                _winampPosition = target;
+                _winampAt = DateTime.UtcNow;
+                Changed?.Invoke();
+            }
+            return;
+        }
+
         Session? session = _session;
         if (session == null) return;
         if (_noTimeline)
@@ -232,6 +317,7 @@ sealed class MediaService
 
     Session? PickSession()
     {
+        if (_manager == null) return null;
         try
         {
             if (_pinned != null)
@@ -276,7 +362,8 @@ sealed class MediaService
             _title = _artist = "";
             Art = null;
             Palette = CoverPalette.Plain;
-            IsPlaying = false;
+            _playing = false;
+            _status = Status.Closed;
             Changed?.Invoke();
             return;
         }
@@ -339,12 +426,12 @@ sealed class MediaService
             Status status = info.PlaybackStatus;
             bool playing = status == Status.Playing;
             double rate = info.PlaybackRate is double told && told > 0 ? told : 1;
-            bool changed = playing != IsPlaying || rate != _rate || status != _status;
-            if (playing != IsPlaying || rate != _rate)
+            bool changed = playing != _playing || rate != _rate || status != _status;
+            if (playing != _playing || rate != _rate)
             {
-                _position = Position;
+                _position = GsmRunningPosition;
                 _positionAt = DateTime.UtcNow;
-                IsPlaying = playing;
+                _playing = playing;
                 _rate = rate;
             }
             if (status != _status)
@@ -395,7 +482,7 @@ sealed class MediaService
     {
         while (true)
         {
-            await Task.Delay(IsPlaying ? PollPlayingMs : PollPausedMs);
+            await Task.Delay(_playing ? PollPlayingMs : PollPausedMs);
             try
             {
                 if (ReadPlayback() | ReadTimeline()) Changed?.Invoke();
@@ -411,12 +498,14 @@ sealed class MediaService
     {
         while (true)
         {
-            await Task.Delay(IsPlaying ? PollPlayingMs : PollPausedMs);
+            await Task.Delay(_playing ? PollPlayingMs : PollPausedMs);
             Session? session = _session;
             if (session == null || !_noTimeline || !IsLive) continue;
             try
             {
-                string app = Source;
+                string app;
+                try { app = session.SourceAppUserModelId ?? ""; }
+                catch { continue; }
                 if (!PlayerBar.Supports(app)) continue;
                 PlayerBar.Reading? reading = await Task.Run(() => _bar.Read(app));
                 if (ReferenceEquals(session, _session) && _noTimeline && IsLive) ApplyBarReading(reading);
@@ -426,6 +515,84 @@ sealed class MediaService
                 App.Log(ex);
             }
         }
+    }
+
+    async void WatchWinamp()
+    {
+        while (true)
+        {
+            await Task.Delay(_winampState == WinampIpc.State.Playing ? PollPlayingMs : PollPausedMs);
+            WinampIpc.Reading? reading = null;
+            try
+            {
+                reading = await Task.Run(_winamp.TryRead);
+            }
+            catch (Exception ex)
+            {
+                App.Log(ex);
+            }
+            ApplyWinamp(reading);
+        }
+    }
+
+    void ApplyWinamp(WinampIpc.Reading? reading)
+    {
+        bool wasActive = WinampActive;
+        bool wasPlaying = IsPlaying;
+        (string title, string artist, TimeSpan duration) = (Title, Artist, Duration);
+
+        if (reading is { } ipc)
+        {
+            bool sameTrack = ipc.Title == _winampTitle && ipc.Artist == _winampArtist;
+            _winampState = ipc.State;
+            _winampSource = ipc.Executable;
+            _winampTitle = ipc.Title;
+            _winampArtist = ipc.Artist;
+
+            if (!sameTrack)
+            {
+                _winampPosition = ipc.Position;
+                _winampAt = DateTime.UtcNow;
+                _winampDuration = ipc.Duration;
+            }
+            else
+            {
+                if (ipc.Duration > TimeSpan.Zero) _winampDuration = ipc.Duration;
+                if (ipc.State == WinampIpc.State.Playing)
+                {
+                    _winampPosition = ipc.Position;
+                    _winampAt = DateTime.UtcNow;
+                }
+            }
+        }
+        else
+        {
+            ResetWinamp();
+        }
+
+        bool active = WinampActive;
+        if (active && Art != null)
+        {
+            // У Winamp/AIMP нет обложки: не оставляем на экране чужую (GSMTC) картинку.
+            Art = null;
+            Palette = CoverPalette.Plain;
+        }
+        else if (!active && wasActive && _session != null)
+        {
+            // Вернулись к GSMTC — перечитываем обложку и метаданные сессии.
+            _ = RefreshAsync();
+        }
+
+        if (wasActive != active || wasPlaying != IsPlaying
+            || title != Title || artist != Artist || duration != Duration)
+            Changed?.Invoke();
+    }
+
+    void ResetWinamp()
+    {
+        _winampState = WinampIpc.State.Stopped;
+        _winampArtist = _winampTitle = _winampSource = "";
+        _winampPosition = _winampDuration = TimeSpan.Zero;
     }
 
     void ApplyBarReading(PlayerBar.Reading? reading)
@@ -466,11 +633,11 @@ sealed class MediaService
     {
         if (percent == _barPercent) return;
 
-        bool stepped = IsPlaying && percent == _barPercent + 1;
+        bool stepped = _playing && percent == _barPercent + 1;
         _barPercent = percent;
         if (!stepped || percent < MinPercentToMeasure) return;
 
-        double length = RunningPosition.TotalSeconds * 100 / (percent - 0.5);
+        double length = GsmRunningPosition.TotalSeconds * 100 / (percent - 0.5);
         if (_measuredLength == TimeSpan.Zero || Math.Abs(length - _measuredLength.TotalSeconds) > 50.0 / percent)
             _measuredLength = TimeSpan.FromSeconds(Math.Round(length));
     }
@@ -478,7 +645,7 @@ sealed class MediaService
     void UpdateBarDuration()
     {
         if (_assumedLength > TimeSpan.Zero && _barPercent >= 0
-            && Math.Abs(RunningPosition / _assumedLength * 100 - _barPercent) > 1.5 + 150 / _assumedLength.TotalSeconds)
+            && Math.Abs(GsmRunningPosition / _assumedLength * 100 - _barPercent) > 1.5 + 150 / _assumedLength.TotalSeconds)
             _assumedLength = TimeSpan.Zero;
         _duration = !_barFound ? TimeSpan.Zero : _measuredLength > TimeSpan.Zero ? _measuredLength : _assumedLength;
     }

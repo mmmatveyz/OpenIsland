@@ -74,6 +74,22 @@ static class SourceApp
         return _name;
     }
 
+    public static string ExecutableName(uint process)
+    {
+        IntPtr handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, process);
+        if (handle == IntPtr.Zero) return "";
+        try
+        {
+            var text = new StringBuilder(PathCapacity);
+            int size = text.Capacity;
+            return QueryFullProcessImageName(handle, 0, text, ref size) ? Path.GetFileName(text.ToString()) : "";
+        }
+        finally
+        {
+            CloseHandle(handle);
+        }
+    }
+
     public static bool OwnsProcess(string appId, uint process)
     {
         if (appId.Length == 0) return false;
@@ -100,6 +116,23 @@ static class SourceApp
         return found;
     }
 
+    public static string WindowTitle(uint process)
+    {
+        string title = "";
+        var text = new StringBuilder(TitleCapacity);
+        EnumWindows((hwnd, _) =>
+        {
+            if (!IsWindowVisible(hwnd) || GetWindow(hwnd, GW_OWNER) != IntPtr.Zero) return true;
+            if (Native.IsToolWindow(hwnd)) return true;
+            GetWindowThreadProcessId(hwnd, out uint owner);
+            if (owner != process) return true;
+            if (GetWindowText(hwnd, text, text.Capacity) == 0) return true;
+            title = text.ToString();
+            return false;
+        }, IntPtr.Zero);
+        return title;
+    }
+
     static dynamic? StartMenuEntry(string appId)
     {
         dynamic shell = Activator.CreateInstance(Type.GetTypeFromProgID("Shell.Application")!)!;
@@ -109,13 +142,25 @@ static class SourceApp
     static string ResolveName(string appId)
     {
         if (appId.Length == 0) return "";
+        string file = Path.GetFileName(appId);
+        if (file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+            && PlayerName(Path.GetFileNameWithoutExtension(file)) is { } player)
+            return player;
         try
         {
             if (StartMenuEntry(appId)?.Name is string name && name.Length > 0) return name;
         }
         catch { }
-        return appId.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Path.GetFileNameWithoutExtension(appId) : "";
+        return file.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? Path.GetFileNameWithoutExtension(file) : "";
     }
+
+    static string? PlayerName(string executable) => executable.ToLowerInvariant() switch
+    {
+        "aimp" or "aimp64" or "aimp2" or "aimp3" or "aimp4" => "AIMP",
+        "winamp" => "Winamp",
+        "wacup" => "WACUP",
+        _ => null,
+    };
 
     static string ResolveExecutable(string appId)
     {
