@@ -49,8 +49,14 @@ OpenIsland/
 │   ├── MainWindow.Status.cs       # Громкость, заряд, наушники, сеть
 │   ├── MainWindow.OpenCode.cs     # UI OpenCode AI Hub, звук и тост завершения задачи
 │   ├── MainWindow.Perf.cs         # Карточка мониторинга ПК
+│   ├── MainWindow.Processes.cs    # Карточка «Процессы и порты»
 │   ├── MainWindow.Clipboard.cs    # Карточка истории буфера обмена
-│   ├── OpenCodeService*.cs        # REST/SSE клиент OpenCode (partial): ядро, пейринг+DPAPI, HTTP, сессии, команды, SSE
+│   ├── DevProcesses.cs            # Чистая логика процессов/портов (фильтр, версии, формат)
+│   ├── DevProcessService.cs       # Фоновый опрос dev-процессов и завершение
+│   ├── PortScanner.cs             # Владельцы портов через IP Helper API
+│   ├── QuickActions.cs            # Чистая логика быстрого запуска (список, проверки, запуск)
+│   ├── MainWindow.QuickLaunch.cs  # Карточка «Быстрый запуск»: системные утилиты и свои .exe
+│   ├── OpenCodeService*.cs        # REST/SSE клиент OpenCode (partial): ядро, пейринг+DPAPI, HTTP, сессии, команды, SSE, диффы
 │   ├── OpenCodeSelfTest.cs        # Диагностический прогон (--selftest)
 │   ├── SessionList.cs             # Чистая логика списка сессий (порядок, поиск, время)
 │   ├── PerfService.cs             # CPU/ядра/диск, RAM, сеть, GPU, температура (опрос по требованию)

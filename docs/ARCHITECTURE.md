@@ -101,8 +101,8 @@
 
 Состояния UI описаны двумя перечислениями в `MainWindow.xaml.cs`:
 
-- `View` — конкретный визуальный экран (`Idle`, `Sound`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `OpenCodeBig`, `Perf`, `Clipboard`, ...).
-- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Menu`, `Settings`, `OpenCode`, `Perf`, `Clipboard`, ...).
+- `View` — конкретный визуальный экран (`Idle`, `Sound`, `Media`, `Volume`, `TimerBig`, `Menu`, `Settings`, `OpenCodeBig`, `Perf`, `Clipboard`, `Processes`, `QuickLaunch`, ...).
+- `Panel` — логическая раскрытая панель (`Player`, `Timer`, `Menu`, `Settings`, `OpenCode`, `Perf`, `Clipboard`, `Processes`, `QuickLaunch`, ...).
 
 `TargetView()` выбирает экран по приоритету: принудительный view → активная панель → активный агент OpenCode → медиа → звук (`_sounding`) → таймер → idle. `ShowPanel()`/`SelectPanel()` переключают панель и анимируют переход.
 
@@ -129,6 +129,7 @@
 | OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService*.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
 | Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs`, `PerfMath.cs` | CPU (`GetSystemTimes`), загрузка ядер (PDH), RAM (`GlobalMemoryStatusEx`), диск (PDH `% Disk Time` + свободное место), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта (1 с под курсором, иначе 3 с) |
 | Процессы и порты | `MainWindow.Processes.cs`, `DevProcessService.cs`, `DevProcesses.cs`, `PortScanner.cs` | Dev-процессы и владельцы слушающих портов, режимы «Dev»/«Все», завершение в два шага. Порты — IP Helper API (`GetExtendedTcpTable`/`GetExtendedUdpTable`), опрос — только пока карточка открыта (2,5 с) |
+| Быстрый запуск | `MainWindow.QuickLaunch.cs`, `QuickActions.cs` | 8 системных утилит (Проводник, Терминал/PowerShell, Калькулятор, Блокнот, Диспетчер задач, Параметры, Панель управления, Ножницы) и свои `.exe`/`.lnk`/`.bat`/`.cmd`. Список хранится в реестре одной строкой на команду (`Имя|Путь|Аргументы`, `Settings.QuickLaunch`), запуск — через оболочку Windows (`UseShellExecute`) с рабочим каталогом файла |
 | Буфер обмена | `MainWindow.Clipboard.cs`, `ClipboardService.cs` | История последних 30 фрагментов (в памяти), захват по `WM_CLIPBOARDUPDATE`, вставка в один клик |
 | Обновления | `Updater.cs`, XAML `UpdatePage` | Проверка релизов [`mmmatveyz/OpenIsland`](https://github.com/mmmatveyz/OpenIsland), скачивание ассета `OpenIsland.exe`, сверка `sha256`-дайджеста, подмена файла с автоперезапуском |
 
@@ -265,4 +266,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1
 - Проект: `desktop/OpenIsland/OpenIsland.csproj`, имя сборки — `OpenIsland`, пространство имён — `OpenIsland`.
 - Вывод: `bin/OpenIsland/OpenIsland.exe`.
 - Если .NET 8 SDK не найден, `scripts/build.ps1` устанавливает его в `.dotnet/`.
-- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--view Perf` / `--view Clipboard` / `--view Processes` (карточки мониторинга, буфера и процессов), `--selftest` (диагностика).
+- Аргументы запуска: `--view OpenCodeBig` (открыть карточку OpenCode), `--view Perf` / `--view Clipboard` / `--view Processes` / `--view QuickLaunch` (карточки мониторинга, буфера, процессов и быстрого запуска), `--selftest` (диагностика).
