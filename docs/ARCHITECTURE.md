@@ -121,7 +121,7 @@
 
 | Модуль | Файлы | Возможности |
 | :--- | :--- | :--- |
-| Плеер | `MainWindow.Media.cs`, `MediaService.cs`, `Cover.cs`, `Scrubber.cs`, `PlayerBar.cs` | Управление системным плеером через GSMTC, обложка, прогресс, перемотка, источник приложения |
+| Плеер | `MainWindow.Media.cs`, `MediaService.cs`, `WinampIpc.cs`, `Cover.cs`, `Scrubber.cs`, `PlayerBar.cs` | Управление системным плеером через GSMTC и Winamp/AIMP через IPC-окно `Winamp v1.x` (только скалярные `WM_USER`-селекторы и заголовок окна), обложка, прогресс, перемотка, источник приложения |
 | Эквалайзер | `MainWindow.Media.cs`, `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `BandMeter.cs`, `Equalizer.cs`, `AudioService.cs` | Живой спектр из реального вывода звука (WASAPI loopback); капсула `View.Sound` при любом системном звуке без активного трека (дешёвый master peak через `IAudioMeterInformation`) |
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер: пресеты, точная настройка, кольцо прогресса, звонок |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |

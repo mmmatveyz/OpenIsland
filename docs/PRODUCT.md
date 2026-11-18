@@ -31,10 +31,11 @@
 
 - `MainWindow.Status.cs`, `MainWindow.Headset.cs`, `Headset.cs`, `AudioService.cs`, `CoreAudio.cs`, `NetworkService.cs`.
 
-### 2.3. Медиаплеер (апстрим, `ок`)
-Системная медиасессия (GSMTC): обложка и палитра из неё, перемотка, прогресс, эквалайзер/спектр, источник трека.
+### 2.3. Медиаплеер (апстрим + наше, `ок`)
+Системная медиасессия (GSMTC): обложка и палитра из неё, перемотка, прогресс, эквалайзер/спектр, источник трека. Для плееров без GSMTC (AIMP, Winamp, WACUP) — резервный канал через совместимое окно `Winamp v1.x`: состояние, позиция и длительность читаются скалярными `WM_USER`-селекторами, трек — из заголовка окна, команды идут через `WM_COMMAND`/`IPC_JUMPTOTIME`.
 
-- `MediaService.cs`, `MainWindow.Media.cs`, `MainWindow.Seek.cs`, `Cover.cs`, `CoverPalette.cs`, `SourceApp.cs`, `PlayerBar.cs`, `Scrubber.cs`, `LineBar.cs`, `BandMeter.cs`, `Equalizer.cs`, `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `SpectrumLevels.cs`, `Skip.cs`.
+- `MediaService.cs`, `WinampIpc.cs`, `MainWindow.Media.cs`, `MainWindow.Seek.cs`, `Cover.cs`, `CoverPalette.cs`, `SourceApp.cs`, `PlayerBar.cs`, `Scrubber.cs`, `LineBar.cs`, `BandMeter.cs`, `Equalizer.cs`, `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `SpectrumLevels.cs`, `Skip.cs`.
+- Winamp/AIMP показывается, когда GSMTC не играет; играющий Winamp важнее приостановленной системной сессии, а приостановленный — только при отсутствии живой сессии GSMTC. Обложки у Winamp-совместимых плееров нет.
 
 ### 2.4. Мини-эквалайзер на любой звук — **наше**
 Когда в системе есть звук, но активной медиасессии нет (видео в браузере, игра, голосовой чат), свёрнутый островок разворачивается в компактную капсулу `View.Sound` с одними полосками эквалайзера. Реагирует на **любой** системный вывод, а не только на треки GSMTC.
@@ -123,7 +124,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 | `Updater.cs` | чужой GitHub-репозиторий и ассет `DynamicIsland.exe` | наш репозиторий `mmmatveyz/OpenIsland`, ассет `OpenIsland.exe`, сверка `sha256`-дайджеста | ✅ |
 | `Settings.cs` | реестр `HKCU\Software\DynamicIsland` | `HKCU\Software\OpenIsland` + авто-миграция значений при первом чтении | ✅ |
 | `Autostart.cs` | Run-значение `DynamicIsland` | `OpenIsland` (+ миграция и удаление старого) | ✅ |
-| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.2.5), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
+| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.2.6), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
 | `app.manifest` | `name="DynamicIsland.app"` | `OpenIsland.app` | ✅ |
 | Иконка приложения | отсутствовала | `Assets/OpenIsland.ico` (7 кадров 16–256, тёмная капсула + индиго-циан ободок + искра) | ✅ |
 | Трей | кода не было вообще | `MainWindow.Tray.cs` + `Native.cs`: `Shell_NotifyIcon`, меню (Открыть / Скрыть-Показать / Настройки / Выход), двойной клик — показать | ✅ |
@@ -199,7 +200,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 
 **Стек.** Судя по ассету релиза `Island_x.y.z_x64-setup.exe` и заметке в changelog «обновлена библиотека проверки сертификатов» — Tauri (Rust + WebView2), то есть веб-UI поверх нативного хоста. Наш WPF выигрывает по памяти (нет WebView2-процессов) и по глубине интеграции с OpenCode; их сильная сторона — ширина фич и отделка визуала.
 
-**Пересечение и разница.** Важное для нас: в 1.2.10 они добавили статус `opencode` в пилюлю «как Claude Code и Codex» — то есть заходят в нашу нишу, но у нас это ядро продукта (SSE-стриминг и разрешения), а у них Pro-фича поверх чужих хуков. Заодно у них есть поддержка плееров, которые не сообщают о себе Windows (AIMP, Winamp) — в нашем `MediaService` это известный пробел, GSMTC их не видит.
+**Пересечение и разница.** Важное для нас: в 1.2.10 они добавили статус `opencode` в пилюлю «как Claude Code и Codex» — то есть заходят в нашу нишу, но у нас это ядро продукта (SSE-стриминг и разрешения), а у них Pro-фича поверх чужих хуков. Заодно у них есть поддержка плееров, которые не сообщают о себе Windows (AIMP, Winamp); мы закрыли этот пробел в v1.2.6 через совместимое окно `Winamp v1.x` (`WinampIpc.cs`).
 
 ### 7.1. Что у нас уже есть из их набора
 

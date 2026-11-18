@@ -66,6 +66,7 @@ OpenIsland/
 │   ├── Settings.cs                # Настройки в реестре
 │   ├── Native.cs                  # Win32: topmost, toolwindow, DWM, клики
 │   ├── MediaService.cs            # Интеграция с системным медиаплеером (GSMTC)
+│   ├── WinampIpc.cs               # Резервный канал AIMP/Winamp через окно Winamp v1.x (IPC + разбор заголовка)
 │   ├── AudioService.cs            # Громкость и пик вывода (IAudioMeterInformation)
 │   ├── SpectrumService.cs         # Захват системного звука (WASAPI loopback)
 │   ├── Updater.cs                 # Обновления через GitHub Releases (mmmatveyz/OpenIsland)
