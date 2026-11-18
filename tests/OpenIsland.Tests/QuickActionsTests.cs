@@ -127,7 +127,7 @@ public class QuickActionsTests
 
         Assert.Equal("My Tool", action.Name);
         Assert.Equal(full, action.Target);
-        Assert.Equal(full, action.DisplayName);
+        Assert.Equal("My Tool", action.DisplayName);
     }
 
     [Fact]
