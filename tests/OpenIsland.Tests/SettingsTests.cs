@@ -31,6 +31,45 @@ public class SettingsTests
     }
 
     [Fact]
+    public void NoticeSeconds_StaysWithinSupportedRange()
+    {
+        Assert.InRange(Settings.NoticeSeconds, 2, 10);
+    }
+
+    [Fact]
+    public void NoticeSeconds_CyclesThroughPresets()
+    {
+        Assert.Equal(new[] { 2, 3, 4, 6, 8, 10 }, Settings.NoticePresets);
+        Assert.Equal(3, Settings.NextNoticeSeconds(2));
+        Assert.Equal(4, Settings.NextNoticeSeconds(3));
+        Assert.Equal(6, Settings.NextNoticeSeconds(4));
+        Assert.Equal(8, Settings.NextNoticeSeconds(6));
+        Assert.Equal(10, Settings.NextNoticeSeconds(8));
+        Assert.Equal(2, Settings.NextNoticeSeconds(10));
+        // Значение вне пресетов (например, из реестра) уходит к ближайшему большему.
+        Assert.Equal(6, Settings.NextNoticeSeconds(5));
+        Assert.Equal(2, Settings.NextNoticeSeconds(11));
+    }
+
+    [Fact]
+    public void NoticeSeconds_ClampsAndRestores()
+    {
+        int original = Settings.NoticeSeconds;
+        try
+        {
+            Settings.NoticeSeconds = 1;
+            Assert.Equal(2, Settings.NoticeSeconds);
+
+            Settings.NoticeSeconds = 99;
+            Assert.Equal(10, Settings.NoticeSeconds);
+        }
+        finally
+        {
+            Settings.NoticeSeconds = original;
+        }
+    }
+
+    [Fact]
     public void EnumeratedChoices_StayWithinTheirDeclaredRange()
     {
         Assert.InRange((int)Settings.Backdrop, (int)Backdrop.Glow, (int)Backdrop.MatrixAndStars);

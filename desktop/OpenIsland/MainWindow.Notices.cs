@@ -7,28 +7,61 @@ namespace OpenIsland;
 public partial class MainWindow
 {
     const double NoticeBackgroundAlpha = 0.2;
-    const double NoticeSeconds = 3.2;
     static readonly TimeSpan NoticeIconDelay = TimeSpan.FromMilliseconds(160);
+
+    sealed record NoticeCard(Glyph Icon, SolidColorBrush Tint, string Title, string Text, double Seconds,
+        bool Force, Glyph? From, bool Warn, Action? Open);
+
+    readonly Queue<NoticeCard> _notices = new();
 
     Action? _noticeOpen;
 
-    void Notify(Glyph icon, SolidColorBrush tint, string title, string text, double seconds = NoticeSeconds, bool force = false, Glyph? from = null, bool warn = false,
+    /// <summary>
+    /// Показывает событийную карточку. Если карточка уже на экране, новое событие
+    /// встаёт в очередь и покажется после текущего, а не перебьёт его.
+    /// Срочные (<paramref name="force"/>, например будильник) показываются сразу.
+    /// </summary>
+    void Notify(Glyph icon, SolidColorBrush tint, string title, string text, double? seconds = null, bool force = false, Glyph? from = null, bool warn = false,
         Action? open = null)
     {
         if (_ringing && !force) return;
 
-        bool shown = _view == View.Notice;
-        Color color = tint.Color;
-        NoticeIcon.Kind = icon;
-        NoticeIcon.Fill = tint;
-        NoticeBack.Background = new SolidColorBrush(Color.FromArgb((byte)(color.A * NoticeBackgroundAlpha), color.R, color.G, color.B));
-        NoticeTitle.Text = title;
-        NoticeText.Text = text;
-        _noticeOpen = open;
-        ShowTransient(View.Notice, seconds, force);
-        if (shown) FadeIn(NoticeView);
-        AnimateNoticeIcon(icon, from, warn);
+        NoticeCard card = new(icon, tint, title, text, seconds ?? Settings.NoticeSeconds, force, from, warn, open);
+
+        if (!force && _transientView == View.Notice)
+        {
+            _notices.Enqueue(card);
+            return;
+        }
+        PresentNotice(card);
     }
+
+    bool PresentNotice(NoticeCard card)
+    {
+        bool shown = _view == View.Notice;
+        if (!ShowTransient(View.Notice, card.Seconds, card.Force)) return false;
+
+        Color color = card.Tint.Color;
+        NoticeIcon.Kind = card.Icon;
+        NoticeIcon.Fill = card.Tint;
+        NoticeBack.Background = new SolidColorBrush(Color.FromArgb((byte)(color.A * NoticeBackgroundAlpha), color.R, color.G, color.B));
+        NoticeTitle.Text = card.Title;
+        NoticeText.Text = card.Text;
+        _noticeOpen = card.Open;
+        if (shown) FadeIn(NoticeView);
+        AnimateNoticeIcon(card.Icon, card.From, card.Warn);
+        return true;
+    }
+
+    /// <summary>Показывает следующую карточку из очереди; недоступные (панель, полный экран) отбрасываются.</summary>
+    void ShowNextNotice()
+    {
+        while (_notices.Count > 0)
+            if (PresentNotice(_notices.Dequeue())) return;
+    }
+
+    /// <summary>Сбрасывает ожидающие карточки: пользователь открыл панель или свернул островок.</summary>
+    void ClearPendingNotices() => _notices.Clear();
 
     void AnimateNoticeIcon(Glyph icon, Glyph? from, bool warn)
     {

@@ -32,6 +32,7 @@ static class Settings
     const int MinScale = 80, MaxScale = 200, MaxGap = 24;
     const int DefaultScale = 100, DefaultGap = 8;
     const int MinOpacity = 30, MaxOpacity = 100, DefaultOpacity = 100;
+    const int MinNoticeSeconds = 2, MaxNoticeSeconds = 10, DefaultNoticeSeconds = 4;
 
     static bool _migrated;
 
@@ -50,6 +51,7 @@ static class Settings
     static SeekHover _seekHover = (SeekHover)Math.Clamp(Read(nameof(SeekHover), 0), 0, (int)SeekHover.Wave);
     static int _scale = Math.Clamp(Read(nameof(Scale), DefaultScale), MinScale, MaxScale);
     static int _gap = Math.Clamp(Read(nameof(Gap), DefaultGap), 0, MaxGap);
+    static int _noticeSeconds = Math.Clamp(Read(nameof(NoticeSeconds), DefaultNoticeSeconds), MinNoticeSeconds, MaxNoticeSeconds);
     static int _accent = Read(nameof(Accent), 0);
 
     public static bool Dots
@@ -164,6 +166,23 @@ static class Settings
     {
         get => _gap;
         set => Write(nameof(Gap), _gap = Math.Clamp(value, 0, MaxGap));
+    }
+
+    /// <summary>Время жизни событийной карточки, секунды (2–10). Пресеты — <see cref="NoticePresets"/>.</summary>
+    public static int NoticeSeconds
+    {
+        get => _noticeSeconds;
+        set => Write(nameof(NoticeSeconds), _noticeSeconds = Math.Clamp(value, MinNoticeSeconds, MaxNoticeSeconds));
+    }
+
+    public static IReadOnlyList<int> NoticePresets { get; } = [2, 3, 4, 6, 8, 10];
+
+    /// <summary>Следующий пресет по кругу: 2 → 3 → 4 → 6 → 8 → 10 → 2.</summary>
+    public static int NextNoticeSeconds(int current)
+    {
+        foreach (int preset in NoticePresets)
+            if (preset > current) return preset;
+        return NoticePresets[0];
     }
 
     public static Color? Accent

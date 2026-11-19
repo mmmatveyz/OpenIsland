@@ -81,6 +81,13 @@ public partial class MainWindow
         UpdateSwitches(true);
     }
 
+    /// <summary>Клик по строке переключает время жизни карточки по кругу пресетов.</summary>
+    void NoticeTime_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.NoticeSeconds = Settings.NextNoticeSeconds(Settings.NoticeSeconds);
+        UpdateSwitches(true);
+    }
+
     void Clipboard_Click(object sender, RoutedEventArgs e)
     {
         Settings.Clipboard = !Settings.Clipboard;
@@ -103,6 +110,7 @@ public partial class MainWindow
         NetworkSwitch.Set(Settings.Network, animate);
         TaskToastSwitch.Set(Settings.TaskToast, animate);
         TaskChimeSwitch.Set(Settings.TaskChime, animate);
+        NoticeTimeValue.Text = $"{Settings.NoticeSeconds} с";
         ClipboardSwitch.Set(Settings.Clipboard, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);

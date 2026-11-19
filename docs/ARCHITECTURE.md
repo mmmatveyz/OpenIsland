@@ -114,7 +114,7 @@
 
 - четыре пружины `_width`, `_height`, `_radius`, `_userScale` плавно интерполируют форму;
 - тень, блики и «жидкое» стекло (`Liquid.cs`, `Goo.cs`, `Glass.cs`) рисуются вручную;
-- пузырьки уведомлений (таймер, громкость, наушники) анимируются отдельными пружинами;
+- пузырьки уведомлений (таймер, громкость, наушники) анимируются отдельными пружинами; события выстраиваются в очередь, чтобы не перебивать друг друга;
 - `DrawingSurfaces.cs` и `Visuals.cs` инкапсулируют недорогие `DrawingVisual`-поверхности.
 
 ### 3.3. Модули виджетов
@@ -125,6 +125,7 @@
 | Эквалайзер | `MainWindow.Media.cs`, `SpectrumService.cs`, `SpectrumAnalyzer.cs`, `BandMeter.cs`, `Equalizer.cs`, `AudioService.cs` | Живой спектр из реального вывода звука (WASAPI loopback); капсула `View.Sound` при любом системном звуке без активного трека (дешёвый master peak через `IAudioMeterInformation`) |
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер: пресеты, точная настройка, кольцо прогресса, звонок |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
+| Уведомления | `MainWindow.Notices.cs`, `DelayedAction.cs` | Очередь событийных карточек (сеть/VPN, наушники, таймер, click-through): карточка живёт `Settings.NoticeSeconds` (2–10 с, пресеты 2/3/4/6/8/10), следующая показывается после текущей; срочные (будильник) перебивают очередь, медиа-тост — карточку |
 | Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
 | OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService*.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
 | Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs`, `PerfMath.cs` | CPU (`GetSystemTimes`), загрузка ядер (PDH), RAM (`GlobalMemoryStatusEx`), диск (PDH `% Disk Time` + свободное место), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта (1 с под курсором, иначе 3 с) |

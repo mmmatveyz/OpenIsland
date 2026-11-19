@@ -37,7 +37,7 @@ public partial class MainWindow : Window
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
         [View.Menu] = new(300, 464, 34),
-        [View.Settings] = new(320, 416, 34),
+        [View.Settings] = new(320, 456, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
@@ -561,19 +561,23 @@ public partial class MainWindow : Window
         _ => PillShapes[view],
     };
 
-    void ShowTransient(View view, double seconds, bool force = false)
+    bool ShowTransient(View view, double seconds, bool force = false)
     {
         if (force) _panel = Panel.None;
-        else if (_panel != Panel.None || _hiddenByFullscreen || _sentAway) return;
+        else if (_panel != Panel.None || _hiddenByFullscreen || _sentAway) return false;
         _transientView = view;
         _transientTimeout.Start(TimeSpan.FromSeconds(seconds));
         UpdateView();
+        return true;
     }
 
     void EndTransient()
     {
         _transientView = null;
         SilenceAlarm();
+        // Следующая карточка из очереди показывается до общего обновления вида,
+        // чтобы не мигнуть пустой пилюлей между событиями.
+        ShowNextNotice();
         UpdateView();
     }
 
@@ -582,12 +586,14 @@ public partial class MainWindow : Window
         _panel = panel;
         _transientView = null;
         _transientTimeout.Cancel();
+        ClearPendingNotices();
         SilenceAlarm();
     }
 
     void ShowPanel(Panel panel)
     {
         _panel = panel;
+        ClearPendingNotices();
         if (panel == Panel.OpenCode) EnterTextEntry();
         else LeaveTextEntry();
         UpdateView();
