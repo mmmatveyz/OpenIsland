@@ -384,7 +384,8 @@ sealed class MediaService
 
             _title = title;
             _artist = properties.Artist ?? "";
-            if (art != null || !sameTrack)
+            // Пока играет Winamp/AIMP, обложка GSMTC не должна мелькать на экране.
+            if (!WinampActive && (art != null || !sameTrack))
             {
                 Art = art;
                 Palette = palette;
@@ -571,9 +572,9 @@ sealed class MediaService
         }
 
         bool active = WinampActive;
-        if (active && Art != null)
+        if (active && !wasActive)
         {
-            // У Winamp/AIMP нет обложки: не оставляем на экране чужую (GSMTC) картинку.
+            // У Winamp/AIMP нет обложки: убираем чужую (GSMTC) картинку при переходе.
             Art = null;
             Palette = CoverPalette.Plain;
         }

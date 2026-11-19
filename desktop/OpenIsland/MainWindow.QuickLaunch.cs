@@ -222,9 +222,11 @@ public partial class MainWindow
 
     IReadOnlyList<QuickAction> OwnQuickActions() => QuickActions.Parse(Settings.QuickLaunch);
 
-    void LaunchAction(QuickAction action)
+    async void LaunchAction(QuickAction action)
     {
-        if (!QuickActions.CanStart(action))
+        // Проверка существования файла и старт процесса не должны блокировать UI
+        // (например, если путь указывает на отключённую сетевую папку).
+        if (!await Task.Run(() => QuickActions.CanStart(action)))
         {
             ShowQuickLaunchNotice("Файл не найден");
             return;
@@ -232,7 +234,7 @@ public partial class MainWindow
 
         try
         {
-            Process.Start(QuickActions.StartInfo(action))?.Dispose();
+            await Task.Run(() => Process.Start(QuickActions.StartInfo(action))?.Dispose());
             App.LogDebug($"QuickLaunch: started {action.Target}.");
             CollapseNow();
         }

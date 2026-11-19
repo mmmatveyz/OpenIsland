@@ -35,6 +35,7 @@ sealed class WinampIpc
     const uint SMTO_BLOCK = 0x0001, SMTO_ABORTIFHUNG = 0x0002;
     const uint TimeoutMs = 120;
     const int TitleCapacity = 512;
+    const int ClassNameCapacity = 64;
 
     internal const int IsPlayingSelector = 104;
     internal const int OutputTimeSelector = 105;
@@ -50,8 +51,16 @@ sealed class WinampIpc
     uint _process;
     string _executable = "";
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-    static extern IntPtr FindWindow(string? className, string? windowName);
+    delegate bool WindowProc(IntPtr window, IntPtr param);
+
+    [DllImport("user32.dll")]
+    static extern bool EnumWindows(WindowProc callback, IntPtr param);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    static extern int GetClassName(IntPtr window, StringBuilder text, int max);
+
+    [DllImport("user32.dll")]
+    static extern bool IsWindowVisible(IntPtr window);
 
     [DllImport("user32.dll")]
     static extern bool IsWindow(IntPtr window);
@@ -91,11 +100,10 @@ sealed class WinampIpc
                     (artist, title) = WinampTitle.Parse(fallback);
                 return new Reading(state, artist, title, position, duration, _executable);
             }
-            catch
+            catch (Exception ex)
             {
-                _window = IntPtr.Zero;
-                _process = 0;
-                _executable = "";
+                App.LogDebug($"Winamp IPC: чтение не удалось ({_executable}): {ex.Message}");
+                ResetWindow();
                 return null;
             }
         }
@@ -137,31 +145,88 @@ sealed class WinampIpc
     {
         result = IntPtr.Zero;
         if (_window == IntPtr.Zero) return false;
-        if (SendMessageTimeout(_window, WM_USER, data, new IntPtr(selector),
-                SMTO_BLOCK | SMTO_ABORTIFHUNG, TimeoutMs, out result) != IntPtr.Zero)
-            return true;
+        if (SendTo(_window, selector, data, out result)) return true;
 
         // Плеер закрылся или перестал отвечать — найдём окно заново при следующем опросе.
-        _window = IntPtr.Zero;
-        _process = 0;
-        _executable = "";
-        result = IntPtr.Zero;
+        ResetWindow();
         return false;
     }
 
+    static bool SendTo(IntPtr window, int selector, IntPtr data, out IntPtr result) =>
+        SendMessageTimeout(window, WM_USER, data, new IntPtr(selector),
+            SMTO_BLOCK | SMTO_ABORTIFHUNG, TimeoutMs, out result) != IntPtr.Zero;
+
+    /// <summary>
+    /// Выбирает окно плеера: сначала тот, что реально играет, затем приостановленный,
+    /// иначе любой найденный. Так при одновременно запущенных Winamp и AIMP
+    /// показывается активный источник.
+    /// </summary>
     bool EnsureWindow()
     {
-        if (_window != IntPtr.Zero && IsWindow(_window)) return true;
+        bool valid = _window != IntPtr.Zero && IsWindow(_window);
+        if (valid && ReadState(_window) == State.Playing) return true;
 
+        // Текущий плеер не играет — ищем лучший среди всех окон.
+        if (TryAttachBest()) return true;
+        if (!valid) ResetWindow();
+        return valid;
+    }
+
+    bool TryAttachBest()
+    {
+        IntPtr best = IntPtr.Zero;
+        int bestRank = -1;
+
+        EnumWindows((window, _) =>
+        {
+            if (!IsPlayerWindow(window)) return true;
+            int rank = RankOf(ReadState(window));
+            if (rank > bestRank)
+            {
+                bestRank = rank;
+                best = window;
+            }
+            return true;
+        }, IntPtr.Zero);
+
+        if (best == IntPtr.Zero) return false;
+        Attach(best);
+        return true;
+    }
+
+    static int RankOf(State? state) => state switch
+    {
+        State.Playing => 2,
+        State.Paused => 1,
+        State.Stopped => 0,
+        _ => -1, // окно не ответило
+    };
+
+    static bool IsPlayerWindow(IntPtr window)
+    {
+        if (!IsWindowVisible(window)) return false;
+        var text = new StringBuilder(ClassNameCapacity);
+        return GetClassName(window, text, text.Capacity) > 0
+            && text.ToString().Equals(WindowClass, StringComparison.OrdinalIgnoreCase);
+    }
+
+    State? ReadState(IntPtr window) =>
+        SendTo(window, IsPlayingSelector, IntPtr.Zero, out IntPtr status)
+            ? StateOf(status.ToInt64())
+            : null;
+
+    void Attach(IntPtr window)
+    {
+        _window = window;
+        GetWindowThreadProcessId(window, out _process);
+        _executable = SourceApp.ExecutableName(_process);
+    }
+
+    void ResetWindow()
+    {
         _window = IntPtr.Zero;
         _process = 0;
         _executable = "";
-        _window = FindWindow(WindowClass, null);
-        if (_window == IntPtr.Zero) return false;
-
-        GetWindowThreadProcessId(_window, out _process);
-        _executable = SourceApp.ExecutableName(_process);
-        return true;
     }
 
     string WindowText()
