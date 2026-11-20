@@ -39,7 +39,7 @@ public partial class MainWindow
 
     void CheckFullscreen()
     {
-        bool hidden = Settings.HideFullscreen && Native.IsForegroundFullscreen(_hwnd);
+        bool hidden = Settings.HideFullscreen && Native.IsForegroundFullscreen(_hwnd, Settings.IsFullscreenExcluded);
         if (hidden == _hiddenByFullscreen) return;
         _hiddenByFullscreen = hidden;
         UpdateTargets();

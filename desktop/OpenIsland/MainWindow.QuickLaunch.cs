@@ -86,6 +86,18 @@ public partial class MainWindow
         if (sender is Button { Tag: QuickAction action }) LaunchAction(action);
     }
 
+    void ColorPicker_Click(object sender, RoutedEventArgs e)
+    {
+        CollapseNow();
+        StartColorPicker();
+    }
+
+    void ScreenOcr_Click(object sender, RoutedEventArgs e)
+    {
+        CollapseNow();
+        StartScreenOcr();
+    }
+
     void QuickLaunchAdd_Click(object sender, RoutedEventArgs e)
     {
         _collapseTimeout.Cancel();

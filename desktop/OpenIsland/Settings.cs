@@ -41,7 +41,9 @@ static class Settings
     static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
     static bool _clickThrough = ReadSwitch(nameof(ClickThrough), false);
+    static bool _hideFromCapture = ReadSwitch(nameof(HideFromCapture), false);
     static string _quickLaunch = Read(nameof(QuickLaunch), "");
+    static string _fullscreenExceptions = Read(nameof(FullscreenExceptions), "");
     static int _pillOpacity = Math.Clamp(Read(nameof(PillOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static int _openOpacity = Math.Clamp(Read(nameof(OpenOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static bool _dots = ReadSwitch(nameof(Dots), false);
@@ -108,6 +110,33 @@ static class Settings
         set => Write(nameof(HideFullscreen), _hideFullscreen = value);
     }
 
+    /// <summary>Список процессов-исключений через запятую, для которых островок не скрывается в полноэкранном режиме.</summary>
+    public static string FullscreenExceptions
+    {
+        get => _fullscreenExceptions;
+        set => Write(nameof(FullscreenExceptions), _fullscreenExceptions = value ?? "");
+    }
+
+    /// <summary>Проверяет, входит ли имя процесса в список исключений скрытия на полном экране.</summary>
+    public static bool IsFullscreenExcluded(string? processName)
+    {
+        if (string.IsNullOrWhiteSpace(_fullscreenExceptions) || string.IsNullOrWhiteSpace(processName)) return false;
+        string target = processName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+            ? processName[..^4]
+            : processName;
+
+        string[] parts = _fullscreenExceptions.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (string part in parts)
+        {
+            string cleanPart = part.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
+                ? part[..^4]
+                : part;
+            if (string.Equals(cleanPart, target, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
     public static bool TaskToast
     {
         get => _taskToast;
@@ -126,6 +155,13 @@ static class Settings
     {
         get => _clipboard;
         set => Write(nameof(Clipboard), _clipboard = value);
+    }
+
+    /// <summary>Скрывать остров на записях экрана, стримах и скриншотах (WDA_EXCLUDEFROMCAPTURE).</summary>
+    public static bool HideFromCapture
+    {
+        get => _hideFromCapture;
+        set => Write(nameof(HideFromCapture), _hideFromCapture = value);
     }
 
     /// <summary>Сквозной режим: остров не ловит мышь, клики уходят под него. Выключается хоткеем Ctrl+Alt+I или из меню трея.</summary>

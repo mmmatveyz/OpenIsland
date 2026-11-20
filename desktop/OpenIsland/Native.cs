@@ -29,7 +29,7 @@ static class Native
     const int HSHELL_APPCOMMAND = 12;
     const int WM_HOTKEY = 0x0312;
     const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
-    const uint VK_O = 0x4F, VK_I = 0x49;
+    const uint VK_O = 0x4F, VK_I = 0x49, VK_C = 0x43, VK_X = 0x58;
     const ulong WNF_SHEL_QUIETHOURS_ACTIVE_PROFILE_CHANGED = 0x0D83063EA3BF1C75;
     const byte AC_LINE_ONLINE = 1, BATTERY_FLAG_NO_BATTERY = 128, BATTERY_FLAG_UNKNOWN = 255, BATTERY_PERCENT_MAX = 100;
     const int ClassNameCapacity = 64;
@@ -106,6 +106,7 @@ static class Native
     static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
 
     [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hwnd);
     [DllImport("user32.dll")] static extern IntPtr GetDesktopWindow();
     [DllImport("user32.dll")] static extern IntPtr GetShellWindow();
@@ -195,6 +196,14 @@ static class Native
     public static bool RegisterClickThroughHotkey(IntPtr hwnd, int id) =>
         RegisterHotKey(hwnd, id, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_I);
 
+    /// <summary>Регистрирует глобальный хоткей Ctrl+Alt+C (экранная пипетка цвета, без автоповтора).</summary>
+    public static bool RegisterColorPickerHotkey(IntPtr hwnd, int id) =>
+        RegisterHotKey(hwnd, id, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_C);
+
+    /// <summary>Регистрирует глобальный хоткей Ctrl+Alt+X (быстрый снимок экрана с OCR, без автоповтора).</summary>
+    public static bool RegisterOcrHotkey(IntPtr hwnd, int id) =>
+        RegisterHotKey(hwnd, id, MOD_CONTROL | MOD_ALT | MOD_NOREPEAT, VK_X);
+
     public static void UnregisterHotkey(IntPtr hwnd, int id) => UnregisterHotKey(hwnd, id);
 
     public static bool IsHotkeyMessage(int message, IntPtr wParam, int id) =>
@@ -226,6 +235,29 @@ static class Native
         long style = GetWindowLongPtr(hwnd, GWL_EXSTYLE).ToInt64();
         style = on ? style | WS_EX_TRANSPARENT : style & ~WS_EX_TRANSPARENT;
         SetWindowLongPtr(hwnd, GWL_EXSTYLE, new IntPtr(style));
+    }
+
+    const uint WDA_NONE = 0x00000000;
+    const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    static extern bool SetWindowDisplayAffinity(IntPtr hwnd, uint affinity);
+
+    /// <summary>
+    /// Скрывает окно из захвата экрана (OBS, Discord, Zoom, скриншоты) с помощью
+    /// <c>WDA_EXCLUDEFROMCAPTURE</c> (Windows 10 2004+).
+    /// </summary>
+    public static bool SetExcludeFromCapture(IntPtr hwnd, bool on)
+    {
+        if (hwnd == IntPtr.Zero) return false;
+        try
+        {
+            return SetWindowDisplayAffinity(hwnd, on ? WDA_EXCLUDEFROMCAPTURE : WDA_NONE);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public static Int32Rect VirtualScreen => new(GetSystemMetrics(SM_XVIRTUALSCREEN), GetSystemMetrics(SM_YVIRTUALSCREEN),
@@ -292,14 +324,30 @@ static class Native
     public static void KeepOnTop(IntPtr hwnd) =>
         SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    public static bool IsForegroundFullscreen(IntPtr self)
+    public static bool IsForegroundFullscreen(IntPtr self, Func<string?, bool>? isExcluded = null)
     {
         IntPtr foreground = GetForegroundWindow();
         if (foreground == IntPtr.Zero || foreground == self || foreground == GetDesktopWindow() || foreground == GetShellWindow()) return false;
 
         var className = new StringBuilder(ClassNameCapacity);
         GetClassName(foreground, className, className.Capacity);
-        if (className.ToString() is "Progman" or "WorkerW" or "Shell_TrayWnd" or "XamlExplorerHostIslandWindow") return false;
+        string cls = className.ToString();
+        if (cls is "Progman" or "WorkerW" or "Shell_TrayWnd" or "XamlExplorerHostIslandWindow") return false;
+
+        if (GetWindowThreadProcessId(foreground, out uint pid) != 0 && pid != 0)
+        {
+            try
+            {
+                using var proc = System.Diagnostics.Process.GetProcessById((int)pid);
+                string procName = proc.ProcessName;
+                if (procName.Equals("explorer", StringComparison.OrdinalIgnoreCase)) return false;
+                if (isExcluded != null && isExcluded(procName)) return false;
+            }
+            catch
+            {
+                // Процесс мог уже завершиться или ограничен в правах чтения
+            }
+        }
 
         long style = GetWindowLongPtr(foreground, GWL_STYLE).ToInt64();
         bool framed = (style & WS_CAPTION) == WS_CAPTION || (style & WS_THICKFRAME) != 0;

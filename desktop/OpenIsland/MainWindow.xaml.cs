@@ -37,7 +37,7 @@ public partial class MainWindow : Window
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
         [View.Menu] = new(300, 464, 34),
-        [View.Settings] = new(320, 456, 34),
+        [View.Settings] = new(320, 496, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
         [View.Loading] = new(118, 34, 17),
@@ -105,10 +105,12 @@ public partial class MainWindow : Window
     IntPtr _hwnd;
     int _ticks;
 
-    const int OpenCodeHotkeyId = 0x4F49, ClickThroughHotkeyId = 0x4F4A;
+    const int OpenCodeHotkeyId = 0x4F49, ClickThroughHotkeyId = 0x4F4A, ColorPickerHotkeyId = 0x4F4B, OcrHotkeyId = 0x4F4C;
     HwndSource? _windowSource;
     bool _hotkeyRegistered;
     bool _clickThroughHotkeyRegistered;
+    bool _colorPickerHotkeyRegistered;
+    bool _ocrHotkeyRegistered;
     bool _clickThrough;
 
     public MainWindow()
@@ -246,6 +248,14 @@ public partial class MainWindow : Window
             App.LogDebug(_clickThroughHotkeyRegistered
                 ? "Global hotkey Ctrl+Alt+I registered."
                 : "Global hotkey Ctrl+Alt+I is unavailable (already in use).");
+            _colorPickerHotkeyRegistered = Native.RegisterColorPickerHotkey(_hwnd, ColorPickerHotkeyId);
+            App.LogDebug(_colorPickerHotkeyRegistered
+                ? "Global hotkey Ctrl+Alt+C registered."
+                : "Global hotkey Ctrl+Alt+C is unavailable (already in use).");
+            _ocrHotkeyRegistered = Native.RegisterOcrHotkey(_hwnd, OcrHotkeyId);
+            App.LogDebug(_ocrHotkeyRegistered
+                ? "Global hotkey Ctrl+Alt+X registered."
+                : "Global hotkey Ctrl+Alt+X is unavailable (already in use).");
         }
     }
 
@@ -260,6 +270,16 @@ public partial class MainWindow : Window
         {
             Native.UnregisterHotkey(_hwnd, ClickThroughHotkeyId);
             _clickThroughHotkeyRegistered = false;
+        }
+        if (_colorPickerHotkeyRegistered && _hwnd != IntPtr.Zero)
+        {
+            Native.UnregisterHotkey(_hwnd, ColorPickerHotkeyId);
+            _colorPickerHotkeyRegistered = false;
+        }
+        if (_ocrHotkeyRegistered && _hwnd != IntPtr.Zero)
+        {
+            Native.UnregisterHotkey(_hwnd, OcrHotkeyId);
+            _ocrHotkeyRegistered = false;
         }
         _windowSource?.RemoveHook(OnHotkeyMessage);
         _windowSource?.RemoveHook(OnClipboardMessage);
@@ -288,7 +308,53 @@ public partial class MainWindow : Window
             return IntPtr.Zero;
         }
 
+        if (Native.IsHotkeyMessage(msg, wParam, ColorPickerHotkeyId))
+        {
+            handled = true;
+            StartColorPicker();
+            return IntPtr.Zero;
+        }
+
+        if (Native.IsHotkeyMessage(msg, wParam, OcrHotkeyId))
+        {
+            handled = true;
+            StartScreenOcr();
+            return IntPtr.Zero;
+        }
+
         return IntPtr.Zero;
+    }
+
+    public void StartColorPicker()
+    {
+        if (ColorPickerWindow.IsOpen) return;
+        ColorPickerWindow.Start((color, hex, rgb) =>
+        {
+            Dispatcher.Invoke(() =>
+            {
+                Notify(Glyph.Drop, new SolidColorBrush(color), "Цвет скопирован", $"{hex}  \u00B7  {rgb}", seconds: 4);
+            });
+        });
+    }
+
+    public void StartScreenOcr()
+    {
+        if (ScreenOcrWindow.IsOpen) return;
+        ScreenOcrWindow.Start(
+            (text, preview) =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    Notify(Glyph.PointerText, _green, "Текст скопирован", preview, seconds: 4);
+                });
+            },
+            () =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    Notify(Glyph.PointerText, _orange, "Текст не найден", "В выбранной области нет распознаваемого текста", seconds: 3);
+                });
+            });
     }
 
     void ToggleClickThrough()
@@ -315,6 +381,15 @@ public partial class MainWindow : Window
             UpdateTargets();
         }
         App.LogDebug(on ? "Click-through mode enabled." : "Click-through mode disabled.");
+    }
+
+    /// <summary>Скрытие окна из захвата экрана (OBS, Discord, Zoom, скриншоты).</summary>
+    void ApplyHideFromCapture()
+    {
+        bool on = Settings.HideFromCapture;
+        if (_hwnd != IntPtr.Zero) Native.SetExcludeFromCapture(_hwnd, on);
+        if (_glass.Handle != IntPtr.Zero) Native.SetExcludeFromCapture(_glass.Handle, on);
+        App.LogDebug(on ? "ExcludeFromCapture enabled." : "ExcludeFromCapture disabled.");
     }
 
     void ToggleOpenCodeFromHotkey()
@@ -383,6 +458,7 @@ public partial class MainWindow : Window
         PlayIntro();
         InitTray();
         ApplyClickThrough(Settings.ClickThrough || Switch("--clickthrough"));
+        ApplyHideFromCapture();
         _ticker.Start();
         if (_forcedTimerSeconds > 0) StartTimer(TimeSpan.FromSeconds(_forcedTimerSeconds));
         if (_forcedView == View.Update) _ = _updater.CheckAsync();

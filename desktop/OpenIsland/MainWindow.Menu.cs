@@ -103,6 +103,13 @@ public partial class MainWindow
         CheckFullscreen();
     }
 
+    void HideFromCapture_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.HideFromCapture = !Settings.HideFromCapture;
+        UpdateSwitches(true);
+        ApplyHideFromCapture();
+    }
+
     void UpdateSwitches(bool animate)
     {
         RimSwitch.Set(Settings.Rim, animate);
@@ -113,6 +120,7 @@ public partial class MainWindow
         NoticeTimeValue.Text = $"{Settings.NoticeSeconds} с";
         ClipboardSwitch.Set(Settings.Clipboard, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
+        HideFromCaptureSwitch.Set(Settings.HideFromCapture, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
     }
 

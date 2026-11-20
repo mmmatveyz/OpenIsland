@@ -108,4 +108,45 @@ public class SettingsTests
             Settings.TaskChime = originalChime;
         }
     }
+
+    [Fact]
+    public void HideFromCapture_RoundTrips()
+    {
+        bool original = Settings.HideFromCapture;
+        try
+        {
+            Settings.HideFromCapture = !original;
+            Assert.Equal(!original, Settings.HideFromCapture);
+        }
+        finally
+        {
+            Settings.HideFromCapture = original;
+        }
+    }
+
+    [Fact]
+    public void FullscreenExceptions_RoundTrips_And_IsFullscreenExcluded_Matches()
+    {
+        string original = Settings.FullscreenExceptions;
+        try
+        {
+            Settings.FullscreenExceptions = "code, notepad.exe, vlc";
+            Assert.Equal("code, notepad.exe, vlc", Settings.FullscreenExceptions);
+
+            Assert.True(Settings.IsFullscreenExcluded("code"));
+            Assert.True(Settings.IsFullscreenExcluded("code.exe"));
+            Assert.True(Settings.IsFullscreenExcluded("notepad"));
+            Assert.True(Settings.IsFullscreenExcluded("notepad.exe"));
+            Assert.True(Settings.IsFullscreenExcluded("VLC"));
+            Assert.True(Settings.IsFullscreenExcluded("VLC.EXE"));
+
+            Assert.False(Settings.IsFullscreenExcluded("chrome"));
+            Assert.False(Settings.IsFullscreenExcluded(""));
+            Assert.False(Settings.IsFullscreenExcluded(null));
+        }
+        finally
+        {
+            Settings.FullscreenExceptions = original;
+        }
+    }
 }

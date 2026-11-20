@@ -901,7 +901,7 @@
                     </local:RowList>
                 </Grid>
 
-                <Grid x:Name="SettingsView" Width="320" Height="456" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="SettingsView" Width="320" Height="496" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,8,10,0">
                         <Button Style="{StaticResource BackButton}" Content="НАСТРОЙКИ" Click="SettingsBack_Click"/>
                         <Button Style="{StaticResource RowButton}" Click="Rim_Click">
@@ -958,6 +958,13 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Expand"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Скрывать на полном экране"/>
                                 <local:Toggle x:Name="FullscreenSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="HideFromCapture_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Record"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Скрывать на записях экрана"/>
+                                <local:Toggle x:Name="HideFromCaptureSwitch" Style="{StaticResource RowSwitch}"/>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RowButton}" Click="Autostart_Click">
@@ -1625,6 +1632,21 @@
                                 <StackPanel>
                                     <TextBlock Style="{StaticResource Caption}" Text="СИСТЕМНЫЕ" Margin="4,0,0,6"/>
                                     <UniformGrid x:Name="QuickLaunchTiles" Columns="2" Margin="0,0,0,4"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="ИНСТРУМЕНТЫ" Margin="4,8,0,6"/>
+                                    <UniformGrid Columns="2" Margin="0,0,0,4">
+                                        <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ColorPicker_Click" ToolTip="Пипетка цвета на экране (Ctrl+Alt+C)">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <local:Icon Kind="Drop" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Пипетка" FontSize="12" Foreground="White" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ScreenOcr_Click" ToolTip="Распознавание текста с экрана (Ctrl+Alt+X)">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <local:Icon Kind="PointerText" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="Текст (OCR)" FontSize="12" Foreground="White" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </UniformGrid>
                                     <TextBlock Style="{StaticResource Caption}" Text="СВОИ" Margin="4,8,0,2"/>
                                     <local:RowList x:Name="QuickLaunchOwn"/>
                                     <TextBlock x:Name="QuickLaunchEmpty" Text="Добавьте .exe кнопкой «+ .exe» — программа появится здесь"

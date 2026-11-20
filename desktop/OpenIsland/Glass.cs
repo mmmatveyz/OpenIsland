@@ -65,6 +65,7 @@ sealed class Glass
             root.Children.InsertAtTop(_pill.Visual);
             root.Children.InsertAtTop(_bubble.Visual);
             _target.Root = root;
+            if (Settings.HideFromCapture) Native.SetExcludeFromCapture(_hwnd, true);
             Place();
         }
         catch (Exception ex)
