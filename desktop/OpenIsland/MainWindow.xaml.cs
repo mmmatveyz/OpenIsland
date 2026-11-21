@@ -14,9 +14,9 @@ namespace OpenIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes, QuickLaunch }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes, QuickLaunch }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 464, 34),
+        [View.Menu] = new(300, 544, 34),
         [View.Settings] = new(320, 496, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
@@ -47,6 +47,8 @@ public partial class MainWindow : Window
         [View.Clipboard] = new(340, 430, 34),
         [View.Processes] = new(340, 470, 34),
         [View.QuickLaunch] = new(340, 430, 34),
+        [View.Weather] = new(340, 430, 34),
+        [View.Shelf] = new(340, 430, 34),
     };
 
     readonly record struct MediaSpot(
@@ -65,7 +67,7 @@ public partial class MainWindow : Window
         [View.MediaBig] = new(20, 20, 64, 22, 52, 38, 26, 1, true),
     };
 
-    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes, View.QuickLaunch];
+    static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes, View.QuickLaunch, View.Weather, View.Shelf];
 
     static readonly View[] SettingsPages = [View.Update];
 
@@ -152,6 +154,8 @@ public partial class MainWindow : Window
             [View.Clipboard] = ClipboardView,
             [View.Processes] = ProcessesView,
             [View.QuickLaunch] = QuickLaunchView,
+            [View.Weather] = WeatherView,
+            [View.Shelf] = ShelfView,
         };
         _spotSprings = [_coverLeft, _coverTop, _coverSize, _barsRight, _barsCenterY, _barsWidth, _barsHeight, _barsOpen];
         _springs =
@@ -189,8 +193,16 @@ public partial class MainWindow : Window
         InitPerf();
         InitProcesses();
         InitQuickLaunch();
+        InitWeather();
+        InitFileShelf();
         ApplyTimerTint();
         TuneDragSprings(false);
+
+        AllowDrop = true;
+        DragEnter += MainWindow_DragEnter;
+        DragOver += MainWindow_DragOver;
+        Drop += MainWindow_Drop;
+
         _ticker.Tick += (_, _) => OnTick();
         IsVisibleChanged += (_, _) => SyncEq();
         Loaded += OnLoaded;
@@ -288,6 +300,7 @@ public partial class MainWindow : Window
         _openCode.Dispose();
         _perf.Dispose();
         _devProcesses.Dispose();
+        _weather.Dispose();
         DisposeTray();
         base.OnClosed(e);
     }
@@ -355,6 +368,41 @@ public partial class MainWindow : Window
                     Notify(Glyph.PointerText, _orange, "Текст не найден", "В выбранной области нет распознаваемого текста", seconds: 3);
                 });
             });
+    }
+
+    void MainWindow_DragEnter(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Effects = DragDropEffects.Copy;
+            e.Handled = true;
+        }
+    }
+
+    void MainWindow_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Effects = DragDropEffects.Copy;
+            e.Handled = true;
+        }
+    }
+
+    void MainWindow_Drop(object sender, DragEventArgs e)
+    {
+        if (e.Data.GetDataPresent(DataFormats.FileDrop))
+        {
+            e.Handled = true;
+            if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
+            {
+                int added = FileShelf.AddFiles(files);
+                if (added > 0)
+                {
+                    ShowPanel(Panel.Shelf);
+                    Notify(Glyph.Folder, _indigo, "Файлы на полке", $"{added} шт. добавлено", seconds: 3);
+                }
+            }
+        }
     }
 
     void ToggleClickThrough()
@@ -553,6 +601,8 @@ public partial class MainWindow : Window
             Panel.Clipboard => View.Clipboard,
             Panel.Processes => View.Processes,
             Panel.QuickLaunch => View.QuickLaunch,
+            Panel.Weather => View.Weather,
+            Panel.Shelf => View.Shelf,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
             Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (_openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
@@ -670,6 +720,11 @@ public partial class MainWindow : Window
     {
         _panel = panel;
         ClearPendingNotices();
+        if (panel == Panel.Menu)
+        {
+            SyncWeatherUI();
+            SyncFileShelfUI();
+        }
         if (panel == Panel.OpenCode) EnterTextEntry();
         else LeaveTextEntry();
         UpdateView();

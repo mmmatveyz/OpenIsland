@@ -807,7 +807,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="MenuView" Width="300" Height="464" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="MenuView" Width="300" Height="544" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,14,10,0">
                         <TextBlock Style="{StaticResource Caption}" Text="OPENISLAND" Margin="12,0,0,6"/>
                         <Button Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
@@ -866,6 +866,26 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Bolt"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Быстрый запуск"/>
                                 <local:Icon Style="{StaticResource RowChevron}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="ShelfRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Folder"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Полка файлов"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MenuFileShelfCount" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WeatherRow_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="CloudSun"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Погода"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock x:Name="MenuWeatherTemp" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
+                                </StackPanel>
                             </Grid>
                         </Button>
                         <Button Style="{StaticResource RowButton}" Click="TimerRow_Click">
@@ -1686,7 +1706,107 @@
                         </Grid>
                     </Border>
                 </Grid>
-</Grid>
+
+                <Grid x:Name="WeatherView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="14,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="WeatherBack_Click" ToolTip="Назад"/>
+                                    <TextBlock x:Name="WeatherCityText" Style="{StaticResource Caption}" Text="ПОГОДА" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="Обновить" Click="WeatherRefresh_Click"/>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                </ScrollViewer.Resources>
+                                <StackPanel>
+                                    <Border Background="#1AFFFFFF" CornerRadius="16" Padding="16,14" Margin="0,0,0,10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock x:Name="WeatherBigTemp" Text="+0°" FontSize="38" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,2"/>
+                                                <TextBlock x:Name="WeatherConditionText" Text="Загрузка прогноза..." FontSize="13" FontWeight="Medium" Foreground="White"/>
+                                                <TextBlock x:Name="WeatherFeelsText" Text="" FontSize="11" Foreground="{StaticResource Dim}" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <local:Icon x:Name="WeatherIcon" Grid.Column="1" Kind="CloudSun" Width="46" Height="46" Fill="{StaticResource Indigo}" VerticalAlignment="Center" Margin="10,0,4,0"/>
+                                        </Grid>
+                                    </Border>
+                                    <UniformGrid Columns="3" Margin="0,0,0,12">
+                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="0,0,4,0">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="ВЕТЕР" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
+                                                <TextBlock x:Name="WeatherWindText" Text="0.0 м/с" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="2,0,2,0">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="ВЛАЖНОСТЬ" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
+                                                <TextBlock x:Name="WeatherHumidityText" Text="0%" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="4,0,0,0">
+                                            <StackPanel HorizontalAlignment="Center">
+                                                <TextBlock Text="ОСАДКИ" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
+                                                <TextBlock x:Name="WeatherPrecipText" Text="0 мм" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </UniformGrid>
+                                    <TextBlock Style="{StaticResource Caption}" Text="ПРОГНОЗ ПО ЧАСАМ" Margin="4,0,0,6"/>
+                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,10">
+                                        <ScrollViewer.Resources>
+                                            <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                        </ScrollViewer.Resources>
+                                        <StackPanel x:Name="WeatherHourlyList" Orientation="Horizontal"/>
+                                    </ScrollViewer>
+                                    <TextBlock x:Name="WeatherUpdatedText" Text="" FontSize="10" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    <ProgressBar x:Name="WeatherLoading" IsIndeterminate="True" Height="2" Foreground="{StaticResource Indigo}" Background="Transparent" BorderThickness="0" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="ShelfView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="ShelfBack_Click" ToolTip="Назад"/>
+                                    <TextBlock Style="{StaticResource Caption}" Text="ПОЛКА ФАЙЛОВ" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource ChipButton}" Height="24" Padding="10,0" Content="+ Файл" Click="ShelfAdd_Click" Margin="0,0,6,0" ToolTip="Добавить файл на полку"/>
+                                    <Button Style="{StaticResource ChipButton}" Height="24" Padding="8,0" Content="Очистить" Click="ShelfClear_Click" ToolTip="Очистить всю полку"/>
+                                </StackPanel>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
+                                </ScrollViewer.Resources>
+                                <StackPanel x:Name="ShelfList"/>
+                            </ScrollViewer>
+                            <TextBlock x:Name="ShelfEmpty" Grid.Row="1" Text="Перетащите файлы на остров &#8212; они останутся на полке для быстрого доступа"
+                                       FontSize="12" Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                       MaxWidth="250" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ShelfCountText" Grid.Row="2" FontSize="10.5" Foreground="{StaticResource Dim}" Margin="2,4,2,0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
 
 
             <Canvas x:Name="Shared" Visibility="Collapsed" Opacity="0">
