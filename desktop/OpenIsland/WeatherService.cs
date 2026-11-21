@@ -35,6 +35,13 @@ public sealed record CurrentWeather(
     public (Glyph Glyph, string Description) Condition => WeatherMath.DescribeWmoCode(WmoCode, IsDay);
 }
 
+public sealed record GeoCity(string Name, string Country, string AdminRegion, double Latitude, double Longitude)
+{
+    public string DisplayName => string.IsNullOrWhiteSpace(AdminRegion) || AdminRegion == Name
+        ? (string.IsNullOrWhiteSpace(Country) ? Name : $"{Name}, {Country}")
+        : $"{Name}, {AdminRegion}, {Country}";
+}
+
 /// <summary>
 /// Асинхронный сервис погоды через бесплатный открытый API Open-Meteo (без API-ключей),
 /// с автоопределением города по IP, кэшированием на 25 минут и безопасной обработкой офлайна.
@@ -58,6 +65,7 @@ public sealed class WeatherService : IDisposable
     public CurrentWeather? Current => _cached;
     public bool IsLoading => _isLoading;
     public string? LastError => _lastError;
+    public bool IsManualLocation => Settings.HasManualWeatherLocation;
 
     public WeatherService(HttpClient? http = null)
     {
@@ -67,6 +75,54 @@ public sealed class WeatherService : IDisposable
     public void Dispose()
     {
         _http.Dispose();
+    }
+
+    /// <summary>
+    /// Ищет города по названию через геокодер Open-Meteo.
+    /// </summary>
+    public async Task<IReadOnlyList<GeoCity>> SearchCitiesAsync(string query, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+            return Array.Empty<GeoCity>();
+
+        try
+        {
+            string url = $"https://geocoding-api.open-meteo.com/v1/search?name={Uri.EscapeDataString(query.Trim())}&count=6&language=ru&format=json";
+            using var response = await _http.GetAsync(url, ct);
+            response.EnsureSuccessStatusCode();
+            string json = await response.Content.ReadAsStringAsync(ct);
+            return ParseGeocodingJson(json);
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"WeatherService: search cities error: {ex.Message}");
+            return Array.Empty<GeoCity>();
+        }
+    }
+
+    /// <summary>
+    /// Устанавливает город вручную, сохраняет в настройках и обновляет прогноз.
+    /// </summary>
+    public async Task SetManualCityAsync(GeoCity city)
+    {
+        Settings.WeatherCity = city.Name;
+        Settings.WeatherLat = city.Latitude;
+        Settings.WeatherLon = city.Longitude;
+        _cachedCity = city.Name;
+        _cachedLat = city.Latitude;
+        _cachedLon = city.Longitude;
+        _geoResolved = true;
+        await GetWeatherAsync(force: true);
+    }
+
+    /// <summary>
+    /// Сбрасывает ручной выбор города на автоопределение по IP.
+    /// </summary>
+    public async Task ResetToAutoLocationAsync()
+    {
+        Settings.ResetWeatherLocation();
+        _geoResolved = false;
+        await GetWeatherAsync(force: true);
     }
 
     /// <summary>
@@ -120,6 +176,15 @@ public sealed class WeatherService : IDisposable
 
     async Task ResolveLocationAsync()
     {
+        if (Settings.HasManualWeatherLocation)
+        {
+            _cachedCity = Settings.WeatherCity;
+            _cachedLat = Settings.WeatherLat;
+            _cachedLon = Settings.WeatherLon;
+            _geoResolved = true;
+            return;
+        }
+
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
@@ -143,6 +208,41 @@ public sealed class WeatherService : IDisposable
             // Ошибка гео-поиска: используем дефолтные координаты
             _geoResolved = true;
         }
+    }
+
+    public static IReadOnlyList<GeoCity> ParseGeocodingJson(string json)
+    {
+        var list = new List<GeoCity>();
+        if (string.IsNullOrWhiteSpace(json)) return list;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("results", out var results) || results.ValueKind != JsonValueKind.Array)
+            {
+                return list;
+            }
+
+            foreach (var item in results.EnumerateArray())
+            {
+                string name = item.TryGetProperty("name", out var np) ? np.GetString() ?? "" : "";
+                string country = item.TryGetProperty("country", out var cp) ? cp.GetString() ?? "" : "";
+                string admin = item.TryGetProperty("admin1", out var ap) ? ap.GetString() ?? "" : "";
+                double lat = item.TryGetProperty("latitude", out var lp) ? lp.GetDouble() : 0.0;
+                double lon = item.TryGetProperty("longitude", out var lonp) ? lonp.GetDouble() : 0.0;
+
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    list.Add(new GeoCity(name, country, admin, lat, lon));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"WeatherService: ParseGeocodingJson error: {ex.Message}");
+        }
+
+        return list;
     }
 
     public static CurrentWeather ParseOpenMeteoJson(string json, string cityName)

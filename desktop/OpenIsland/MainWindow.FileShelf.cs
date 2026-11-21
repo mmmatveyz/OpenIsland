@@ -167,6 +167,7 @@ public partial class MainWindow
         {
             e.Handled = true;
             FileShelf.Remove(item.Path);
+            SoundFx.Play(SoundCue.Tuck);
         };
 
         actions.Children.Add(copyBtn);
@@ -229,7 +230,11 @@ public partial class MainWindow
 
     void ShelfBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Menu);
 
-    void ShelfClear_Click(object sender, RoutedEventArgs e) => FileShelf.Clear();
+    void ShelfClear_Click(object sender, RoutedEventArgs e)
+    {
+        FileShelf.Clear();
+        SoundFx.Play(SoundCue.Tuck);
+    }
 
     void ShelfAdd_Click(object sender, RoutedEventArgs e)
     {
@@ -244,6 +249,7 @@ public partial class MainWindow
             int added = FileShelf.AddFiles(dialog.FileNames);
             if (added > 0)
             {
+                SoundFx.Play(SoundCue.Pop);
                 Notify(Glyph.Folder, _indigo, "Файлы на полке", $"{added} шт. добавлено", seconds: 2);
             }
         }

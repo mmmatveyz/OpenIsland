@@ -51,6 +51,14 @@ OpenIsland/
 │   ├── MainWindow.Perf.cs         # Карточка мониторинга ПК
 │   ├── MainWindow.Processes.cs    # Карточка «Процессы и порты»
 │   ├── MainWindow.Clipboard.cs    # Карточка истории буфера обмена
+│   ├── MainWindow.Weather.cs      # Карточка «Погода»: почасовой прогноз, авто IP, ручной поиск города
+│   ├── MainWindow.FileShelf.cs    # Карточка «Полка файлов»: drag & drop, drag-out наружу
+│   ├── FileShelf.cs               # Модель и персистентность полки файлов
+│   ├── WeatherService.cs          # Открытый API Open-Meteo и геокодер городов
+│   ├── WeatherMath.cs             # Форматирование метео-данных и WMO-кодов
+│   ├── SoundFx.cs                 # Звуковые микро-эффекты интерфейса (щелчки, поп, тык)
+│   ├── ColorPickerWindow.cs       # Экранная пипетка цвета (Ctrl+Alt+C) с лупой
+│   ├── ScreenOcrWindow.cs         # Экранный снимок с OCR текста (Ctrl+Alt+X)
 │   ├── DevProcesses.cs            # Чистая логика процессов/портов (фильтр, версии, формат)
 │   ├── DevProcessService.cs       # Фоновый опрос dev-процессов и завершение
 │   ├── PortScanner.cs             # Владельцы портов через IP Helper API

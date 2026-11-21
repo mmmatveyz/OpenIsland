@@ -48,6 +48,7 @@ public partial class MainWindow
         try { Autostart.Set(!Autostart.Enabled); }
         catch (Exception ex) { App.Log(ex); }
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     void Rim_Click(object sender, RoutedEventArgs e)
@@ -55,30 +56,35 @@ public partial class MainWindow
         Settings.Rim = !Settings.Rim;
         UpdateSwitches(true);
         SyncRim();
+        SoundFx.Play(SoundCue.Click);
     }
 
     void AppVolume_Click(object sender, RoutedEventArgs e)
     {
         Settings.AppVolume = !Settings.AppVolume;
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     void Network_Click(object sender, RoutedEventArgs e)
     {
         Settings.Network = !Settings.Network;
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     void TaskToast_Click(object sender, RoutedEventArgs e)
     {
         Settings.TaskToast = !Settings.TaskToast;
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     void TaskChime_Click(object sender, RoutedEventArgs e)
     {
         Settings.TaskChime = !Settings.TaskChime;
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     /// <summary>Клик по строке переключает время жизни карточки по кругу пресетов.</summary>
@@ -86,6 +92,7 @@ public partial class MainWindow
     {
         Settings.NoticeSeconds = Settings.NextNoticeSeconds(Settings.NoticeSeconds);
         UpdateSwitches(true);
+        SoundFx.Play(SoundCue.Click);
     }
 
     void Clipboard_Click(object sender, RoutedEventArgs e)
@@ -94,6 +101,7 @@ public partial class MainWindow
         if (!Settings.Clipboard) _clipboard.Clear();
         UpdateSwitches(true);
         RefreshClipboardUI();
+        SoundFx.Play(SoundCue.Click);
     }
 
     void Fullscreen_Click(object sender, RoutedEventArgs e)
@@ -101,6 +109,7 @@ public partial class MainWindow
         Settings.HideFullscreen = !Settings.HideFullscreen;
         UpdateSwitches(true);
         CheckFullscreen();
+        SoundFx.Play(SoundCue.Click);
     }
 
     void HideFromCapture_Click(object sender, RoutedEventArgs e)
@@ -108,6 +117,14 @@ public partial class MainWindow
         Settings.HideFromCapture = !Settings.HideFromCapture;
         UpdateSwitches(true);
         ApplyHideFromCapture();
+        SoundFx.Play(SoundCue.Click);
+    }
+
+    void UiSoundFx_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.UiSoundFx = !Settings.UiSoundFx;
+        UpdateSwitches(true);
+        if (Settings.UiSoundFx) SoundFx.Play(SoundCue.Click);
     }
 
     void UpdateSwitches(bool animate)
@@ -121,6 +138,7 @@ public partial class MainWindow
         ClipboardSwitch.Set(Settings.Clipboard, animate);
         FullscreenSwitch.Set(Settings.HideFullscreen, animate);
         HideFromCaptureSwitch.Set(Settings.HideFromCapture, animate);
+        UiSoundFxSwitch.Set(Settings.UiSoundFx, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
     }
 

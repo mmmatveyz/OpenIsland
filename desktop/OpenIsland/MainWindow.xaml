@@ -987,6 +987,13 @@
                                 <local:Toggle x:Name="HideFromCaptureSwitch" Style="{StaticResource RowSwitch}"/>
                             </Grid>
                         </Button>
+                        <Button Style="{StaticResource RowButton}" Click="UiSoundFx_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Speaker"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Звуки интерфейса"/>
+                                <local:Toggle x:Name="UiSoundFxSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
                         <Button Style="{StaticResource RowButton}" Click="Autostart_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Windows"/>
@@ -1712,6 +1719,7 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <Grid Grid.Row="0" Height="28" Margin="0,0,0,8">
@@ -1719,9 +1727,40 @@
                                     <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="WeatherBack_Click" ToolTip="Назад"/>
                                     <TextBlock x:Name="WeatherCityText" Style="{StaticResource Caption}" Text="ПОГОДА" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <Button Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="Обновить" Click="WeatherRefresh_Click"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button x:Name="WeatherCityChangeButton" Style="{StaticResource ChipButton}" Height="24" Padding="8,0" Content="Город" Click="WeatherCityChange_Click" Margin="0,0,6,0" ToolTip="Выбрать другой город вручную"/>
+                                    <Button Style="{StaticResource ChipButton}" Height="24" Padding="8,0" Content="Обновить" Click="WeatherRefresh_Click"/>
+                                </StackPanel>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <Border x:Name="WeatherCityPanel" Grid.Row="1" Background="#242426" BorderBrush="#3A3A3C" BorderThickness="1"
+                                    CornerRadius="14" Padding="10,10" Margin="0,0,0,8" Visibility="Collapsed">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="#1C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="8" Padding="8,4" Margin="0,0,6,0">
+                                            <Grid>
+                                                <TextBox x:Name="WeatherCitySearchBox" Background="Transparent" Foreground="White" BorderThickness="0"
+                                                         FontSize="12" CaretBrush="White" VerticalAlignment="Center" Padding="0"
+                                                         GotFocus="WeatherCitySearchBox_GotFocus" PreviewMouseLeftButtonDown="WeatherCitySearchBox_MouseDown"
+                                                         KeyDown="WeatherCitySearchBox_KeyDown" TextChanged="WeatherCitySearchBox_TextChanged"/>
+                                                <TextBlock x:Name="WeatherCitySearchHint" Text="Поиск города (например: Сочи)..." FontSize="11.5"
+                                                           Foreground="{StaticResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                            </Grid>
+                                        </Border>
+                                        <Button Grid.Column="1" Style="{StaticResource ChipButton}" Height="26" Padding="8,0" Content="Найти" Click="WeatherCityFind_Click"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Button x:Name="WeatherAutoIpButton" Style="{StaticResource ChipButton}" Height="22" Padding="8,0" Content="Авто по IP" Click="WeatherAutoIp_Click" ToolTip="Определять город автоматически по IP-адресу"/>
+                                        <Button Style="{StaticResource ChipButton}" Height="22" Padding="8,0" Content="Закрыть" Click="WeatherCityPanelClose_Click" Margin="6,0,0,0"/>
+                                    </StackPanel>
+                                    <StackPanel x:Name="WeatherCitySearchResults" Margin="0,2,0,0"/>
+                                    <TextBlock x:Name="WeatherCitySearchStatus" Text="" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Border>
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <ScrollViewer.Resources>
                                     <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
                                 </ScrollViewer.Resources>

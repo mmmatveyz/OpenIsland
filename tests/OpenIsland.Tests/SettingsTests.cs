@@ -149,4 +149,50 @@ public class SettingsTests
             Settings.FullscreenExceptions = original;
         }
     }
+
+    [Fact]
+    public void UiSoundFx_RoundTrips()
+    {
+        bool original = Settings.UiSoundFx;
+        try
+        {
+            Settings.UiSoundFx = !original;
+            Assert.Equal(!original, Settings.UiSoundFx);
+        }
+        finally
+        {
+            Settings.UiSoundFx = original;
+        }
+    }
+
+    [Fact]
+    public void WeatherLocation_RoundTrips_And_Resets()
+    {
+        string originalCity = Settings.WeatherCity;
+        double originalLat = Settings.WeatherLat;
+        double originalLon = Settings.WeatherLon;
+        try
+        {
+            Settings.WeatherCity = "Сочи";
+            Settings.WeatherLat = 43.59917;
+            Settings.WeatherLon = 39.72569;
+
+            Assert.Equal("Сочи", Settings.WeatherCity);
+            Assert.Equal(43.59917, Settings.WeatherLat);
+            Assert.Equal(39.72569, Settings.WeatherLon);
+            Assert.True(Settings.HasManualWeatherLocation);
+
+            Settings.ResetWeatherLocation();
+            Assert.Equal("", Settings.WeatherCity);
+            Assert.Equal(0.0, Settings.WeatherLat);
+            Assert.Equal(0.0, Settings.WeatherLon);
+            Assert.False(Settings.HasManualWeatherLocation);
+        }
+        finally
+        {
+            Settings.WeatherCity = originalCity;
+            Settings.WeatherLat = originalLat;
+            Settings.WeatherLon = originalLon;
+        }
+    }
 }

@@ -398,6 +398,7 @@ public partial class MainWindow : Window
                 int added = FileShelf.AddFiles(files);
                 if (added > 0)
                 {
+                    SoundFx.Play(SoundCue.Pop);
                     ShowPanel(Panel.Shelf);
                     Notify(Glyph.Folder, _indigo, "Файлы на полке", $"{added} шт. добавлено", seconds: 3);
                 }
@@ -718,8 +719,14 @@ public partial class MainWindow : Window
 
     void ShowPanel(Panel panel)
     {
+        Panel prev = _panel;
         _panel = panel;
         ClearPendingNotices();
+        if (prev != panel)
+        {
+            if (panel == Panel.None) SoundFx.Play(SoundCue.Tuck);
+            else SoundFx.Play(SoundCue.Pop);
+        }
         if (panel == Panel.Menu)
         {
             SyncWeatherUI();

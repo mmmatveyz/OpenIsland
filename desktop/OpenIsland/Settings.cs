@@ -40,8 +40,12 @@ static class Settings
     static bool _rim = ReadSwitch(nameof(Rim)), _appVolume = ReadSwitch(nameof(AppVolume));
     static bool _taskToast = ReadSwitch(nameof(TaskToast)), _taskChime = ReadSwitch(nameof(TaskChime));
     static bool _clipboard = ReadSwitch(nameof(Clipboard));
+    static bool _uiSoundFx = ReadSwitch(nameof(UiSoundFx), true);
     static bool _clickThrough = ReadSwitch(nameof(ClickThrough), false);
     static bool _hideFromCapture = ReadSwitch(nameof(HideFromCapture), false);
+    static string _weatherCity = Read(nameof(WeatherCity), "");
+    static double _weatherLat = ReadDouble(nameof(WeatherLat), 0.0);
+    static double _weatherLon = ReadDouble(nameof(WeatherLon), 0.0);
     static string _quickLaunch = Read(nameof(QuickLaunch), "");
     static string _fullscreenExceptions = Read(nameof(FullscreenExceptions), "");
     static int _pillOpacity = Math.Clamp(Read(nameof(PillOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
@@ -157,6 +161,42 @@ static class Settings
         set => Write(nameof(Clipboard), _clipboard = value);
     }
 
+    /// <summary>Звуковые микро-эффекты интерфейса (щелчки переключателей, поп раскрытия, тык сворачивания).</summary>
+    public static bool UiSoundFx
+    {
+        get => _uiSoundFx;
+        set => Write(nameof(UiSoundFx), _uiSoundFx = value);
+    }
+
+    /// <summary>Вручную заданный город для погоды (пусто, если автоопределение по IP).</summary>
+    public static string WeatherCity
+    {
+        get => _weatherCity;
+        set => Write(nameof(WeatherCity), _weatherCity = value ?? "");
+    }
+
+    public static double WeatherLat
+    {
+        get => _weatherLat;
+        set => Write(nameof(WeatherLat), _weatherLat = value);
+    }
+
+    public static double WeatherLon
+    {
+        get => _weatherLon;
+        set => Write(nameof(WeatherLon), _weatherLon = value);
+    }
+
+    public static bool HasManualWeatherLocation =>
+        !string.IsNullOrWhiteSpace(_weatherCity) && (Math.Abs(_weatherLat) > 0.0001 || Math.Abs(_weatherLon) > 0.0001);
+
+    public static void ResetWeatherLocation()
+    {
+        WeatherCity = "";
+        WeatherLat = 0.0;
+        WeatherLon = 0.0;
+    }
+
     /// <summary>Скрывать остров на записях экрана, стримах и скриншотах (WDA_EXCLUDEFROMCAPTURE).</summary>
     public static bool HideFromCapture
     {
@@ -229,6 +269,14 @@ static class Settings
 
     static bool ReadSwitch(string name, bool fallback = true) => Read(name, fallback ? 1 : 0) != 0;
 
+    static double ReadDouble(string name, double fallback)
+    {
+        string raw = Read(name, "");
+        return double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double parsed)
+            ? parsed
+            : fallback;
+    }
+
     static T Read<T>(string name, T fallback)
     {
         MigrateLegacy();
@@ -273,6 +321,8 @@ static class Settings
     static void Write(string name, int value) => Write(name, value, RegistryValueKind.DWord);
 
     static void Write(string name, string value) => Write(name, value, RegistryValueKind.String);
+
+    static void Write(string name, double value) => Write(name, value.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
     static void Write(string name, object value, RegistryValueKind kind)
     {
