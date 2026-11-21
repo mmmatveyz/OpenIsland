@@ -12,7 +12,7 @@ public partial class MainWindow
     const double UpdatePagePadding = 14, UpdateNotesWheelStep = 54;
     const double EdgeFadeLength = 16;
     const int MegabyteShift = 20;
-    const double LookHeight = 430, LookTilesHeight = 72, LookWheelStep = 80;
+    const double LookHeight = 530, LookTilesHeight = 72, LookWheelStep = 80;
     const double LookEdgeZone = 70, LookEdgeScale = 0.8;
     const double SettingsHeight = 496, SettingsWheelStep = 80;
     const double SettingsEdgeZone = 70, SettingsEdgeScale = 0.8;
@@ -584,6 +584,7 @@ public partial class MainWindow
         GlassStyleSegments.Set((int)Settings.GlassStyle, LookView.IsVisible);
         GlassStyleRow.IsEnabled = Settings.Glass;
         GlassStyleRow.Opacity = Settings.Glass ? 1 : 0.45;
+        GlassStyleCaption.Opacity = Settings.Glass ? 1 : 0.45;
         ((RadioButton)BackdropStrip.Children[(int)Settings.Backdrop]).IsChecked = true;
         ((RadioButton)HoverStrip.Children[(int)Settings.Hover]).IsChecked = true;
         BackdropText.Text = Settings.Backdrop switch

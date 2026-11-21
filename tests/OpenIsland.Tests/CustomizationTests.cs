@@ -53,4 +53,36 @@ public class CustomizationTests
         Assert.True(crystalAlpha < tintedAlpha, "Crystal alpha must be more transparent than Tinted");
         Assert.True(tintedAlpha < frostedAlpha, "Tinted alpha must be more transparent than Frosted");
     }
+
+    [Fact]
+    public void ThemeBrushes_UpdatesColorsOnThemeChange()
+    {
+        Exception? error = null;
+        var thread = new System.Threading.Thread(() =>
+        {
+            try
+            {
+                if (System.Windows.Application.ResourceAssembly == null)
+                    System.Windows.Application.ResourceAssembly = typeof(MainWindow).Assembly;
+
+                var win = new MainWindow();
+                win.ApplyThemeBrushes(ThemeService.Resolve(ThemeMode.Light, ThemePreset.Default), new System.Windows.Duration(TimeSpan.Zero));
+                var lightBrush = (System.Windows.Media.SolidColorBrush)win.FindResource("TextPrimary");
+                Assert.Equal(System.Windows.Media.Color.FromRgb(0x1C, 0x1C, 0x1E), lightBrush.Color);
+
+                win.ApplyThemeBrushes(ThemeService.Resolve(ThemeMode.Dark, ThemePreset.Default), new System.Windows.Duration(TimeSpan.Zero));
+                var darkBrush = (System.Windows.Media.SolidColorBrush)win.FindResource("TextPrimary");
+                Assert.Equal(System.Windows.Media.Colors.White, darkBrush.Color);
+            }
+            catch (Exception ex)
+            {
+                error = ex;
+            }
+        });
+        thread.SetApartmentState(System.Threading.ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        if (error != null) throw error;
+    }
 }

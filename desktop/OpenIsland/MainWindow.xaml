@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OpenIsland"
         Title="OpenIsland" Width="680" Height="622"
-        Icon="pack://application:,,,/Assets/OpenIsland.ico"
+        Icon="pack://application:,,,/OpenIsland;component/Assets/OpenIsland.ico"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" ShowActivated="False"
         Focusable="False" UseLayoutRounding="True"
@@ -134,6 +134,7 @@
         <Style x:Key="RowLabel" TargetType="TextBlock">
             <Setter Property="Margin" Value="29,0,0,0"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
         </Style>
 
         <Style x:Key="RowChevron" TargetType="local:Icon">
@@ -817,7 +818,7 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="MenuView" Width="300" Height="544" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="MenuView" Width="300" Height="527" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,14,10,0">
                         <TextBlock Style="{StaticResource Caption}" Text="OPENISLAND" Margin="12,0,0,6"/>
                         <Button x:Name="MenuOpenCodeRow" Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
@@ -835,7 +836,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Note"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Плеер"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuPlayerTrack" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"
+                                    <TextBlock x:Name="MenuPlayerTrack" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"
                                                MaxWidth="140" TextTrimming="CharacterEllipsis"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
@@ -846,7 +847,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Буфер обмена"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuClipboardCount" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MenuClipboardCount" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -856,7 +857,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Мониторинг ПК"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuPerfCpu" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MenuPerfCpu" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -866,7 +867,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Процессы и порты"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuProcesses" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MenuProcesses" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -883,7 +884,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Folder"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Полка файлов"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuFileShelfCount" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MenuFileShelfCount" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -893,7 +894,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="CloudSun"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Погода"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock x:Name="MenuWeatherTemp" FontSize="12" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="MenuWeatherTemp" FontSize="12" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -903,7 +904,7 @@
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Таймер"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <local:Digits x:Name="MenuTimer" VerticalAlignment="Center"/>
+                                    <local:Digits x:Name="MenuTimer" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                     <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -1167,10 +1168,10 @@
                     </local:RowList>
                 </Grid>
 
-                <Grid x:Name="LookView" Width="352" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Grid x:Name="LookView" Width="352" Height="530" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <Border ClipToBounds="True">
                         <Border.OpacityMask>
-                            <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="0,430">
+                            <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="0,530">
                                 <GradientStop x:Name="LookEdgeTop" Color="Black" Offset="0"/>
                                 <GradientStop Color="Black" Offset="0.05"/>
                                 <GradientStop Color="Black" Offset="0.95"/>
@@ -1184,12 +1185,8 @@
                                 </local:RowList.RenderTransform>
                                 <Button Style="{StaticResource BackButton}" Content="ОФОРМЛЕНИЕ" Click="SettingsBack_Click"/>
                                 <TextBlock Style="{StaticResource Caption}" Text="ТЕМА" Margin="12,4,0,6"/>
-                                <Button Style="{StaticResource RowButton}" Click="ThemeMode_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Режим"/>
-                                        <local:Segments x:Name="ThemeModeSegments" Style="{StaticResource RowSegments}" Labels="Тёмная|Светлая|Авто"/>
-                                    </Grid>
+                                <Button Style="{StaticResource RowButton}" Height="34" Padding="12,2" Click="ThemeMode_Click">
+                                    <local:Segments x:Name="ThemeModeSegments" Height="28" HorizontalAlignment="Stretch" Labels="Тёмная|Светлая|Авто"/>
                                 </Button>
                                 <Button x:Name="ThemePresetRow" Style="{StaticResource RowButton}" Click="ThemePresetRow_Click">
                                     <Grid>
@@ -1229,7 +1226,7 @@
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Размер"/>
                                         <local:Scrubber x:Name="SizeSlider" Style="{StaticResource RowSlider}"
                                                         Minimum="80" Maximum="200" Step="5" Changed="SizeSlider_Changed"/>
-                                        <local:Digits x:Name="SizeText" Foreground="{StaticResource Dim}"
+                                        <local:Digits x:Name="SizeText" Foreground="{DynamicResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
@@ -1239,16 +1236,13 @@
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Отступ от края"/>
                                         <local:Scrubber x:Name="GapSlider" Style="{StaticResource RowSlider}"
                                                         Minimum="0" Maximum="24" Step="2" Changed="GapSlider_Changed"/>
-                                        <local:Digits x:Name="GapText" Foreground="{StaticResource Dim}"
+                                        <local:Digits x:Name="GapText" Foreground="{DynamicResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="CapsuleShape_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Форма капсулы"/>
-                                        <local:Segments x:Name="CapsuleShapeSegments" Style="{StaticResource RowSegments}" Labels="Сквиркл|Капсула|Fluent|Строгая"/>
-                                    </Grid>
+                                <TextBlock Style="{StaticResource Caption}" Text="ФОРМА КАПСУЛЫ" Margin="12,8,0,6"/>
+                                <Button Style="{StaticResource RowButton}" Height="34" Padding="12,2" Click="CapsuleShape_Click">
+                                    <local:Segments x:Name="CapsuleShapeSegments" Height="28" HorizontalAlignment="Stretch" Labels="Сквиркл|Капсула|Fluent|Строгая"/>
                                 </Button>
                                 <TextBlock Style="{StaticResource Caption}" Text="ПРОЗРАЧНОСТЬ" Margin="12,8,0,6"/>
                                 <Button x:Name="PillOpacityRow" Style="{StaticResource RowButton}">
@@ -1257,7 +1251,7 @@
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Свёрнутый"/>
                                         <local:Scrubber x:Name="PillOpacitySlider" Style="{StaticResource RowSlider}"
                                                         Minimum="30" Maximum="100" Step="5" Changed="PillOpacitySlider_Changed"/>
-                                        <local:Digits x:Name="PillOpacityText" Foreground="{StaticResource Dim}"
+                                        <local:Digits x:Name="PillOpacityText" Foreground="{DynamicResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
@@ -1267,7 +1261,7 @@
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Раскрытый"/>
                                         <local:Scrubber x:Name="OpenOpacitySlider" Style="{StaticResource RowSlider}"
                                                         Minimum="30" Maximum="100" Step="5" Changed="OpenOpacitySlider_Changed"/>
-                                        <local:Digits x:Name="OpenOpacityText" Foreground="{StaticResource Dim}"
+                                        <local:Digits x:Name="OpenOpacityText" Foreground="{DynamicResource Dim}"
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
@@ -1278,33 +1272,24 @@
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
                                     </Grid>
                                 </Button>
-                                <Button x:Name="GlassStyleRow" Style="{StaticResource RowButton}" Click="GlassStyle_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Drop"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Стиль стекла"/>
-                                        <local:Segments x:Name="GlassStyleSegments" Style="{StaticResource RowSegments}" Labels="Матовое|Тонир.|Кристалл"/>
-                                    </Grid>
+                                <TextBlock x:Name="GlassStyleCaption" Style="{StaticResource Caption}" Text="СТИЛЬ СТЕКЛА" Margin="12,8,0,6"/>
+                                <Button x:Name="GlassStyleRow" Style="{StaticResource RowButton}" Height="34" Padding="12,2" Click="GlassStyle_Click">
+                                    <local:Segments x:Name="GlassStyleSegments" Height="28" HorizontalAlignment="Stretch" Labels="Матовое|Тонированное|Кристалл"/>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="Dots_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Эквалайзер"/>
-                                        <local:Segments x:Name="DotsSegments" Style="{StaticResource RowSegments}" Labels="Полоски|Матрица"/>
-                                    </Grid>
+                                <TextBlock Style="{StaticResource Caption}" Text="ИНДИКАТОР ЗВУКА" Margin="12,8,0,6"/>
+                                <Button Style="{StaticResource RowButton}" Height="34" Padding="12,2" Click="Dots_Click">
+                                    <local:Segments x:Name="DotsSegments" Height="28" HorizontalAlignment="Stretch" Labels="Полоски|Матрица"/>
                                 </Button>
-                                <Button Style="{StaticResource RowButton}" Click="SeekHover_Click">
-                                    <Grid>
-                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Bulge"/>
-                                        <TextBlock Style="{StaticResource RowLabel}" Text="Под курсором"/>
-                                        <local:Segments x:Name="SeekHoverSegments" Style="{StaticResource RowSegments}" Labels="Лупа|Волна"/>
-                                    </Grid>
+                                <TextBlock Style="{StaticResource Caption}" Text="ИНДИКАТОР ПОЗИЦИИ" Margin="12,8,0,6"/>
+                                <Button Style="{StaticResource RowButton}" Height="34" Padding="12,2" Click="SeekHover_Click">
+                                    <local:Segments x:Name="SeekHoverSegments" Height="28" HorizontalAlignment="Stretch" Labels="Лупа|Волна"/>
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="BackdropRow_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Stars"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Фон плеера"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <TextBlock x:Name="BackdropText" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="BackdropText" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                             <local:Icon x:Name="BackdropChevron" Style="{StaticResource RowChevron}" Margin="8,1,0,0"
                                                         RenderTransformOrigin="0.5,0.5">
                                                 <local:Icon.RenderTransform>

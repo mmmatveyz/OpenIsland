@@ -36,7 +36,7 @@ public partial class MainWindow : Window
         [View.IdleBig] = new(320, 124, 38),
         [View.TimerBig] = new(330, 92, 40),
         [View.TimerSet] = new(300, 190, 38),
-        [View.Menu] = new(300, 544, 34),
+        [View.Menu] = new(300, 527, 34),
         [View.Settings] = new(320, 496, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
@@ -85,8 +85,18 @@ public partial class MainWindow : Window
     static readonly TimeSpan AwayDuration = TimeSpan.FromSeconds(5);
 
     readonly Dictionary<View, FrameworkElement> _views;
-    readonly SolidColorBrush _dim, _faint, _orange, _green, _red, _indigo;
-    readonly SolidColorBrush _textPrimary, _cardBackground, _cardSubBackground, _cardSectionBackground, _cardBorder, _chipBackground, _hoverBackground, _pressedBackground, _shadowBrush;
+    readonly SolidColorBrush _orange, _green, _red, _indigo;
+    SolidColorBrush _dim => (SolidColorBrush)FindResource("Dim");
+    SolidColorBrush _faint => (SolidColorBrush)FindResource("Faint");
+    SolidColorBrush _textPrimary => (SolidColorBrush)FindResource("TextPrimary");
+    SolidColorBrush _cardBackground => (SolidColorBrush)FindResource("CardBackground");
+    SolidColorBrush _cardSubBackground => (SolidColorBrush)FindResource("CardSubBackground");
+    SolidColorBrush _cardSectionBackground => (SolidColorBrush)FindResource("CardSectionBackground");
+    SolidColorBrush _cardBorder => (SolidColorBrush)FindResource("CardBorder");
+    SolidColorBrush _chipBackground => (SolidColorBrush)FindResource("ChipBackground");
+    SolidColorBrush _hoverBackground => (SolidColorBrush)FindResource("HoverBackground");
+    SolidColorBrush _pressedBackground => (SolidColorBrush)FindResource("PressedBackground");
+    SolidColorBrush _shadowBrush => (SolidColorBrush)FindResource("ShadowBrush");
     readonly AudioService _audio = new();
     readonly MediaService _media;
     readonly NetworkService _network;
@@ -123,21 +133,10 @@ public partial class MainWindow : Window
         Width *= LargestScale / 100.0;
         Height = Height * LargestScale / 100.0 + LargestGap;
 
-        _dim = BrushResource("Dim");
-        _faint = BrushResource("Faint");
-        _orange = BrushResource("Orange");
-        _green = BrushResource("Green");
-        _red = BrushResource("Red");
-        _indigo = BrushResource("Indigo");
-        _textPrimary = BrushResource("TextPrimary");
-        _cardBackground = BrushResource("CardBackground");
-        _cardSubBackground = BrushResource("CardSubBackground");
-        _cardSectionBackground = BrushResource("CardSectionBackground");
-        _cardBorder = BrushResource("CardBorder");
-        _chipBackground = BrushResource("ChipBackground");
-        _hoverBackground = BrushResource("HoverBackground");
-        _pressedBackground = BrushResource("PressedBackground");
-        _shadowBrush = BrushResource("ShadowBrush");
+        _orange = (SolidColorBrush)FindResource("Orange");
+        _green = (SolidColorBrush)FindResource("Green");
+        _red = (SolidColorBrush)FindResource("Red");
+        _indigo = (SolidColorBrush)FindResource("Indigo");
 
         _views = new()
         {
@@ -484,42 +483,104 @@ public partial class MainWindow : Window
 
     static bool Switch(string name) => Array.IndexOf(Environment.GetCommandLineArgs(), name) >= 0;
 
-    SolidColorBrush BrushResource(string key)
-    {
-        var brush = (SolidColorBrush)FindResource(key);
-        if (brush.IsFrozen)
-        {
-            brush = brush.Clone();
-            Resources[key] = brush;
-        }
-        return brush;
-    }
+    DispatcherTimer? _themeFadeTimer;
+    int _themeFadeStep;
+    const int ThemeFadeTotalSteps = 10;
+    ThemePalette? _themeFromPalette, _themeToPalette;
 
     public void ApplyThemeBrushes(ThemePalette p, Duration duration)
     {
-        AnimateBrush(_textPrimary, p.TextPrimary, duration);
-        AnimateBrush(_dim, p.TextDim, duration);
-        AnimateBrush(_faint, p.TextFaint, duration);
-        AnimateBrush(_cardBackground, p.CardBackground, duration);
-        AnimateBrush(_cardSubBackground, p.CardSubBackground, duration);
-        AnimateBrush(_cardSectionBackground, p.CardSectionBackground, duration);
-        AnimateBrush(_cardBorder, p.CardBorder, duration);
-        AnimateBrush(_chipBackground, p.ChipBackground, duration);
-        AnimateBrush(_hoverBackground, p.HoverBackground, duration);
-        AnimateBrush(_pressedBackground, p.PressedBackground, duration);
-        AnimateBrush(_shadowBrush, p.ShadowColor, duration);
+        _themeFadeTimer?.Stop();
+
+        if (!duration.HasTimeSpan || duration.TimeSpan <= TimeSpan.Zero)
+        {
+            ApplyThemePaletteDirect(p);
+            return;
+        }
+
+        _themeFromPalette = new ThemePalette(
+            IsDark: ThemeService.IsDark,
+            IslandFill: Colors.Transparent,
+            IslandRim: Colors.Transparent,
+            TextPrimary: GetThemeBrushColor("TextPrimary", p.TextPrimary),
+            TextDim: GetThemeBrushColor("Dim", p.TextDim),
+            TextFaint: GetThemeBrushColor("Faint", p.TextFaint),
+            CardBackground: GetThemeBrushColor("CardBackground", p.CardBackground),
+            CardSubBackground: GetThemeBrushColor("CardSubBackground", p.CardSubBackground),
+            CardSectionBackground: GetThemeBrushColor("CardSectionBackground", p.CardSectionBackground),
+            CardBorder: GetThemeBrushColor("CardBorder", p.CardBorder),
+            ToggleOff: p.ToggleOff,
+            ChipBackground: GetThemeBrushColor("ChipBackground", p.ChipBackground),
+            HoverBackground: GetThemeBrushColor("HoverBackground", p.HoverBackground),
+            PressedBackground: GetThemeBrushColor("PressedBackground", p.PressedBackground),
+            ShadowColor: GetThemeBrushColor("ShadowBrush", p.ShadowColor),
+            ShadowOpacity: p.ShadowOpacity,
+            GlassAlpha: p.GlassAlpha
+        );
+        _themeToPalette = p;
+        _themeFadeStep = 0;
+
+        _themeFadeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(duration.TimeSpan.TotalMilliseconds / ThemeFadeTotalSteps) };
+        _themeFadeTimer.Tick += (_, _) =>
+        {
+            _themeFadeStep++;
+            double t = (double)_themeFadeStep / ThemeFadeTotalSteps;
+            if (t >= 1)
+            {
+                _themeFadeTimer.Stop();
+                ApplyThemePaletteDirect(_themeToPalette!);
+                return;
+            }
+
+            var from = _themeFromPalette!;
+            var to = _themeToPalette!;
+            SetThemeBrush("TextPrimary", LerpColor(from.TextPrimary, to.TextPrimary, t));
+            SetThemeBrush("Dim", LerpColor(from.TextDim, to.TextDim, t));
+            SetThemeBrush("Faint", LerpColor(from.TextFaint, to.TextFaint, t));
+            SetThemeBrush("CardBackground", LerpColor(from.CardBackground, to.CardBackground, t));
+            SetThemeBrush("CardSubBackground", LerpColor(from.CardSubBackground, to.CardSubBackground, t));
+            SetThemeBrush("CardSectionBackground", LerpColor(from.CardSectionBackground, to.CardSectionBackground, t));
+            SetThemeBrush("CardBorder", LerpColor(from.CardBorder, to.CardBorder, t));
+            SetThemeBrush("ChipBackground", LerpColor(from.ChipBackground, to.ChipBackground, t));
+            SetThemeBrush("HoverBackground", LerpColor(from.HoverBackground, to.HoverBackground, t));
+            SetThemeBrush("PressedBackground", LerpColor(from.PressedBackground, to.PressedBackground, t));
+            SetThemeBrush("ShadowBrush", LerpColor(from.ShadowColor, to.ShadowColor, t));
+        };
+        _themeFadeTimer.Start();
     }
 
-    static void AnimateBrush(SolidColorBrush brush, Color target, Duration duration)
+    void ApplyThemePaletteDirect(ThemePalette p)
     {
-        if (brush.IsFrozen) return;
-        if (duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero)
-            brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(target, duration));
-        else
-        {
-            brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
-            brush.Color = target;
-        }
+        SetThemeBrush("TextPrimary", p.TextPrimary);
+        SetThemeBrush("Dim", p.TextDim);
+        SetThemeBrush("Faint", p.TextFaint);
+        SetThemeBrush("CardBackground", p.CardBackground);
+        SetThemeBrush("CardSubBackground", p.CardSubBackground);
+        SetThemeBrush("CardSectionBackground", p.CardSectionBackground);
+        SetThemeBrush("CardBorder", p.CardBorder);
+        SetThemeBrush("ChipBackground", p.ChipBackground);
+        SetThemeBrush("HoverBackground", p.HoverBackground);
+        SetThemeBrush("PressedBackground", p.PressedBackground);
+        SetThemeBrush("ShadowBrush", p.ShadowColor);
+    }
+
+    Color GetThemeBrushColor(string key, Color fallback) =>
+        Resources[key] is SolidColorBrush b ? b.Color : fallback;
+
+    void SetThemeBrush(string key, Color color)
+    {
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        Resources[key] = brush;
+    }
+
+    static Color LerpColor(Color a, Color b, double t)
+    {
+        byte r = (byte)Math.Clamp(a.R + (b.R - a.R) * t, 0, 255);
+        byte g = (byte)Math.Clamp(a.G + (b.G - a.G) * t, 0, 255);
+        byte blue = (byte)Math.Clamp(a.B + (b.B - a.B) * t, 0, 255);
+        byte alpha = (byte)Math.Clamp(a.A + (b.A - a.A) * t, 0, 255);
+        return Color.FromArgb(alpha, r, g, blue);
     }
 
     IntPtr OnShellMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -747,7 +808,7 @@ public partial class MainWindow : Window
             if (Settings.ShowShelf) count++;
             if (Settings.ShowWeather) count++;
             if (Settings.ShowTimer) count++;
-            return Math.Max(212, 172 + count * 40 + 12);
+            return Math.Max(167, 167 + count * 40);
         }
     }
 
