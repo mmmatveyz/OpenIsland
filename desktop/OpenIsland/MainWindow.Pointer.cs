@@ -204,6 +204,7 @@ public partial class MainWindow
         else if (_view == View.Look && PillOpacityRow.IsMouseOver) SetPillOpacity(Settings.PillOpacity + step * ScaleStep);
         else if (_view == View.Look && OpenOpacityRow.IsMouseOver) SetOpenOpacity(Settings.OpenOpacity + step * ScaleStep);
         else if (_view == View.Look && LookOverflow > 0) ScrollLook(-step);
+        else if (_view == View.Settings && SettingsOverflow > 0) ScrollSettings(-step);
         else if (_view == View.Update && UpdateNotesOverflow > 0) ScrollUpdateNotes(-step);
         else if (_view == View.MediaBig && Settings.AppVolume && _audio.AdjustAppVolume(_media.Source, step * WheelVolumeStep, out float level))
             ShowPlayerVolume(level, false, true);

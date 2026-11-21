@@ -161,7 +161,7 @@ public partial class MainWindow : Window
         _springs =
         [
             _width, _height, _radius, _scale, _offsetY, _userScale, _topGap, _opacity, _bubbleSplit, _bubbleScale, _bubbleTimer,
-            _lookScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, .. _spotSprings,
+            _lookScroll, _settingsScroll, _updateNotesScroll, _volumeOvershoot, _leanX, _coverScale, _coverSnapX, _coverSnapY, .. _spotSprings,
         ];
         _timerTint = new SolidColorBrush(_orange.Color);
 

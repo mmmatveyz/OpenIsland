@@ -123,6 +123,7 @@ public partial class MainWindow
         if (_morphing) FitViews(w, h);
         ApplyMotionBlur();
         ApplyLookScroll();
+        ApplySettingsScroll();
         ApplyUpdateNotesScroll();
         StretchVolumeBar();
 

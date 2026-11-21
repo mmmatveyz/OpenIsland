@@ -14,14 +14,21 @@ public partial class MainWindow
     const int MegabyteShift = 20;
     const double LookHeight = 430, LookTilesHeight = 72, LookWheelStep = 80;
     const double LookEdgeZone = 70, LookEdgeScale = 0.8;
+    const double SettingsHeight = 496, SettingsWheelStep = 80;
+    const double SettingsEdgeZone = 70, SettingsEdgeScale = 0.8;
     const int LargestScale = 200, ScaleStep = 5;
     const int LargestGap = 24, GapStep = 2;
 
     Border? _openLookTiles;
     readonly Spring _lookScroll = new(0, 260, 30);
+    readonly Spring _settingsScroll = new(0, 260, 30);
     readonly Spring _updateNotesScroll = new(0, 260, 30);
 
-    void SettingsRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Settings);
+    void SettingsRow_Click(object sender, RoutedEventArgs e)
+    {
+        _settingsScroll.Snap(0);
+        ShowPanelAndCheckUpdate(Panel.Settings);
+    }
 
     void UpdateRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Update);
 
@@ -33,7 +40,11 @@ public partial class MainWindow
         ShowPanel(Panel.Look);
     }
 
-    void SettingsBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Menu);
+    void SettingsBack_Click(object sender, RoutedEventArgs e)
+    {
+        _settingsScroll.Snap(0);
+        ShowPanel(Panel.Menu);
+    }
 
     void Exit_Click(object sender, RoutedEventArgs e) => Exit();
 
@@ -372,6 +383,50 @@ public partial class MainWindow
 
         LookMove.Y = -scrolled;
         if (_view == View.Look) LookRows.FollowPointer();
+    }
+
+    double SettingsOverflow => Math.Max(SettingsRows.ActualHeight + SettingsRows.Margin.Top + SettingsRows.Margin.Bottom - SettingsView.Height, 0);
+
+    void SettingsRows_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        _settingsScroll.Target = Math.Clamp(_settingsScroll.Target, 0, SettingsOverflow);
+        StartShapeLoop();
+    }
+
+    void ScrollSettings(int notches)
+    {
+        _settingsScroll.Target = Math.Clamp(_settingsScroll.Target + notches * SettingsWheelStep, 0, SettingsOverflow);
+        StartShapeLoop();
+    }
+
+    void ShrinkSettingsEdges(double scrolled)
+    {
+        double top = Math.Clamp(scrolled / SettingsEdgeZone, 0, 1), bottom = Math.Clamp((SettingsOverflow - scrolled) / SettingsEdgeZone, 0, 1);
+        foreach (FrameworkElement row in SettingsRows.Children)
+        {
+            double middle = VisualTreeHelper.GetOffset(row).Y + SettingsRows.Margin.Top + row.ActualHeight / 2 - scrolled;
+            double fromTop = Math.Clamp(middle / SettingsEdgeZone, 0, 1), fromBottom = Math.Clamp((SettingsView.Height - middle) / SettingsEdgeZone, 0, 1);
+            double shrink = Math.Max(top * Smooth(1 - fromTop), bottom * Smooth(1 - fromBottom));
+
+            if (row.RenderTransform is not ScaleTransform size)
+            {
+                row.RenderTransform = size = new ScaleTransform();
+                row.RenderTransformOrigin = new Point(0.5, 0.5);
+            }
+            size.ScaleX = size.ScaleY = 1 - (1 - SettingsEdgeScale) * shrink;
+        }
+    }
+
+    void ApplySettingsScroll()
+    {
+        double scrolled = _settingsScroll.Value;
+        SettingsEdgeTop.Color = EdgeFade(scrolled);
+        SettingsEdgeBottom.Color = EdgeFade(SettingsOverflow - scrolled);
+        if (SettingsView.IsVisible) ShrinkSettingsEdges(scrolled);
+        if (SettingsMove.Y == -scrolled) return;
+
+        SettingsMove.Y = -scrolled;
+        if (_view == View.Settings) SettingsRows.FollowPointer();
     }
 
     void Accent_Click(object sender, RoutedEventArgs e)

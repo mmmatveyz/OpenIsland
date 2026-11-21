@@ -89,6 +89,7 @@ public partial class MainWindow
             Settings.ClickThrough = false;
             ApplyClickThrough(false);
         }
+        _settingsScroll.Snap(0);
         ShowPanel(Panel.Settings);
     }
 
