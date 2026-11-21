@@ -55,10 +55,20 @@ public static class ThemeService
         return false;
     }
 
+    public static byte GetAdjustedGlassAlpha(byte baseAlpha) => Settings.GlassStyle switch
+    {
+        GlassStyle.Frosted => baseAlpha,
+        GlassStyle.Tinted => (byte)Math.Clamp((int)(baseAlpha * 0.65), 20, 255),
+        GlassStyle.Crystal => (byte)Math.Clamp((int)(baseAlpha * 0.35), 10, 255),
+        _ => baseAlpha
+    };
+
     public static ThemePalette Resolve(ThemeMode mode, ThemePreset preset)
     {
         bool light = mode == ThemeMode.Light || (mode == ThemeMode.System && IsWindowsLightMode());
-        return light ? ResolveLight(preset) : ResolveDark(preset);
+        ThemePalette p = light ? ResolveLight(preset) : ResolveDark(preset);
+        byte adjustedAlpha = GetAdjustedGlassAlpha(p.GlassAlpha);
+        return p with { GlassAlpha = adjustedAlpha };
     }
 
     static ThemePalette ResolveDark(ThemePreset preset) => preset switch

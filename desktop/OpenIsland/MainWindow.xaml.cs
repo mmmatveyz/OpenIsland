@@ -14,9 +14,9 @@ namespace OpenIsland;
 
 public partial class MainWindow : Window
 {
-    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
+    enum View { Idle, Sound, Media, Timer, Volume, Charge, Headset, Focus, Toast, Notice, MediaBig, IdleBig, TimerBig, TimerSet, Menu, Settings, Look, Update, Widgets, Loading, OpenCode, OpenCodeBig, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
 
-    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, OpenCode, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
+    enum Panel { None, Player, Timer, TimerSet, Menu, Settings, Look, Update, Widgets, OpenCode, Perf, Clipboard, Processes, QuickLaunch, Weather, Shelf }
 
     readonly record struct PillShape(double Width, double Height, double Radius);
 
@@ -40,6 +40,7 @@ public partial class MainWindow : Window
         [View.Settings] = new(320, 496, 34),
         [View.Look] = new(352, LookHeight, 34),
         [View.Update] = new(320, 150, 34),
+        [View.Widgets] = new(320, 460, 34),
         [View.Loading] = new(118, 34, 17),
         [View.OpenCode] = new(238, 34, 17),
         [View.OpenCodeBig] = new(380, 486, 36),
@@ -69,7 +70,7 @@ public partial class MainWindow : Window
 
     static readonly View[] MenuPages = [View.Settings, View.Look, View.TimerSet, View.TimerBig, View.OpenCodeBig, View.Perf, View.Clipboard, View.Processes, View.QuickLaunch, View.Weather, View.Shelf];
 
-    static readonly View[] SettingsPages = [View.Update];
+    static readonly View[] SettingsPages = [View.Update, View.Widgets];
 
     const double HostWidth = 620, HostHeight = 592;
     const double CompactMaxHeight = 40;
@@ -158,6 +159,7 @@ public partial class MainWindow : Window
             [View.Settings] = SettingsView,
             [View.Look] = LookView,
             [View.Update] = UpdatePage,
+            [View.Widgets] = WidgetsView,
             [View.Loading] = LoadingView,
             [View.OpenCode] = OpenCodeView,
             [View.OpenCodeBig] = OpenCodeBigView,
@@ -240,6 +242,7 @@ public partial class MainWindow : Window
         Eq.Dots = Settings.Dots;
         PlayerMatrix.Rounding = PillShapes[View.MediaBig].Radius;
         SyncBackdrop();
+        ApplyMenuWidgetVisibility();
         foreach (FrameworkElement icon in new FrameworkElement[] { PlayIcon, PauseIcon, TimerPlayIcon, TimerPauseIcon })
         {
             icon.RenderTransformOrigin = new Point(0.5, 0.5);
@@ -635,6 +638,7 @@ public partial class MainWindow : Window
             Panel.Settings => View.Settings,
             Panel.Look => View.Look,
             Panel.Update => View.Update,
+            Panel.Widgets => View.Widgets,
             Panel.TimerSet => View.TimerSet,
             Panel.OpenCode => View.OpenCodeBig,
             Panel.Perf => View.Perf,
@@ -719,13 +723,64 @@ public partial class MainWindow : Window
     static bool IsPageOf(View parent, View page) =>
         parent == View.Menu && MenuPages.Contains(page) || parent == View.Settings && SettingsPages.Contains(page);
 
-    PillShape ShapeOf(View view) => view switch
+    double MenuHeight
     {
-        View.Update => PillShapes[view] with { Height = UpdatePage.Height },
-        View.Look => PillShapes[view] with { Height = LookView.Height },
-        View.Processes => PillShapes[view] with { Height = ProcessesView.Height > 0 ? ProcessesView.Height : PillShapes[view].Height },
-        _ => PillShapes[view],
-    };
+        get
+        {
+            int count = 0;
+            if (Settings.ShowOpenCode) count++;
+            if (Settings.ShowPlayer) count++;
+            if (Settings.ShowClipboard) count++;
+            if (Settings.ShowPerf) count++;
+            if (Settings.ShowProcesses) count++;
+            if (Settings.ShowQuickLaunch) count++;
+            if (Settings.ShowShelf) count++;
+            if (Settings.ShowWeather) count++;
+            if (Settings.ShowTimer) count++;
+            return Math.Max(212, 172 + count * 40 + 12);
+        }
+    }
+
+    PillShape ApplyCapsuleShape(PillShape shape, View view)
+    {
+        bool isCompact = shape.Height <= 50;
+        return Settings.CapsuleShape switch
+        {
+            CapsuleShape.Pill => shape with { Radius = isCompact ? shape.Height / 2 : Math.Min(shape.Height / 2, 42) },
+            CapsuleShape.Fluent => shape with { Radius = isCompact ? Math.Round(shape.Height * 0.35) : 20 },
+            CapsuleShape.Sharp => shape with { Radius = isCompact ? 8 : 12 },
+            _ => shape, // Squircle (default)
+        };
+    }
+
+    PillShape ShapeOf(View view)
+    {
+        PillShape baseShape = view switch
+        {
+            View.Update => PillShapes[view] with { Height = UpdatePage.Height },
+            View.Look => PillShapes[view] with { Height = LookView.Height },
+            View.Processes => PillShapes[view] with { Height = ProcessesView.Height > 0 ? ProcessesView.Height : PillShapes[view].Height },
+            View.Menu => PillShapes[view] with { Height = MenuHeight },
+            _ => PillShapes[view],
+        };
+        return ApplyCapsuleShape(baseShape, view);
+    }
+
+    internal void ApplyMenuWidgetVisibility()
+    {
+        MenuOpenCodeRow.Visibility = Settings.ShowOpenCode ? Visibility.Visible : Visibility.Collapsed;
+        MenuPlayerRow.Visibility = Settings.ShowPlayer ? Visibility.Visible : Visibility.Collapsed;
+        MenuClipboardRow.Visibility = Settings.ShowClipboard ? Visibility.Visible : Visibility.Collapsed;
+        MenuPerfRow.Visibility = Settings.ShowPerf ? Visibility.Visible : Visibility.Collapsed;
+        MenuProcessesRow.Visibility = Settings.ShowProcesses ? Visibility.Visible : Visibility.Collapsed;
+        MenuQuickLaunchRow.Visibility = Settings.ShowQuickLaunch ? Visibility.Visible : Visibility.Collapsed;
+        MenuShelfRow.Visibility = Settings.ShowShelf ? Visibility.Visible : Visibility.Collapsed;
+        MenuWeatherRow.Visibility = Settings.ShowWeather ? Visibility.Visible : Visibility.Collapsed;
+        MenuTimerRow.Visibility = Settings.ShowTimer ? Visibility.Visible : Visibility.Collapsed;
+
+        MenuView.Height = MenuHeight;
+        if (_view == View.Menu) Reshape();
+    }
 
     bool ShowTransient(View view, double seconds, bool force = false)
     {

@@ -30,6 +30,14 @@ public partial class MainWindow
         ShowPanelAndCheckUpdate(Panel.Settings);
     }
 
+    void WidgetsRow_Click(object sender, RoutedEventArgs e)
+    {
+        ShowPanel(Panel.Widgets);
+        RefreshWidgetsPage();
+    }
+
+    void WidgetsBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Settings);
+
     void UpdateRow_Click(object sender, RoutedEventArgs e) => ShowPanelAndCheckUpdate(Panel.Update);
 
     void UpdateBack_Click(object sender, RoutedEventArgs e) => ShowPanel(Panel.Settings);
@@ -151,6 +159,84 @@ public partial class MainWindow
         HideFromCaptureSwitch.Set(Settings.HideFromCapture, animate);
         UiSoundFxSwitch.Set(Settings.UiSoundFx, animate);
         AutostartSwitch.Set(Autostart.Enabled, animate);
+        RefreshWidgetsPage();
+    }
+
+    void RefreshWidgetsPage()
+    {
+        bool live = WidgetsView.IsVisible;
+        WidgetOpenCodeSwitch.Set(Settings.ShowOpenCode, live);
+        WidgetPlayerSwitch.Set(Settings.ShowPlayer, live);
+        WidgetClipboardSwitch.Set(Settings.ShowClipboard, live);
+        WidgetPerfSwitch.Set(Settings.ShowPerf, live);
+        WidgetProcessesSwitch.Set(Settings.ShowProcesses, live);
+        WidgetQuickLaunchSwitch.Set(Settings.ShowQuickLaunch, live);
+        WidgetShelfSwitch.Set(Settings.ShowShelf, live);
+        WidgetWeatherSwitch.Set(Settings.ShowWeather, live);
+        WidgetTimerSwitch.Set(Settings.ShowTimer, live);
+    }
+
+    void WidgetOpenCode_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowOpenCode = !Settings.ShowOpenCode;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetPlayer_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowPlayer = !Settings.ShowPlayer;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowClipboard = !Settings.ShowClipboard;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetPerf_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowPerf = !Settings.ShowPerf;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetProcesses_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowProcesses = !Settings.ShowProcesses;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetQuickLaunch_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowQuickLaunch = !Settings.ShowQuickLaunch;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetShelf_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowShelf = !Settings.ShowShelf;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetWeather_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowWeather = !Settings.ShowWeather;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
+    }
+
+    void WidgetTimer_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ShowTimer = !Settings.ShowTimer;
+        RefreshWidgetsPage();
+        ApplyMenuWidgetVisibility();
     }
 
     async void Update_Click(object sender, RoutedEventArgs e)
@@ -283,10 +369,26 @@ public partial class MainWindow
         RefreshLookPage();
     }
 
+    void CapsuleShape_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.CapsuleShape = (CapsuleShape)CapsuleShapeSegments.PickUnderPointer();
+        RefreshLookPage();
+        Reshape();
+    }
+
     void Glass_Click(object sender, RoutedEventArgs e)
     {
         Settings.Glass = !Settings.Glass;
         RefreshLookPage();
+        SyncGlass(true);
+        ThemeService.Apply(this, animate: true);
+    }
+
+    void GlassStyle_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.GlassStyle = (GlassStyle)GlassStyleSegments.PickUnderPointer();
+        RefreshLookPage();
+        ThemeService.Apply(this, animate: true);
         SyncGlass(true);
     }
 
@@ -471,6 +573,7 @@ public partial class MainWindow
         GapText.Text = Settings.Gap + " px";
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);
         GapSlider.Set(Settings.Gap, LookView.IsVisible);
+        CapsuleShapeSegments.Set((int)Settings.CapsuleShape, LookView.IsVisible);
         PillOpacityText.Text = Settings.PillOpacity + "%";
         OpenOpacityText.Text = Settings.OpenOpacity + "%";
         PillOpacitySlider.Set(Settings.PillOpacity, LookView.IsVisible);
@@ -478,6 +581,9 @@ public partial class MainWindow
         DotsSegments.Set(Settings.Dots ? 1 : 0, LookView.IsVisible);
         SeekHoverSegments.Set((int)Settings.SeekHover, LookView.IsVisible);
         GlassSwitch.Set(Settings.Glass, LookView.IsVisible);
+        GlassStyleSegments.Set((int)Settings.GlassStyle, LookView.IsVisible);
+        GlassStyleRow.IsEnabled = Settings.Glass;
+        GlassStyleRow.Opacity = Settings.Glass ? 1 : 0.45;
         ((RadioButton)BackdropStrip.Children[(int)Settings.Backdrop]).IsChecked = true;
         ((RadioButton)HoverStrip.Children[(int)Settings.Hover]).IsChecked = true;
         BackdropText.Text = Settings.Backdrop switch

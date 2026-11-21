@@ -40,6 +40,21 @@ public enum ThemePreset
     Cyberpunk = 3,
 }
 
+public enum CapsuleShape
+{
+    Squircle = 0,
+    Pill = 1,
+    Fluent = 2,
+    Sharp = 3,
+}
+
+public enum GlassStyle
+{
+    Frosted = 0,
+    Tinted = 1,
+    Crystal = 2,
+}
+
 static class Settings
 {
     const string Key = @"Software\OpenIsland";
@@ -76,6 +91,18 @@ static class Settings
     static int _accent = Read(nameof(Accent), 0);
     static ThemeMode _themeMode = (ThemeMode)Math.Clamp(Read(nameof(ThemeMode), (int)ThemeMode.Dark), 0, (int)ThemeMode.System);
     static ThemePreset _themePreset = (ThemePreset)Math.Clamp(Read(nameof(ThemePreset), (int)ThemePreset.Default), 0, (int)ThemePreset.Cyberpunk);
+    static CapsuleShape _capsuleShape = (CapsuleShape)Math.Clamp(Read(nameof(CapsuleShape), (int)CapsuleShape.Squircle), 0, (int)CapsuleShape.Sharp);
+    static GlassStyle _glassStyle = (GlassStyle)Math.Clamp(Read(nameof(GlassStyle), (int)GlassStyle.Frosted), 0, (int)GlassStyle.Crystal);
+
+    static bool _showOpenCode = ReadSwitch(nameof(ShowOpenCode), true);
+    static bool _showPlayer = ReadSwitch(nameof(ShowPlayer), true);
+    static bool _showClipboard = ReadSwitch(nameof(ShowClipboard), true);
+    static bool _showPerf = ReadSwitch(nameof(ShowPerf), true);
+    static bool _showProcesses = ReadSwitch(nameof(ShowProcesses), true);
+    static bool _showQuickLaunch = ReadSwitch(nameof(ShowQuickLaunch), true);
+    static bool _showShelf = ReadSwitch(nameof(ShowShelf), true);
+    static bool _showWeather = ReadSwitch(nameof(ShowWeather), true);
+    static bool _showTimer = ReadSwitch(nameof(ShowTimer), true);
 
     public static ThemeMode ThemeMode
     {
@@ -87,6 +114,72 @@ static class Settings
     {
         get => _themePreset;
         set => Write(nameof(ThemePreset), (int)(_themePreset = value));
+    }
+
+    public static CapsuleShape CapsuleShape
+    {
+        get => _capsuleShape;
+        set => Write(nameof(CapsuleShape), (int)(_capsuleShape = value));
+    }
+
+    public static GlassStyle GlassStyle
+    {
+        get => _glassStyle;
+        set => Write(nameof(GlassStyle), (int)(_glassStyle = value));
+    }
+
+    public static bool ShowOpenCode
+    {
+        get => _showOpenCode;
+        set => Write(nameof(ShowOpenCode), _showOpenCode = value);
+    }
+
+    public static bool ShowPlayer
+    {
+        get => _showPlayer;
+        set => Write(nameof(ShowPlayer), _showPlayer = value);
+    }
+
+    public static bool ShowClipboard
+    {
+        get => _showClipboard;
+        set => Write(nameof(ShowClipboard), _showClipboard = value);
+    }
+
+    public static bool ShowPerf
+    {
+        get => _showPerf;
+        set => Write(nameof(ShowPerf), _showPerf = value);
+    }
+
+    public static bool ShowProcesses
+    {
+        get => _showProcesses;
+        set => Write(nameof(ShowProcesses), _showProcesses = value);
+    }
+
+    public static bool ShowQuickLaunch
+    {
+        get => _showQuickLaunch;
+        set => Write(nameof(ShowQuickLaunch), _showQuickLaunch = value);
+    }
+
+    public static bool ShowShelf
+    {
+        get => _showShelf;
+        set => Write(nameof(ShowShelf), _showShelf = value);
+    }
+
+    public static bool ShowWeather
+    {
+        get => _showWeather;
+        set => Write(nameof(ShowWeather), _showWeather = value);
+    }
+
+    public static bool ShowTimer
+    {
+        get => _showTimer;
+        set => Write(nameof(ShowTimer), _showTimer = value);
     }
 
     public static bool Dots

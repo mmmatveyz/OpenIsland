@@ -820,7 +820,7 @@
                 <Grid x:Name="MenuView" Width="300" Height="544" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <local:RowList Margin="10,14,10,0">
                         <TextBlock Style="{StaticResource Caption}" Text="OPENISLAND" Margin="12,0,0,6"/>
-                        <Button Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
+                        <Button x:Name="MenuOpenCodeRow" Style="{StaticResource RowButton}" Click="OpenCodeRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle" Fill="{StaticResource Indigo}"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="OpenCode AI Hub"/>
@@ -841,7 +841,7 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="ClipboardRow_Click">
+                        <Button x:Name="MenuClipboardRow" Style="{StaticResource RowButton}" Click="ClipboardRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Буфер обмена"/>
@@ -851,7 +851,7 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="PerfRow_Click">
+                        <Button x:Name="MenuPerfRow" Style="{StaticResource RowButton}" Click="PerfRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Мониторинг ПК"/>
@@ -861,7 +861,7 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="ProcessesRow_Click">
+                        <Button x:Name="MenuProcessesRow" Style="{StaticResource RowButton}" Click="ProcessesRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Процессы и порты"/>
@@ -871,14 +871,14 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="QuickLaunchRow_Click">
+                        <Button x:Name="MenuQuickLaunchRow" Style="{StaticResource RowButton}" Click="QuickLaunchRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Bolt"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Быстрый запуск"/>
                                 <local:Icon Style="{StaticResource RowChevron}"/>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="ShelfRow_Click">
+                        <Button x:Name="MenuShelfRow" Style="{StaticResource RowButton}" Click="ShelfRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Folder"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Полка файлов"/>
@@ -888,7 +888,7 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="WeatherRow_Click">
+                        <Button x:Name="MenuWeatherRow" Style="{StaticResource RowButton}" Click="WeatherRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="CloudSun"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Погода"/>
@@ -898,7 +898,7 @@
                                 </StackPanel>
                             </Grid>
                         </Button>
-                        <Button Style="{StaticResource RowButton}" Click="TimerRow_Click">
+                        <Button x:Name="MenuTimerRow" Style="{StaticResource RowButton}" Click="TimerRow_Click">
                             <Grid>
                                 <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
                                 <TextBlock Style="{StaticResource RowLabel}" Text="Таймер"/>
@@ -947,6 +947,13 @@
                                     <TranslateTransform x:Name="SettingsMove"/>
                                 </local:RowList.RenderTransform>
                                 <Button Style="{StaticResource BackButton}" Content="НАСТРОЙКИ" Click="SettingsBack_Click"/>
+                                <Button Style="{StaticResource RowButton}" Click="WidgetsRow_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Виджеты в меню"/>
+                                        <local:Icon Style="{StaticResource RowChevron}"/>
+                                    </Grid>
+                                </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Rim_Click">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
@@ -1090,6 +1097,76 @@
                     </StackPanel>
                 </Grid>
 
+                <Grid x:Name="WidgetsView" Width="320" Height="460" HorizontalAlignment="Center" VerticalAlignment="Top">
+                    <local:RowList Width="300" Margin="10,8,10,10">
+                        <Button Style="{StaticResource BackButton}" Content="ВИДЖЕТЫ" Click="WidgetsBack_Click"/>
+                        <TextBlock Style="{StaticResource Caption}" Text="ОТОБРАЖЕНИЕ В МЕНЮ" Margin="12,4,0,6"/>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetOpenCode_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle" Fill="{StaticResource Indigo}"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="OpenCode AI Hub"/>
+                                <local:Toggle x:Name="WidgetOpenCodeSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetPlayer_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Note"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Плеер"/>
+                                <local:Toggle x:Name="WidgetPlayerSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetClipboard_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Lines"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Буфер обмена"/>
+                                <local:Toggle x:Name="WidgetClipboardSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetPerf_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bars"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Мониторинг ПК"/>
+                                <local:Toggle x:Name="WidgetPerfSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetProcesses_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Segments"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Процессы и порты"/>
+                                <local:Toggle x:Name="WidgetProcessesSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetQuickLaunch_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Bolt"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Быстрый запуск"/>
+                                <local:Toggle x:Name="WidgetQuickLaunchSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetShelf_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Folder"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Полка файлов"/>
+                                <local:Toggle x:Name="WidgetShelfSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetWeather_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="CloudSun"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Погода"/>
+                                <local:Toggle x:Name="WidgetWeatherSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource RowButton}" Click="WidgetTimer_Click">
+                            <Grid>
+                                <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
+                                <TextBlock Style="{StaticResource RowLabel}" Text="Таймер"/>
+                                <local:Toggle x:Name="WidgetTimerSwitch" Style="{StaticResource RowSwitch}"/>
+                            </Grid>
+                        </Button>
+                    </local:RowList>
+                </Grid>
+
                 <Grid x:Name="LookView" Width="352" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <Border ClipToBounds="True">
                         <Border.OpacityMask>
@@ -1166,6 +1243,13 @@
                                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Button>
+                                <Button Style="{StaticResource RowButton}" Click="CapsuleShape_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Rim"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Форма капсулы"/>
+                                        <local:Segments x:Name="CapsuleShapeSegments" Style="{StaticResource RowSegments}" Labels="Сквиркл|Капсула|Fluent|Строгая"/>
+                                    </Grid>
+                                </Button>
                                 <TextBlock Style="{StaticResource Caption}" Text="ПРОЗРАЧНОСТЬ" Margin="12,8,0,6"/>
                                 <Button x:Name="PillOpacityRow" Style="{StaticResource RowButton}">
                                     <Grid>
@@ -1192,6 +1276,13 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Стекло"/>
                                         <local:Toggle x:Name="GlassSwitch" Style="{StaticResource RowSwitch}"/>
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="GlassStyleRow" Style="{StaticResource RowButton}" Click="GlassStyle_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Drop"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Стиль стекла"/>
+                                        <local:Segments x:Name="GlassStyleSegments" Style="{StaticResource RowSegments}" Labels="Матовое|Тонир.|Кристалл"/>
                                     </Grid>
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Dots_Click">
