@@ -25,6 +25,21 @@ enum SeekHover
     Wave,
 }
 
+public enum ThemeMode
+{
+    Dark = 0,
+    Light = 1,
+    System = 2,
+}
+
+public enum ThemePreset
+{
+    Default = 0,
+    Oled = 1,
+    Nord = 2,
+    Cyberpunk = 3,
+}
+
 static class Settings
 {
     const string Key = @"Software\OpenIsland";
@@ -59,6 +74,20 @@ static class Settings
     static int _gap = Math.Clamp(Read(nameof(Gap), DefaultGap), 0, MaxGap);
     static int _noticeSeconds = Math.Clamp(Read(nameof(NoticeSeconds), DefaultNoticeSeconds), MinNoticeSeconds, MaxNoticeSeconds);
     static int _accent = Read(nameof(Accent), 0);
+    static ThemeMode _themeMode = (ThemeMode)Math.Clamp(Read(nameof(ThemeMode), (int)ThemeMode.Dark), 0, (int)ThemeMode.System);
+    static ThemePreset _themePreset = (ThemePreset)Math.Clamp(Read(nameof(ThemePreset), (int)ThemePreset.Default), 0, (int)ThemePreset.Cyberpunk);
+
+    public static ThemeMode ThemeMode
+    {
+        get => _themeMode;
+        set => Write(nameof(ThemeMode), (int)(_themeMode = value));
+    }
+
+    public static ThemePreset ThemePreset
+    {
+        get => _themePreset;
+        set => Write(nameof(ThemePreset), (int)(_themePreset = value));
+    }
 
     public static bool Dots
     {

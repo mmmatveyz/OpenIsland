@@ -23,14 +23,32 @@ public sealed class Goo : FrameworkElement
     readonly Light _flash = new();
     readonly Pen _edge;
 
+    Color _baseFill = Colors.Black;
+    Color _baseRim = PlainRim;
+    byte _glassAlpha = GlassAlpha;
+    Color? _rimColor;
+
     Rect _pill = Rect.Empty, _bubble = Rect.Empty;
     double _radius;
 
     public Goo() => _edge = new Pen(_rim, 2 * RimWidth) { LineJoin = PenLineJoin.Round };
 
+    public void ApplyPalette(Color fillColor, Color rimColor, byte glassAlpha, bool glass, Duration time)
+    {
+        _baseFill = fillColor;
+        _baseRim = rimColor;
+        _glassAlpha = glassAlpha;
+        Thin(glass, time, () => { });
+        if (_rimColor == null)
+        {
+            _rim.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(rimColor, time));
+        }
+    }
+
     public void Tint(Color? color, Duration time)
     {
-        Color to = color is { } c ? Color.FromArgb(TintedAlpha, c.R, c.G, c.B) : PlainRim;
+        _rimColor = color;
+        Color to = color is { } c ? Color.FromArgb(TintedAlpha, c.R, c.G, c.B) : _baseRim;
         _rim.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(to, time));
     }
 
@@ -40,7 +58,7 @@ public sealed class Goo : FrameworkElement
 
     public void Thin(bool glass, Duration time, Action thinned)
     {
-        var fade = new ColorAnimation(Color.FromArgb(glass ? GlassAlpha : byte.MaxValue, 0, 0, 0), time);
+        var fade = new ColorAnimation(Color.FromArgb(glass ? _glassAlpha : byte.MaxValue, _baseFill.R, _baseFill.G, _baseFill.B), time);
         fade.Completed += (_, _) => thinned();
         _fill.BeginAnimation(SolidColorBrush.ColorProperty, fade);
     }

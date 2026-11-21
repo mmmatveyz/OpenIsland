@@ -46,7 +46,7 @@ public partial class MainWindow
             {
                 Text = action.Name,
                 FontSize = 12,
-                Foreground = Brushes.White,
+                Foreground = _textPrimary,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             };
@@ -168,7 +168,7 @@ public partial class MainWindow
                 Text = action.DisplayName,
                 FontSize = 13,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = Brushes.White,
+                Foreground = _textPrimary,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             };
             var pathLine = new TextBlock

@@ -73,7 +73,7 @@ public partial class MainWindow
         {
             var pill = new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(28, 255, 255, 255)),
+                Background = _cardSectionBackground,
                 CornerRadius = new CornerRadius(12),
                 Width = 52,
                 Height = 84,
@@ -101,7 +101,7 @@ public partial class MainWindow
                 Kind = h.Condition.Glyph,
                 Width = 18,
                 Height = 18,
-                Fill = Brushes.White,
+                Fill = _textPrimary,
                 HorizontalAlignment = HorizontalAlignment.Center,
                 Margin = new Thickness(0, 0, 0, 4),
             };
@@ -111,7 +111,7 @@ public partial class MainWindow
                 Text = h.FormattedTemp,
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
-                Foreground = Brushes.White,
+                Foreground = _textPrimary,
                 HorizontalAlignment = HorizontalAlignment.Center,
             };
 

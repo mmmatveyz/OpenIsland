@@ -84,7 +84,8 @@ public partial class MainWindow : Window
     static readonly TimeSpan AwayDuration = TimeSpan.FromSeconds(5);
 
     readonly Dictionary<View, FrameworkElement> _views;
-    readonly SolidColorBrush _dim, _orange, _green, _red, _indigo;
+    readonly SolidColorBrush _dim, _faint, _orange, _green, _red, _indigo;
+    readonly SolidColorBrush _textPrimary, _cardBackground, _cardSubBackground, _cardSectionBackground, _cardBorder, _chipBackground, _hoverBackground, _pressedBackground, _shadowBrush;
     readonly AudioService _audio = new();
     readonly MediaService _media;
     readonly NetworkService _network;
@@ -122,10 +123,20 @@ public partial class MainWindow : Window
         Height = Height * LargestScale / 100.0 + LargestGap;
 
         _dim = BrushResource("Dim");
+        _faint = BrushResource("Faint");
         _orange = BrushResource("Orange");
         _green = BrushResource("Green");
         _red = BrushResource("Red");
         _indigo = BrushResource("Indigo");
+        _textPrimary = BrushResource("TextPrimary");
+        _cardBackground = BrushResource("CardBackground");
+        _cardSubBackground = BrushResource("CardSubBackground");
+        _cardSectionBackground = BrushResource("CardSectionBackground");
+        _cardBorder = BrushResource("CardBorder");
+        _chipBackground = BrushResource("ChipBackground");
+        _hoverBackground = BrushResource("HoverBackground");
+        _pressedBackground = BrushResource("PressedBackground");
+        _shadowBrush = BrushResource("ShadowBrush");
 
         _views = new()
         {
@@ -205,6 +216,8 @@ public partial class MainWindow : Window
 
         _ticker.Tick += (_, _) => OnTick();
         IsVisibleChanged += (_, _) => SyncEq();
+        ThemeService.Apply(this, animate: false);
+        ThemeService.WatchSystemTheme(this);
         Loaded += OnLoaded;
         Deactivated += OnDeactivated;
     }
@@ -469,6 +482,32 @@ public partial class MainWindow : Window
     static bool Switch(string name) => Array.IndexOf(Environment.GetCommandLineArgs(), name) >= 0;
 
     SolidColorBrush BrushResource(string key) => (SolidColorBrush)FindResource(key);
+
+    public void ApplyThemeBrushes(ThemePalette p, Duration duration)
+    {
+        AnimateBrush(_textPrimary, p.TextPrimary, duration);
+        AnimateBrush(_dim, p.TextDim, duration);
+        AnimateBrush(_faint, p.TextFaint, duration);
+        AnimateBrush(_cardBackground, p.CardBackground, duration);
+        AnimateBrush(_cardSubBackground, p.CardSubBackground, duration);
+        AnimateBrush(_cardSectionBackground, p.CardSectionBackground, duration);
+        AnimateBrush(_cardBorder, p.CardBorder, duration);
+        AnimateBrush(_chipBackground, p.ChipBackground, duration);
+        AnimateBrush(_hoverBackground, p.HoverBackground, duration);
+        AnimateBrush(_pressedBackground, p.PressedBackground, duration);
+        AnimateBrush(_shadowBrush, p.ShadowColor, duration);
+    }
+
+    static void AnimateBrush(SolidColorBrush brush, Color target, Duration duration)
+    {
+        if (duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero)
+            brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(target, duration));
+        else
+        {
+            brush.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            brush.Color = target;
+        }
+    }
 
     IntPtr OnShellMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

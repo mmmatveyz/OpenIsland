@@ -148,23 +148,23 @@ public sealed class Scrubber : FrameworkElement
         bool glass = press > GlassShown;
 
         dc.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, w, h));
-        dc.DrawGeometry(Shades.White(TrackOpacity), null, glass ? Geometry.Combine(track, knob, GeometryCombineMode.Exclude, null) : track);
-        dc.DrawGeometry(Shades.White(FillOpacity), null, glass ? Geometry.Combine(fill, knob, GeometryCombineMode.Exclude, null) : fill);
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, TrackOpacity), null, glass ? Geometry.Combine(track, knob, GeometryCombineMode.Exclude, null) : track);
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, FillOpacity), null, glass ? Geometry.Combine(fill, knob, GeometryCombineMode.Exclude, null) : fill);
         DrawShadow(dc, knobRect, knob, press);
 
         if (!glass)
         {
-            dc.DrawGeometry(Brushes.White, null, knob);
+            dc.DrawGeometry(ThemeService.IsDark ? Brushes.White : ThemeService.PrimaryBrush, null, knob);
             return;
         }
 
         dc.PushClip(knob);
         double zoom = 1 + LensZoom * press;
         dc.PushTransform(new ScaleTransform(zoom, zoom * LensZoomTaller, cx, cy));
-        dc.DrawGeometry(Shades.White(TrackOpacity), null, track);
-        dc.DrawGeometry(Shades.White(FillOpacity), null, fill);
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, TrackOpacity), null, track);
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, FillOpacity), null, fill);
         dc.Pop();
-        dc.DrawRectangle(new SolidColorBrush(White(1 - GlassClearing * press)), null, knobRect);
+        dc.DrawRectangle(new SolidColorBrush(ThemeService.IsDark ? White(1 - GlassClearing * press) : Black(1 - GlassClearing * press)), null, knobRect);
         dc.DrawRectangle(Vertical((0, 0.35 * press), (0.45, 0), (1, 0.12 * press)), null, knobRect);
         dc.Pop();
 
@@ -194,4 +194,6 @@ public sealed class Scrubber : FrameworkElement
     }
 
     static Color White(double alpha) => Color.FromArgb((byte)Math.Round(255 * Math.Clamp(alpha, 0, 1)), 255, 255, 255);
+
+    static Color Black(double alpha) => Color.FromArgb((byte)Math.Round(255 * Math.Clamp(alpha, 0, 1)), 0, 0, 0);
 }

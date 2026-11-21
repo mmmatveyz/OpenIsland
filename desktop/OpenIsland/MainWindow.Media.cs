@@ -43,7 +43,7 @@ public partial class MainWindow
     double _sourceSwitchedAt = -SkipMemorySeconds;
     string _source = "", _sourceName = "";
 
-    Color AccentColor => Settings.Accent ?? _media.Accent;
+    Color AccentColor => Settings.Accent ?? (_media.Accent == Colors.White && !ThemeService.IsDark ? Color.FromRgb(0x1C, 0x1C, 0x1E) : _media.Accent);
 
     bool IsEqVisible => MediaSpots.ContainsKey(_view);
 
@@ -119,7 +119,7 @@ public partial class MainWindow
         RememberSkip(direction);
     }
 
-    void SyncRim()
+    internal void SyncRim()
     {
         bool music = _media.HasTrack && (_cover != null || Settings.Accent != null) && (IsMediaActive || _view == View.MediaBig);
         Color? tint = Settings.Rim && music ? AccentColor : null;
@@ -140,7 +140,7 @@ public partial class MainWindow
         StartShapeLoop();
     }
 
-    void SyncAccent(bool animate = true)
+    internal void SyncAccent(bool animate = true)
     {
         Duration time = animate ? TintTime : Ms(0);
         _accentBrush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(AccentColor, time));

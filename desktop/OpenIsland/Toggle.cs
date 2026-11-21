@@ -21,7 +21,7 @@ public sealed class Toggle : FrameworkElement
     const double ShadowDrop = 0.6, PressedShadowDrop = 1.0, ShadowAlpha = 0.1, PressedShadowAlpha = 0.05;
     static readonly TimeSpan ShortestPress = TimeSpan.FromMilliseconds(140);
 
-    static readonly Color OffColor = Color.FromRgb(0x39, 0x39, 0x3D);
+    static Color OffColor => ThemeService.CurrentPalette.ToggleOff;
     static readonly Color OnColor = Color.FromRgb(0x30, 0xD1, 0x58);
     static readonly DependencyPropertyDescriptor RowPressed =
         DependencyPropertyDescriptor.FromProperty(ButtonBase.IsPressedProperty, typeof(ButtonBase));

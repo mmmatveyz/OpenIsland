@@ -79,7 +79,7 @@ public partial class MainWindow
             Text = item.Name,
             FontSize = 12,
             FontWeight = FontWeights.SemiBold,
-            Foreground = item.Exists ? Brushes.White : _dim,
+            Foreground = item.Exists ? _textPrimary : _dim,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
         var sizeBlock = new TextBlock
@@ -181,7 +181,7 @@ public partial class MainWindow
 
         var row = new Border
         {
-            Background = new SolidColorBrush(Color.FromArgb(20, 255, 255, 255)),
+            Background = _cardSectionBackground,
             CornerRadius = new CornerRadius(10),
             Margin = new Thickness(0, 2, 0, 2),
             Padding = new Thickness(4, 2, 4, 2),

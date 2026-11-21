@@ -290,6 +290,22 @@ public partial class MainWindow
         SyncGlass(true);
     }
 
+    void ThemeMode_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ThemeMode = (ThemeMode)ThemeModeSegments.PickUnderPointer();
+        RefreshLookPage();
+        ThemeService.Apply(this, animate: true);
+    }
+
+    void ThemePresetRow_Click(object sender, RoutedEventArgs e) => ToggleLookTiles(ThemePresetTiles);
+
+    void ThemePresetTile_Click(object sender, RoutedEventArgs e)
+    {
+        Settings.ThemePreset = (ThemePreset)ThemePresetStrip.Children.IndexOf((UIElement)sender);
+        RefreshLookPage();
+        ThemeService.Apply(this, animate: true);
+    }
+
     void SeekHover_Click(object sender, RoutedEventArgs e)
     {
         Settings.SeekHover = (SeekHover)SeekHoverSegments.PickUnderPointer();
@@ -316,6 +332,7 @@ public partial class MainWindow
     void ToggleLookTiles(Border tiles)
     {
         _openLookTiles = tiles == _openLookTiles ? null : tiles;
+        SlideLookTiles(ThemePresetTiles, ThemePresetChevron);
         SlideLookTiles(BackdropTiles, BackdropChevron);
         SlideLookTiles(HoverTiles, HoverChevron);
     }
@@ -439,6 +456,17 @@ public partial class MainWindow
 
     void RefreshLookPage()
     {
+        ThemeModeSegments.Set((int)Settings.ThemeMode, LookView.IsVisible);
+        ((RadioButton)ThemePresetStrip.Children[(int)Settings.ThemePreset]).IsChecked = true;
+        ThemePresetText.Text = Settings.ThemePreset switch
+        {
+            ThemePreset.Oled => ThemeService.IsDark ? "OLED" : "Бумага",
+            ThemePreset.Nord => "Nord",
+            ThemePreset.Cyberpunk => "Неон",
+            _ => ThemeService.IsDark ? "Обсидиан" : "Молочное",
+        };
+        ThemePresetStrip.InvalidateVisual();
+
         SizeText.Text = Settings.Scale + "%";
         GapText.Text = Settings.Gap + " px";
         SizeSlider.Set(Settings.Scale, LookView.IsVisible);

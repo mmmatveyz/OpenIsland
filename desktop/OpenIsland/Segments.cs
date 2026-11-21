@@ -61,7 +61,7 @@ public sealed class Segments : FrameworkElement
 
     protected override Size MeasureOverride(Size available)
     {
-        double widest = _labels.Length == 0 ? 0 : _labels.Max(label => Format(label, Brushes.White).Width);
+        double widest = _labels.Length == 0 ? 0 : _labels.Max(label => Format(label, ThemeService.PrimaryBrush).Width);
         return new Size(Math.Ceiling(widest + CellPadding * 2) * _labels.Length + KnobInset * 2, 0);
     }
 
@@ -83,14 +83,14 @@ public sealed class Segments : FrameworkElement
         double knobWidth = cell * (1 + StretchWider * stretch), knobHeight = (h - KnobInset * 2) * (1 - StretchFlatter * stretch);
         double cx = KnobInset + cell * (_at.Value + 0.5);
 
-        dc.DrawRoundedRectangle(Shades.White(TrackOpacity), null, new Rect(0, 0, w, h), TrackRadius, TrackRadius);
-        dc.DrawRoundedRectangle(Shades.White(KnobOpacity), null,
+        dc.DrawRoundedRectangle(Shades.Auto(ThemeService.IsDark, TrackOpacity), null, new Rect(0, 0, w, h), TrackRadius, TrackRadius);
+        dc.DrawRoundedRectangle(Shades.Auto(ThemeService.IsDark, KnobOpacity), null,
             new Rect(cx - knobWidth / 2, (h - knobHeight) / 2, knobWidth, knobHeight), KnobRadius, KnobRadius);
 
         for (int i = 0; i < _labels.Length; i++)
         {
             double near = 1 - Math.Clamp(Math.Abs(_at.Value - i), 0, 1);
-            FormattedText label = Format(_labels[i], Shades.White(RestingText + (1 - RestingText) * near));
+            FormattedText label = Format(_labels[i], Shades.Auto(ThemeService.IsDark, RestingText + (1 - RestingText) * near));
             dc.DrawText(label, new Point(KnobInset + cell * (i + 0.5) - label.Width / 2, (h - label.Height) / 2));
         }
     }

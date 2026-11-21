@@ -7,15 +7,25 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ResizeMode="NoResize" ShowActivated="False"
         Focusable="False" UseLayoutRounding="True"
-        FontFamily="./Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI" Foreground="White">
+        FontFamily="./Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI" Foreground="{DynamicResource TextPrimary}">
 
     <Window.Resources>
+        <SolidColorBrush x:Key="TextPrimary" Color="#FFFFFF"/>
         <SolidColorBrush x:Key="Dim" Color="#99FFFFFF"/>
+        <SolidColorBrush x:Key="Faint" Color="#66FFFFFF"/>
         <SolidColorBrush x:Key="Orange" Color="#FF9F0A"/>
         <SolidColorBrush x:Key="Green" Color="#30D158"/>
         <SolidColorBrush x:Key="Red" Color="#FF453A"/>
         <SolidColorBrush x:Key="Indigo" Color="#7D7AFF"/>
-        <SolidColorBrush x:Key="Faint" Color="#66FFFFFF"/>
+
+        <SolidColorBrush x:Key="CardBackground" Color="#E61C1C1E"/>
+        <SolidColorBrush x:Key="CardSubBackground" Color="#2C2C2E"/>
+        <SolidColorBrush x:Key="CardSectionBackground" Color="#1AFFFFFF"/>
+        <SolidColorBrush x:Key="CardBorder" Color="#3A3A3C"/>
+        <SolidColorBrush x:Key="ChipBackground" Color="#1FFFFFFF"/>
+        <SolidColorBrush x:Key="HoverBackground" Color="#14FFFFFF"/>
+        <SolidColorBrush x:Key="PressedBackground" Color="#24FFFFFF"/>
+        <SolidColorBrush x:Key="ShadowBrush" Color="#000000"/>
 
         <FontFamily x:Key="Display">./Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
 
@@ -26,7 +36,7 @@
 
         <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Width" Value="44"/>
             <Setter Property="Height" Value="44"/>
@@ -74,7 +84,7 @@
 
         <Style x:Key="RowButton" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="FontSize" Value="13.5"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -92,7 +102,7 @@
         <Style x:Key="Caption" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10.5"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource Faint}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Faint}"/>
         </Style>
 
         <Style x:Key="BackButton" TargetType="Button" BasedOn="{StaticResource RowButton}">
@@ -103,7 +113,7 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="Transparent" Padding="12,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <local:Icon Kind="Back" Width="10" Height="10" Fill="{StaticResource Faint}" VerticalAlignment="Center"/>
+                                <local:Icon Kind="Back" Width="10" Height="10" Fill="{DynamicResource Faint}" VerticalAlignment="Center"/>
                                 <TextBlock Style="{StaticResource Caption}" Margin="6,0,0,0" VerticalAlignment="Center"
                                            Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"/>
                             </StackPanel>
@@ -116,7 +126,7 @@
         <Style x:Key="RowIcon" TargetType="local:Icon">
             <Setter Property="Width" Value="17"/>
             <Setter Property="Height" Value="17"/>
-            <Setter Property="Fill" Value="{StaticResource Dim}"/>
+            <Setter Property="Fill" Value="{DynamicResource Dim}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
@@ -130,7 +140,7 @@
             <Setter Property="Kind" Value="Chevron"/>
             <Setter Property="Width" Value="11"/>
             <Setter Property="Height" Value="11"/>
-            <Setter Property="Fill" Value="{StaticResource Dim}"/>
+            <Setter Property="Fill" Value="{DynamicResource Dim}"/>
             <Setter Property="Margin" Value="0,1,0,0"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -154,7 +164,7 @@
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#55FFFFFF" CornerRadius="4" Margin="2,0"/>
+                                                <Border Background="{DynamicResource Dim}" Opacity="0.35" CornerRadius="4" Margin="2,0"/>
                                             </ControlTemplate>
                                         </Thumb.Template>
                                     </Thumb>
@@ -170,8 +180,8 @@
 
         <Style x:Key="ChipButton" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="#1FFFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource ChipBackground}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="Margin" Value="2,0"/>
@@ -181,8 +191,8 @@
                     <ControlTemplate TargetType="Button">
                         <Grid>
                             <Border CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="{TemplateBinding Background}"/>
-                            <Border x:Name="Shine" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
-                            <Border x:Name="Press" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="White" Opacity="0"/>
+                            <Border x:Name="Shine" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="{DynamicResource TextPrimary}" Opacity="0"/>
+                            <Border x:Name="Press" CornerRadius="{Binding ActualHeight, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource ChipCorners}}" Background="{DynamicResource TextPrimary}" Opacity="0"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                         <ControlTemplate.Triggers>
@@ -282,10 +292,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#14FFFFFF"/>
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource HoverBackground}"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Background" Value="#24FFFFFF"/>
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource PressedBackground}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -300,7 +310,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
                         <Grid Width="24" Height="24" Background="Transparent">
-                            <Ellipse x:Name="Ring" Stroke="White" StrokeThickness="1.5" Opacity="0"/>
+                            <Ellipse x:Name="Ring" Stroke="{DynamicResource TextPrimary}" StrokeThickness="1.5" Opacity="0"/>
                             <Ellipse Margin="5" Fill="{TemplateBinding Background}" RenderTransformOrigin="0.5,0.5">
                                 <Ellipse.RenderTransform>
                                     <ScaleTransform x:Name="Swell"/>
@@ -367,7 +377,7 @@
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="3,0"/>
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="{StaticResource Dim}"/>
+            <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -375,15 +385,15 @@
                             <Grid.RenderTransform>
                                 <ScaleTransform x:Name="Squish"/>
                             </Grid.RenderTransform>
-                            <Border x:Name="Plate" CornerRadius="11" Background="White" Opacity="0.08"/>
+                            <Border x:Name="Plate" CornerRadius="11" Background="{DynamicResource TextPrimary}" Opacity="0.08"/>
                             <ContentPresenter Margin="3,3,3,21"/>
                             <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
                                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,5"/>
-                            <Border x:Name="Ring" CornerRadius="11" BorderBrush="White" BorderThickness="1.5" Opacity="0"/>
+                            <Border x:Name="Ring" CornerRadius="11" BorderBrush="{DynamicResource TextPrimary}" BorderThickness="1.5" Opacity="0"/>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
                                 <Trigger.EnterActions>
                                     <BeginStoryboard>
                                         <Storyboard>
@@ -469,7 +479,7 @@
                 <ScaleTransform x:Name="IslandScale"/>
             </Grid.RenderTransform>
 
-            <Path x:Name="Shadow" Fill="Black" Opacity="0" IsHitTestVisible="False"
+            <Path x:Name="Shadow" Fill="{DynamicResource ShadowBrush}" Opacity="0" IsHitTestVisible="False"
                   HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Path.Effect>
                     <DropShadowEffect BlurRadius="38" ShadowDepth="10" Direction="270" Opacity="0.6" Color="Black"/>
@@ -1096,6 +1106,46 @@
                                     <TranslateTransform x:Name="LookMove"/>
                                 </local:RowList.RenderTransform>
                                 <Button Style="{StaticResource BackButton}" Content="ОФОРМЛЕНИЕ" Click="SettingsBack_Click"/>
+                                <TextBlock Style="{StaticResource Caption}" Text="ТЕМА" Margin="12,4,0,6"/>
+                                <Button Style="{StaticResource RowButton}" Click="ThemeMode_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Sparkle"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Режим"/>
+                                        <local:Segments x:Name="ThemeModeSegments" Style="{StaticResource RowSegments}" Labels="Тёмная|Светлая|Авто"/>
+                                    </Grid>
+                                </Button>
+                                <Button x:Name="ThemePresetRow" Style="{StaticResource RowButton}" Click="ThemePresetRow_Click">
+                                    <Grid>
+                                        <local:Icon Style="{StaticResource RowIcon}" Kind="Drop"/>
+                                        <TextBlock Style="{StaticResource RowLabel}" Text="Палитра"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock x:Name="ThemePresetText" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
+                                            <local:Icon x:Name="ThemePresetChevron" Style="{StaticResource RowChevron}" Margin="8,1,0,0"
+                                                        RenderTransformOrigin="0.5,0.5">
+                                                <local:Icon.RenderTransform>
+                                                    <RotateTransform/>
+                                                </local:Icon.RenderTransform>
+                                            </local:Icon>
+                                        </StackPanel>
+                                    </Grid>
+                                </Button>
+                                <Border x:Name="ThemePresetTiles" Height="0" Visibility="Collapsed" ClipToBounds="True">
+                                    <UniformGrid x:Name="ThemePresetStrip" Rows="1" Height="64" Margin="6,2,6,0" VerticalAlignment="Top" Opacity="0">
+                                        <RadioButton Style="{StaticResource Tile}" Tag="Обсидиан" Click="ThemePresetTile_Click">
+                                            <local:ThemePreview Kind="Default"/>
+                                        </RadioButton>
+                                        <RadioButton Style="{StaticResource Tile}" Tag="OLED" Click="ThemePresetTile_Click">
+                                            <local:ThemePreview Kind="Oled"/>
+                                        </RadioButton>
+                                        <RadioButton Style="{StaticResource Tile}" Tag="Nord" Click="ThemePresetTile_Click">
+                                            <local:ThemePreview Kind="Nord"/>
+                                        </RadioButton>
+                                        <RadioButton Style="{StaticResource Tile}" Tag="Неон" Click="ThemePresetTile_Click">
+                                            <local:ThemePreview Kind="Cyberpunk"/>
+                                        </RadioButton>
+                                    </UniformGrid>
+                                </Border>
+                                <TextBlock Style="{StaticResource Caption}" Text="ГЕОМЕТРИЯ" Margin="12,8,0,6"/>
                                 <Button x:Name="SizeRow" Style="{StaticResource RowButton}">
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Size"/>
@@ -1250,18 +1300,18 @@
                 </Grid>
 
                 <Grid x:Name="OpenCodeBigView" Width="380" Height="486" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="16,14" Margin="0">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="16,14" Margin="0">
                         <StackPanel VerticalAlignment="Top">
                             <Grid Height="30" Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="OpenCodeBack_Click" ToolTip="Назад"/>
                                     <Ellipse x:Name="OpenCodeStatusDot" Width="9" Height="9" Fill="{StaticResource Green}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="OpenCode AI Hub" FontSize="14" FontWeight="SemiBold" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="OpenCode AI Hub" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <TextBlock x:Name="OpenCodeModelBadge" Text="Модель" FontSize="11" Foreground="#8E8E93" HorizontalAlignment="Right" VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
                             </Grid>
 
-                            <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="14" Padding="4" Margin="0,0,0,8">
+                            <Border Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="4" Margin="0,0,0,8">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
@@ -1277,7 +1327,7 @@
                                             </Grid.ColumnDefinitions>
                                             <local:Icon Grid.Column="0" Kind="Segments" Width="14" Height="14" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <TextBlock x:Name="OpenCodeTaskTitle" Text="Нет активной сессии" FontSize="13" FontWeight="SemiBold" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock x:Name="OpenCodeTaskTitle" Text="Нет активной сессии" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock x:Name="OpenCodeSubText" Text="OpenCode офлайн" FontSize="10.5" Foreground="#8E8E93" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                                             </StackPanel>
                                             <TextBlock x:Name="OpenCodeSessionCounter" Grid.Column="2" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="6,0,4,0"/>
@@ -1299,10 +1349,10 @@
                                 <Button x:Name="OpenCodeNewSession" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="+ Сессия" Click="OpenCodeNewSession_Click"/>
                             </Grid>
 
-                            <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="14" Padding="10,6" Margin="0,0,0,8">
+                            <Border Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="10,6" Margin="0,0,0,8">
                                 <Grid>
-                                    <TextBox x:Name="OpenCodePromptBox" Background="Transparent" Foreground="White" BorderThickness="0"
-                                             FontSize="12.5" CaretBrush="White" VerticalAlignment="Center" Padding="0,2,30,2"
+                                    <TextBox x:Name="OpenCodePromptBox" Background="Transparent" Foreground="{DynamicResource TextPrimary}" BorderThickness="0"
+                                             FontSize="12.5" CaretBrush="{DynamicResource TextPrimary}" VerticalAlignment="Center" Padding="0,2,30,2"
                                              KeyDown="OpenCodePromptBox_KeyDown" TextChanged="OpenCodePromptBox_TextChanged"
                                              GotFocus="OpenCodePromptBox_GotFocus" PreviewMouseLeftButtonDown="OpenCodePromptBox_MouseDown"/>
                                     <TextBlock x:Name="OpenCodePromptHint" Text="Дать задачу агенту..." FontSize="12.5"
@@ -1432,7 +1482,7 @@
 
                     <Grid x:Name="OpenCodeSessionOverlay" Visibility="Collapsed">
                         <Border Background="#99000000" CornerRadius="22" MouseLeftButtonDown="OpenCodeSessionScrim_MouseDown"/>
-                        <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="16"
+                        <Border Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="16"
                                 Margin="10,58,10,10" VerticalAlignment="Top" MaxHeight="412">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1451,11 +1501,11 @@
                                     </Button>
                                 </Grid>
 
-                                <Border x:Name="OpenCodeSessionSearchBox" Grid.Row="1" Background="#1C1C1E" BorderBrush="#3A3A3C" BorderThickness="1"
+                                <Border x:Name="OpenCodeSessionSearchBox" Grid.Row="1" Background="{DynamicResource CardSectionBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
                                         CornerRadius="10" Padding="8,0" Height="30" Margin="10,0,10,6" Visibility="Collapsed">
                                     <Grid>
-                                        <TextBox x:Name="OpenCodeSessionSearch" Background="Transparent" Foreground="White" BorderThickness="0"
-                                                 FontSize="12" CaretBrush="White" VerticalAlignment="Center" Padding="0"
+                                        <TextBox x:Name="OpenCodeSessionSearch" Background="Transparent" Foreground="{DynamicResource TextPrimary}" BorderThickness="0"
+                                                 FontSize="12" CaretBrush="{DynamicResource TextPrimary}" VerticalAlignment="Center" Padding="0"
                                                  TextChanged="OpenCodeSessionSearch_TextChanged"/>
                                         <TextBlock x:Name="OpenCodeSessionSearchHint" Text="Поиск по названию или папке" FontSize="12"
                                                    Foreground="{StaticResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"
@@ -1480,7 +1530,7 @@
 
                     <Grid x:Name="OpenCodeDiffOverlay" Visibility="Collapsed">
                         <Border Background="#99000000" CornerRadius="22" MouseLeftButtonDown="OpenCodeDiffScrim_MouseDown"/>
-                        <Border Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="16"
+                        <Border Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="16"
                                 Margin="10,58,10,10" VerticalAlignment="Top" MaxHeight="352">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1521,32 +1571,32 @@
                 </Grid>
 
                 <Grid x:Name="PerfView" Width="340" Height="410" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="16,14">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="16,14">
                         <StackPanel VerticalAlignment="Top">
                             <Grid Height="30" Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource ChipButton}" Width="24" Height="24" Padding="0" Content="&lt;" Margin="0,0,8,0" Click="PerfBack_Click" ToolTip="Назад"/>
                                     <TextBlock Style="{StaticResource Caption}" Text="МОНИТОРИНГ ПК" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock x:Name="PerfState" Text="1 с" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PerfState" Text="1 с" FontSize="11" Foreground="{DynamicResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
 
                             <StackPanel Margin="2,0,2,12">
                                 <Grid>
-                                    <TextBlock Text="Процессор" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="PerfCpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="Процессор" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfCpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                <Border Height="6" CornerRadius="3" Background="{DynamicResource CardSubBackground}" Margin="0,6,0,0">
                                     <Rectangle x:Name="PerfCpuBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Green}" HorizontalAlignment="Left"/>
                                 </Border>
                                 <Grid Margin="0,10,0,0">
-                                    <TextBlock Text="Ядра" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="PerfCoresCount" Text="" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="Ядра" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfCoresCount" Text="" FontSize="11" Foreground="{DynamicResource Dim}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Height="26" CornerRadius="4" Background="#2C2C2E" Margin="0,6,0,0" Padding="2">
+                                <Border Height="26" CornerRadius="4" Background="{DynamicResource CardSubBackground}" Margin="0,6,0,0" Padding="2">
                                     <Grid>
                                         <UniformGrid x:Name="PerfCores" Rows="1" Height="22"/>
-                                        <TextBlock x:Name="PerfCoresEmpty" Text="н/д" FontSize="10.5" Foreground="{StaticResource Dim}"
+                                        <TextBlock x:Name="PerfCoresEmpty" Text="н/д" FontSize="10.5" Foreground="{DynamicResource Dim}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Grid>
                                 </Border>
@@ -1554,50 +1604,50 @@
 
                             <StackPanel Margin="2,0,2,12">
                                 <Grid>
-                                    <TextBlock Text="Память" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="PerfRamText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="Память" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfRamText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                <Border Height="6" CornerRadius="3" Background="{DynamicResource CardSubBackground}" Margin="0,6,0,0">
                                     <Rectangle x:Name="PerfRamBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Indigo}" HorizontalAlignment="Left"/>
                                 </Border>
                             </StackPanel>
 
                             <StackPanel Margin="2,0,2,12">
                                 <Grid>
-                                    <TextBlock Text="Видеокарта" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="PerfGpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="Видеокарта" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfGpuText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                <Border Height="6" CornerRadius="3" Background="{DynamicResource CardSubBackground}" Margin="0,6,0,0">
                                     <Rectangle x:Name="PerfGpuBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Orange}" HorizontalAlignment="Left"/>
                                 </Border>
                             </StackPanel>
 
                             <Grid Margin="2,2,2,12">
-                                <TextBlock Text="Сеть" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="PerfNetText" Text="↓ 0 · ↑ 0" FontSize="12.5" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="Сеть" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PerfNetText" Text="↓ 0 · ↑ 0" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                             </Grid>
 
                             <StackPanel Margin="2,0,2,12">
                                 <Grid>
-                                    <TextBlock Text="Диск" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left"/>
-                                    <TextBlock x:Name="PerfDiskText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="Диск" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="PerfDiskText" Text="—" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right"/>
                                 </Grid>
-                                <Border Height="6" CornerRadius="3" Background="#2C2C2E" Margin="0,6,0,0">
+                                <Border Height="6" CornerRadius="3" Background="{DynamicResource CardSubBackground}" Margin="0,6,0,0">
                                     <Rectangle x:Name="PerfDiskBar" Width="0" Height="6" RadiusX="3" RadiusY="3" Fill="{StaticResource Indigo}" HorizontalAlignment="Left"/>
                                 </Border>
-                                <TextBlock x:Name="PerfDiskSpace" Text="" FontSize="10.5" Foreground="{StaticResource Dim}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="PerfDiskSpace" Text="" FontSize="10.5" Foreground="{DynamicResource Dim}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis"/>
                             </StackPanel>
 
                             <Grid Margin="2,0,2,0">
-                                <TextBlock Text="Температура" FontSize="12.5" Foreground="#AEAEB2" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="PerfTempText" Text="—" FontSize="12.5" Foreground="White" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBlock Text="Температура" FontSize="12.5" Foreground="{DynamicResource Dim}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PerfTempText" Text="—" FontSize="12.5" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </StackPanel>
                     </Border>
                 </Grid>
 
                 <Grid x:Name="ProcessesView" Width="340" Height="470" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="12,12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1624,18 +1674,18 @@
                                     <local:RowList x:Name="ProcessesList"/>
                                 </ScrollViewer>
                                 <TextBlock x:Name="ProcessesEmpty" Text="Сканирую процессы и порты…" FontSize="12"
-                                           Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
                                            MaxWidth="240" HorizontalAlignment="Center" VerticalAlignment="Center"
                                            IsHitTestVisible="False"/>
                             </Grid>
-                            <Border x:Name="ProcessesConfirm" Grid.Row="2" Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1"
+                            <Border x:Name="ProcessesConfirm" Grid.Row="2" Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
                                     CornerRadius="12" Padding="10,8" Margin="0,8,0,0" Visibility="Collapsed">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="ProcessesConfirmText" FontSize="11" Foreground="{StaticResource Dim}"
+                                    <TextBlock x:Name="ProcessesConfirmText" FontSize="11" Foreground="{DynamicResource Dim}"
                                                VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                         <Button Style="{StaticResource ChipButton}" Height="26" Padding="10,0"
@@ -1651,7 +1701,7 @@
                 </Grid>
 
                 <Grid x:Name="QuickLaunchView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="12,12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1679,20 +1729,20 @@
                                         <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ColorPicker_Click" ToolTip="Пипетка цвета на экране (Ctrl+Alt+C)">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <local:Icon Kind="Drop" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Пипетка" FontSize="12" Foreground="White" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Пипетка" FontSize="12" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                         <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ScreenOcr_Click" ToolTip="Распознавание текста с экрана (Ctrl+Alt+X)">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                 <local:Icon Kind="PointerText" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
-                                                <TextBlock Text="Текст (OCR)" FontSize="12" Foreground="White" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Текст (OCR)" FontSize="12" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                     </UniformGrid>
                                     <TextBlock Style="{StaticResource Caption}" Text="СВОИ" Margin="4,8,0,2"/>
                                     <local:RowList x:Name="QuickLaunchOwn"/>
                                     <TextBlock x:Name="QuickLaunchEmpty" Text="Добавьте .exe кнопкой «+ .exe» — программа появится здесь"
-                                               FontSize="11" Foreground="{StaticResource Dim}" TextWrapping="Wrap"
+                                               FontSize="11" Foreground="{DynamicResource Dim}" TextWrapping="Wrap"
                                                Margin="6,4,6,0"/>
                                 </StackPanel>
                             </ScrollViewer>
@@ -1703,7 +1753,7 @@
                 </Grid>
 
                 <Grid x:Name="ClipboardView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="12,12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1730,7 +1780,7 @@
                 </Grid>
 
                 <Grid x:Name="WeatherView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="14,12">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="14,12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1747,7 +1797,7 @@
                                     <Button Style="{StaticResource ChipButton}" Height="24" Padding="8,0" Content="Обновить" Click="WeatherRefresh_Click"/>
                                 </StackPanel>
                             </Grid>
-                            <Border x:Name="WeatherCityPanel" Grid.Row="1" Background="#242426" BorderBrush="#3A3A3C" BorderThickness="1"
+                            <Border x:Name="WeatherCityPanel" Grid.Row="1" Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1"
                                     CornerRadius="14" Padding="10,10" Margin="0,0,0,8" Visibility="Collapsed">
                                 <StackPanel>
                                     <Grid Margin="0,0,0,8">
@@ -1755,10 +1805,10 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <Border Background="#1C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="8" Padding="8,4" Margin="0,0,6,0">
+                                        <Border Background="{DynamicResource CardSectionBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="8" Padding="8,4" Margin="0,0,6,0">
                                             <Grid>
-                                                <TextBox x:Name="WeatherCitySearchBox" Background="Transparent" Foreground="White" BorderThickness="0"
-                                                         FontSize="12" CaretBrush="White" VerticalAlignment="Center" Padding="0"
+                                                <TextBox x:Name="WeatherCitySearchBox" Background="Transparent" Foreground="{DynamicResource TextPrimary}" BorderThickness="0"
+                                                         FontSize="12" CaretBrush="{DynamicResource TextPrimary}" VerticalAlignment="Center" Padding="0"
                                                          GotFocus="WeatherCitySearchBox_GotFocus" PreviewMouseLeftButtonDown="WeatherCitySearchBox_MouseDown"
                                                          KeyDown="WeatherCitySearchBox_KeyDown" TextChanged="WeatherCitySearchBox_TextChanged"/>
                                                 <TextBlock x:Name="WeatherCitySearchHint" Text="Поиск города (например: Сочи)..." FontSize="11.5"
@@ -1780,37 +1830,37 @@
                                     <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
                                 </ScrollViewer.Resources>
                                 <StackPanel>
-                                    <Border Background="#1AFFFFFF" CornerRadius="16" Padding="16,14" Margin="0,0,0,10">
+                                    <Border Background="{DynamicResource CardSectionBackground}" CornerRadius="16" Padding="16,14" Margin="0,0,0,10">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                <TextBlock x:Name="WeatherBigTemp" Text="+0°" FontSize="38" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,2"/>
-                                                <TextBlock x:Name="WeatherConditionText" Text="Загрузка прогноза..." FontSize="13" FontWeight="Medium" Foreground="White"/>
+                                                <TextBlock x:Name="WeatherBigTemp" Text="+0°" FontSize="38" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,2"/>
+                                                <TextBlock x:Name="WeatherConditionText" Text="Загрузка прогноза..." FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
                                                 <TextBlock x:Name="WeatherFeelsText" Text="" FontSize="11" Foreground="{StaticResource Dim}" Margin="0,2,0,0"/>
                                             </StackPanel>
                                             <local:Icon x:Name="WeatherIcon" Grid.Column="1" Kind="CloudSun" Width="46" Height="46" Fill="{StaticResource Indigo}" VerticalAlignment="Center" Margin="10,0,4,0"/>
                                         </Grid>
                                     </Border>
                                     <UniformGrid Columns="3" Margin="0,0,0,12">
-                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="0,0,4,0">
+                                        <Border Background="{DynamicResource CardSectionBackground}" CornerRadius="12" Padding="8,8" Margin="0,0,4,0">
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="ВЕТЕР" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
-                                                <TextBlock x:Name="WeatherWindText" Text="0.0 м/с" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="WeatherWindText" Text="0.0 м/с" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
-                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="2,0,2,0">
+                                        <Border Background="{DynamicResource CardSectionBackground}" CornerRadius="12" Padding="8,8" Margin="2,0,2,0">
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="ВЛАЖНОСТЬ" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
-                                                <TextBlock x:Name="WeatherHumidityText" Text="0%" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="WeatherHumidityText" Text="0%" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
-                                        <Border Background="#14FFFFFF" CornerRadius="12" Padding="8,8" Margin="4,0,0,0">
+                                        <Border Background="{DynamicResource CardSectionBackground}" CornerRadius="12" Padding="8,8" Margin="4,0,0,0">
                                             <StackPanel HorizontalAlignment="Center">
                                                 <TextBlock Text="ОСАДКИ" Style="{StaticResource Caption}" HorizontalAlignment="Center" FontSize="9"/>
-                                                <TextBlock x:Name="WeatherPrecipText" Text="0 мм" FontSize="12" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock x:Name="WeatherPrecipText" Text="0 мм" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>
@@ -1828,7 +1878,7 @@
                 </Grid>
 
                 <Grid x:Name="ShelfView" Width="340" Height="430" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border Background="#E61C1C1E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="22" Padding="12,12">
+                    <Border Background="{DynamicResource CardBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="22" Padding="12,12">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>

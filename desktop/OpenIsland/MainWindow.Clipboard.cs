@@ -103,7 +103,7 @@ public partial class MainWindow
         {
             Text = Preview(entry.Text),
             FontSize = 12.5,
-            Foreground = Brushes.White,
+            Foreground = _textPrimary,
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
         };

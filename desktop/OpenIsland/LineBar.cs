@@ -155,7 +155,7 @@ public sealed class LineBar : FrameworkElement
 
         double middle = height / 2, fill = Math.Clamp(_fill, 0, width);
         Geometry shape = SolidShape(width, middle);
-        dc.DrawGeometry(Shades.White(UnplayedOpacity), null, shape);
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, UnplayedOpacity), null, shape);
         if (fill <= 0) return;
 
         double radius = Math.Min(ThicknessOf(_columns[ColumnAt(fill)]) / 2, width / 2);
@@ -163,7 +163,7 @@ public sealed class LineBar : FrameworkElement
             new RectangleGeometry(new Rect(0, 0, Math.Max(0, fill - radius), height)),
             new EllipseGeometry(new Point(fill - radius, middle), radius, radius));
         dc.PushClip(reach);
-        dc.DrawGeometry(Brushes.White, null, shape);
+        dc.DrawGeometry(ThemeService.IsDark ? Brushes.White : ThemeService.PrimaryBrush, null, shape);
         dc.Pop();
     }
 

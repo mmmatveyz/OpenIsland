@@ -154,7 +154,7 @@ public partial class MainWindow
             Text = info.Name,
             FontSize = 13,
             FontWeight = FontWeights.SemiBold,
-            Foreground = Brushes.White,
+            Foreground = _textPrimary,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
         var meta = new TextBlock

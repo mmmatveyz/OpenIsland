@@ -8,11 +8,16 @@ sealed class Shades
     const int Levels = 255;
 
     static readonly Shades Whites = new();
+    static readonly Shades Blacks = new();
 
     readonly Brush?[] _brushes = new Brush?[Levels + 1];
     Color _color = Colors.White;
 
     public static Brush White(double opacity) => Whites.Of(Colors.White, opacity);
+
+    public static Brush Black(double opacity) => Blacks.Of(Colors.Black, opacity);
+
+    public static Brush Auto(bool isDark, double opacity) => isDark ? White(opacity) : Black(opacity);
 
     public Brush Of(Color color, double opacity)
     {
