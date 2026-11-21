@@ -41,7 +41,15 @@ public sealed class Goo : FrameworkElement
         Thin(glass, time, () => { });
         if (_rimColor == null)
         {
-            _rim.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(rimColor, time));
+            if (time.HasTimeSpan && time.TimeSpan == TimeSpan.Zero)
+            {
+                _rim.BeginAnimation(SolidColorBrush.ColorProperty, null);
+                _rim.Color = rimColor;
+            }
+            else
+            {
+                _rim.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(rimColor, time));
+            }
         }
     }
 
@@ -49,6 +57,12 @@ public sealed class Goo : FrameworkElement
     {
         _rimColor = color;
         Color to = color is { } c ? Color.FromArgb(TintedAlpha, c.R, c.G, c.B) : _baseRim;
+        if (time.HasTimeSpan && time.TimeSpan == TimeSpan.Zero)
+        {
+            _rim.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            _rim.Color = to;
+            return;
+        }
         _rim.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(to, time));
     }
 
@@ -58,7 +72,15 @@ public sealed class Goo : FrameworkElement
 
     public void Thin(bool glass, Duration time, Action thinned)
     {
-        var fade = new ColorAnimation(Color.FromArgb(glass ? _glassAlpha : byte.MaxValue, _baseFill.R, _baseFill.G, _baseFill.B), time);
+        Color targetColor = Color.FromArgb(glass ? _glassAlpha : byte.MaxValue, _baseFill.R, _baseFill.G, _baseFill.B);
+        if (time.HasTimeSpan && time.TimeSpan == TimeSpan.Zero)
+        {
+            _fill.BeginAnimation(SolidColorBrush.ColorProperty, null);
+            _fill.Color = targetColor;
+            thinned();
+            return;
+        }
+        var fade = new ColorAnimation(targetColor, time);
         fade.Completed += (_, _) => thinned();
         _fill.BeginAnimation(SolidColorBrush.ColorProperty, fade);
     }

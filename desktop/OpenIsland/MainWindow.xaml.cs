@@ -484,7 +484,16 @@ public partial class MainWindow : Window
 
     static bool Switch(string name) => Array.IndexOf(Environment.GetCommandLineArgs(), name) >= 0;
 
-    SolidColorBrush BrushResource(string key) => (SolidColorBrush)FindResource(key);
+    SolidColorBrush BrushResource(string key)
+    {
+        var brush = (SolidColorBrush)FindResource(key);
+        if (brush.IsFrozen)
+        {
+            brush = brush.Clone();
+            Resources[key] = brush;
+        }
+        return brush;
+    }
 
     public void ApplyThemeBrushes(ThemePalette p, Duration duration)
     {
@@ -503,6 +512,7 @@ public partial class MainWindow : Window
 
     static void AnimateBrush(SolidColorBrush brush, Color target, Duration duration)
     {
+        if (brush.IsFrozen) return;
         if (duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero)
             brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(target, duration));
         else
