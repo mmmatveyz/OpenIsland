@@ -199,16 +199,15 @@ public partial class MainWindow
         e.Handled = true;
         if (Native.IsCtrlDown) SwitchSource(-step);
         else if (_view == View.TimerSet) SetMinutes(_setupMinutes + step);
-        else if (_view == View.Look && SizeRow.IsMouseOver) SetScale(Settings.Scale + step * ScaleStep);
-        else if (_view == View.Look && GapRow.IsMouseOver) SetGap(Settings.Gap + step * GapStep);
-        else if (_view == View.Look && PillOpacityRow.IsMouseOver) SetPillOpacity(Settings.PillOpacity + step * ScaleStep);
-        else if (_view == View.Look && OpenOpacityRow.IsMouseOver) SetOpenOpacity(Settings.OpenOpacity + step * ScaleStep);
-        else if (_view == View.Look && LookOverflow > 0) ScrollLook(-step);
-        else if (_view == View.Settings && SettingsOverflow > 0) ScrollSettings(-step);
-        else if (_view == View.Update && UpdateNotesOverflow > 0) ScrollUpdateNotes(-step);
+        else if (_view == View.Look) { if (LookOverflow > 0) ScrollLook(-step); }
+        else if (_view == View.Settings) { if (SettingsOverflow > 0) ScrollSettings(-step); }
+        else if (_view == View.Update) { if (UpdateNotesOverflow > 0) ScrollUpdateNotes(-step); }
         else if (_view == View.MediaBig && Settings.AppVolume && _audio.AdjustAppVolume(_media.Source, step * WheelVolumeStep, out float level))
             ShowPlayerVolume(level, false, true);
-        else if (IsVolumeAtLimit(up)) OvershootVolume(up);
-        else _audio.AdjustVolume(step * WheelVolumeStep);
+        else if (_view is View.Idle or View.Sound or View.Media or View.Volume or View.Charge or View.Headset or View.Focus or View.Toast or View.Notice or View.MediaBig or View.IdleBig or View.Timer or View.TimerBig)
+        {
+            if (IsVolumeAtLimit(up)) OvershootVolume(up);
+            else _audio.AdjustVolume(step * WheelVolumeStep);
+        }
     }
 }
