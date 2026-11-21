@@ -28,9 +28,9 @@ public partial class MainWindow
 
         if (WeatherCityChangeButton != null)
         {
-            WeatherCityChangeButton.Content = _weather.IsManualLocation ? "Город *" : "Город";
+            WeatherCityChangeButton.Content = "Город";
             WeatherCityChangeButton.ToolTip = _weather.IsManualLocation
-                ? "Город задан вручную. Нажмите для смены или сброса на авто по IP"
+                ? "Город задан вручную (нажмите для смены или сброса на авто по IP)"
                 : "Выбрать другой город вручную";
         }
 
@@ -45,8 +45,7 @@ public partial class MainWindow
 
         if (WeatherCityText != null)
         {
-            string city = current.CityName.ToUpperInvariant();
-            WeatherCityText.Text = _weather.IsManualLocation ? $"{city} (РУЧН.)" : city;
+            WeatherCityText.Text = current.CityName.ToUpperInvariant();
         }
 
         if (WeatherBigTemp != null) WeatherBigTemp.Text = current.FormattedTemp;
@@ -122,6 +121,15 @@ public partial class MainWindow
             pill.Child = stack;
 
             WeatherHourlyList.Children.Add(pill);
+        }
+    }
+
+    void WeatherHourlyScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        if (WeatherHourlyScroll != null)
+        {
+            WeatherHourlyScroll.ScrollToHorizontalOffset(WeatherHourlyScroll.HorizontalOffset - (e.Delta * 0.75));
+            e.Handled = true;
         }
     }
 

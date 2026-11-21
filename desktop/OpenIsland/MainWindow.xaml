@@ -1815,10 +1815,8 @@
                                         </Border>
                                     </UniformGrid>
                                     <TextBlock Style="{StaticResource Caption}" Text="ПРОГНОЗ ПО ЧАСАМ" Margin="4,0,0,6"/>
-                                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,10">
-                                        <ScrollViewer.Resources>
-                                            <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
-                                        </ScrollViewer.Resources>
+                                    <ScrollViewer x:Name="WeatherHourlyScroll" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                                                  PreviewMouseWheel="WeatherHourlyScroll_PreviewMouseWheel" Margin="0,0,0,10">
                                         <StackPanel x:Name="WeatherHourlyList" Orientation="Horizontal"/>
                                     </ScrollViewer>
                                     <TextBlock x:Name="WeatherUpdatedText" Text="" FontSize="10" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
