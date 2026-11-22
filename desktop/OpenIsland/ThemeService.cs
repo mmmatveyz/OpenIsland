@@ -76,6 +76,23 @@ public static class ThemeService
         return p with { GlassAlpha = adjustedAlpha };
     }
 
+    /// <summary>
+    /// Плотность заливки тела островка при включённом стекле.
+    /// Нативный «host backdrop» (акрил) следует за темой Windows, а не за темой
+    /// приложения: на тёмной Windows он всегда тёмный. Поэтому в светлой теме
+    /// заливка должна быть почти непрозрачной — иначе островок остаётся тёмным.
+    /// </summary>
+    public static byte GetGlassFillAlpha(ThemePalette palette) =>
+        palette.IsDark ? palette.GlassAlpha : LightGlassFillAlpha(Settings.GlassStyle);
+
+    static byte LightGlassFillAlpha(GlassStyle style) => style switch
+    {
+        GlassStyle.Frosted => 0xF5,
+        GlassStyle.Tinted => 0xE2,
+        GlassStyle.Crystal => 0xCE,
+        _ => 0xCE
+    };
+
     static ThemePalette ResolveDark(ThemePreset preset) => preset switch
     {
         ThemePreset.Oled => new ThemePalette(
@@ -254,7 +271,7 @@ public static class ThemeService
         window.ApplyThemeBrushes(p, duration);
 
         // Update Goo capsule fill & rim
-        window.Body.ApplyPalette(p.IslandFill, p.IslandRim, p.GlassAlpha, Settings.Glass, duration);
+        window.Body.ApplyPalette(p.IslandFill, p.IslandRim, GetGlassFillAlpha(p), Settings.Glass, duration);
 
         // Update media player accent & rim if needed
         window.SyncAccent(animate);

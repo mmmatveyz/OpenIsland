@@ -108,6 +108,29 @@ public class ThemeTests
     [InlineData(ThemePreset.Oled)]
     [InlineData(ThemePreset.Nord)]
     [InlineData(ThemePreset.Cyberpunk)]
+    public void GetGlassFillAlpha_LightMode_IsNearlyOpaque(ThemePreset preset)
+    {
+        ThemePalette p = ThemeService.Resolve(ThemeMode.Light, preset);
+        byte alpha = ThemeService.GetGlassFillAlpha(p);
+        Assert.True(alpha >= 0xC0, $"Light glass fill alpha ({alpha:X2}) should be nearly opaque (>= 0xC0)");
+    }
+
+    [Theory]
+    [InlineData(ThemePreset.Default)]
+    [InlineData(ThemePreset.Oled)]
+    [InlineData(ThemePreset.Nord)]
+    [InlineData(ThemePreset.Cyberpunk)]
+    public void GetGlassFillAlpha_DarkMode_MatchesPaletteAlpha(ThemePreset preset)
+    {
+        ThemePalette p = ThemeService.Resolve(ThemeMode.Dark, preset);
+        Assert.Equal(p.GlassAlpha, ThemeService.GetGlassFillAlpha(p));
+    }
+
+    [Theory]
+    [InlineData(ThemePreset.Default)]
+    [InlineData(ThemePreset.Oled)]
+    [InlineData(ThemePreset.Nord)]
+    [InlineData(ThemePreset.Cyberpunk)]
     public void Contrast_LightMode_TextIsDark_BackgroundIsLight(ThemePreset preset)
     {
         ThemePalette p = ThemeService.Resolve(ThemeMode.Light, preset);

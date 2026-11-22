@@ -16,7 +16,6 @@ public partial class MainWindow
     /// <summary>Задачи короче этого порога уведомлением не сопровождаем — только звуком.</summary>
     static readonly TimeSpan TaskToastAfter = TimeSpan.FromSeconds(15);
 
-    static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
     static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
     static readonly Brush DangerBackground = Frozen(Color.FromArgb(0xFF, 0xFF, 0x45, 0x3A));
     static Brush DiffPatchBackground => Application.Current?.FindResource("CardSectionBackground") as Brush ?? Brushes.Transparent;
@@ -335,7 +334,8 @@ public partial class MainWindow
         if (!OpenCodeDiffButton.IsEnabled && _openCodeDiffsOpen) CloseOpenCodeDiffs();
 
         OpenCodeAppButton.Content = online ? "OpenCode Desktop" : "Запустить OpenCode";
-        OpenCodeAppButton.Background = online ? ChipBackground : AccentBackground;
+        if (online) OpenCodeAppButton.SetResourceReference(Control.BackgroundProperty, "ChipBackground");
+        else OpenCodeAppButton.Background = AccentBackground;
     }
 
     static string Shorten(string value, int maxLength)
