@@ -23,7 +23,7 @@ public partial class MainWindow
     {
         if (_ringing) return;
 
-        Brush tint = low ? _red : Brushes.White;
+        Brush tint = low ? _red : ThemeService.PrimaryBrush;
         HeadsetLabel.Text = name;
         HeadsetState.Text = low ? LowChargeLabel : ConnectedLabel;
         HeadsetState.Foreground = low ? _red : _dim;

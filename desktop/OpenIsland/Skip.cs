@@ -14,7 +14,8 @@ public sealed class Skip : FrameworkElement
     static readonly Duration StepTime = Ms(420);
 
     static readonly Geometry Triangle = Frozen(Geometry.Parse("M1,1 L11,7.5 L1,14 Z"));
-    static readonly Pen Line = Frozen(new Pen(Brushes.White, 2) { LineJoin = PenLineJoin.Round });
+
+    static Brush Ink => ThemeService.IsDark ? Brushes.White : ThemeService.PrimaryBrush;
 
     public static readonly DependencyProperty TurnProperty = DependencyProperty.Register(
         nameof(Turn), typeof(double), typeof(Skip),
@@ -66,7 +67,8 @@ public sealed class Skip : FrameworkElement
         dc.PushTransform(new TranslateTransform(x, 0));
         dc.PushTransform(new ScaleTransform(size, size, pivotX, PairHeight / 2));
         dc.PushOpacity(Math.Min(size * 2, 1));
-        dc.DrawGeometry(Brushes.White, Line, Triangle);
+        Brush ink = Ink;
+        dc.DrawGeometry(ink, new Pen(ink, 2) { LineJoin = PenLineJoin.Round }, Triangle);
         dc.Pop();
         dc.Pop();
         dc.Pop();

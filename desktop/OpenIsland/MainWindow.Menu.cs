@@ -283,7 +283,7 @@ public partial class MainWindow
         };
         if (found) UpdateButton.Background = _orange;
         else UpdateButton.ClearValue(BackgroundProperty);
-        UpdateButton.Foreground = found ? Brushes.Black : Brushes.White;
+        UpdateButton.Foreground = found ? Brushes.Black : ThemeService.PrimaryBrush;
 
         if (loading) ShowUpdateProgress();
         FitUpdatePage();

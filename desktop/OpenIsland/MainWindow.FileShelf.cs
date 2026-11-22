@@ -105,7 +105,7 @@ public partial class MainWindow
             Width = 26,
             Height = 26,
             Padding = new Thickness(0),
-            Content = new Icon { Kind = Glyph.Check, Width = 11, Height = 11, Fill = Brushes.White },
+            Content = new Icon { Kind = Glyph.Check, Width = 11, Height = 11, Fill = ThemeService.PrimaryBrush },
             ToolTip = "Скопировать путь к файлу",
             Margin = new Thickness(2, 0, 2, 0),
         };
@@ -129,7 +129,7 @@ public partial class MainWindow
             Width = 26,
             Height = 26,
             Padding = new Thickness(0),
-            Content = new Icon { Kind = Glyph.Pointer, Width = 11, Height = 11, Fill = Brushes.White },
+            Content = new Icon { Kind = Glyph.Pointer, Width = 11, Height = 11, Fill = ThemeService.PrimaryBrush },
             ToolTip = "Показать в Проводнике",
             Margin = new Thickness(2, 0, 2, 0),
         };

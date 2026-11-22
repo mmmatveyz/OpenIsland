@@ -126,7 +126,7 @@
 | Таймер | `MainWindow.Timer.cs`, `Countdown.cs`, `Digits.cs`, `Ring.cs` | Таймер: пресеты, точная настройка, кольцо прогресса, звонок |
 | Статус | `MainWindow.Status.cs`, `CoreAudio.cs`, `Headset.cs`, `NetworkService.cs` | Громкость, заряд, наушники, сеть |
 | Уведомления | `MainWindow.Notices.cs`, `DelayedAction.cs` | Очередь событийных карточек (сеть/VPN, наушники, таймер, click-through): карточка живёт `Settings.NoticeSeconds` (2–10 с, пресеты 2/3/4/6/8/10), следующая показывается после текущей; срочные (будильник) перебивают очередь, медиа-тост — карточку |
-| Внешний вид | `MainWindow.Menu.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации |
+| Внешний вид | `MainWindow.Menu.cs`, `ThemeService.cs`, `Toggle.cs`, `Aura.cs`, `StarField.cs`, `BackdropPreview.cs` | Масштаб, отступ, стекло, фон, акцент, вид эквалайзера, анимации; темы (`Тёмная`/`Светлая`/`Авто`), палитры, видимость виджетов, стили формы и стекла |
 | OpenCode | `MainWindow.OpenCode.cs`, `OpenCodeService*.cs`, `SessionList.cs`, `OpenCodeSelfTest.cs`, `Chime.cs` | AI Hub: список сессий (порядок, относительное время, поиск), модели, промпты, разрешения, стриминг, звук завершения задачи и тост о её окончании (иконка трея) |
 | Мониторинг ПК | `MainWindow.Perf.cs`, `PerfService.cs`, `PerfMath.cs` | CPU (`GetSystemTimes`), загрузка ядер (PDH), RAM (`GlobalMemoryStatusEx`), диск (PDH `% Disk Time` + свободное место), сеть (`NetworkInterface`), GPU (PDH), температура (WMI). Опрос — только пока карточка открыта (1 с под курсором, иначе 3 с) |
 | Процессы и порты | `MainWindow.Processes.cs`, `DevProcessService.cs`, `DevProcesses.cs`, `PortScanner.cs` | Dev-процессы и владельцы слушающих портов, режимы «Dev»/«Все», завершение в два шага. Порты — IP Helper API (`GetExtendedTcpTable`/`GetExtendedUdpTable`), опрос — только пока карточка открыта (2,5 с) |
@@ -162,6 +162,19 @@
 **Новые настройки** (реестр, страница оформления в `MainWindow.Menu.cs`): `EdgeWave` (вкл/выкл, по умолчанию включено), `EdgeWaveAmplitude` (0–20 px), `Lively` (дыхание и провис, по умолчанию включено).
 
 **Открытые вопросы.** Нужен ли вариант с шипами наружу (опция B) и не мешает ли он тени и стеклу; стоит ли отдавать амплитуду кромки на быстрые частоты отдельно (сейчас полосы уже разложены по частотам); как ведёт себя кромка в капсуле `View.Sound` без трека — там источник один peak, а не спектр.
+
+### 3.5. Темы, палитры и кастомизация (v1.3.0)
+
+`ThemeService.cs` — единственный источник цветов интерфейса:
+
+- `ThemePalette` — неизменяемая запись с полным набором цветов: заливка и кромка острова, три уровня текста (`TextPrimary`/`TextDim`/`TextFaint`), фон карточки и её секций, границы, выключенный тумблер, чипы, hover/pressed, тень и `GlassAlpha`.
+- `ThemeMode` — `Dark`, `Light`, `System`. В режиме `System` светлая/тёмная выбирается по `HKCU\...\Themes\Personalize\AppsUseLightTheme`; смена системной темы отслеживается через `SystemEvents.UserPreferenceChanged` (`WatchSystemTheme`).
+- `ThemePreset` — `Obsidian` (по умолчанию), `Oled`, `Nord`, `Cyberpunk`; для светлого и тёмного режима у каждого пресета своя палитра (`ResolveDark`/`ResolveLight`).
+- `GetAdjustedGlassAlpha(baseAlpha, style)` — прозрачность стекла по стилю (`Frosted`, `Tinted`, `Crystal`); чистая перегрузка с явным стилем используется в тестах, чтобы результат не зависел от настроек машины.
+
+**Как применяется.** `ThemeService.Apply` считает палитру, обновляет `PrimaryBrush`, вызывает `MainWindow.ApplyThemeBrushes` (плавная интерполяция цветов за ~240 мс), перекрашивает тело капсулы (`Body.ApplyPalette`), акцент медиа и кромку (`SyncAccent`/`SyncRim`).
+
+**Правило для нового UI.** В XAML использовать только `{DynamicResource TextPrimary|Dim|Faint|CardBackground|CardSubBackground|CardSectionBackground|CardBorder|ChipBackground|HoverBackground|PressedBackground|ShadowBrush}`. `ApplyThemeBrushes` подменяет сами объекты кистей в `Resources`, поэтому `{StaticResource ...}` после смены темы останется старым. Не хардкодить `White`/`Black` на нейтральных поверхностях: для кастомных контролов, которые рисуют через `DrawingContext`, брать `ThemeService.IsDark ? Brushes.White : ThemeService.PrimaryBrush` (пример — `LineBar`, `Scrubber`, `Skip`), а для текста, созданного в коде, — `ThemeService.PrimaryBrush`.
 
 ---
 

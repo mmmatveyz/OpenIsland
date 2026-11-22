@@ -43,13 +43,14 @@ public class CustomizationTests
     [Fact]
     public void GetAdjustedGlassAlpha_ProducesCorrectValues()
     {
-        byte frostedAlpha = ThemeService.GetAdjustedGlassAlpha(153);
+        // Явный стиль, чтобы результат не зависел от настроек машины.
+        byte frostedAlpha = ThemeService.GetAdjustedGlassAlpha(153, GlassStyle.Frosted);
+        byte tintedAlpha = ThemeService.GetAdjustedGlassAlpha(153, GlassStyle.Tinted);
+        byte crystalAlpha = ThemeService.GetAdjustedGlassAlpha(153, GlassStyle.Crystal);
+
         Assert.Equal(153, frostedAlpha);
-
-        // When GlassStyle is set to Tinted or Crystal, alpha decreases
-        byte tintedAlpha = (byte)Math.Clamp((int)(153 * 0.65), 20, 255);
-        byte crystalAlpha = (byte)Math.Clamp((int)(153 * 0.35), 10, 255);
-
+        Assert.Equal(99, tintedAlpha);
+        Assert.Equal(53, crystalAlpha);
         Assert.True(crystalAlpha < tintedAlpha, "Crystal alpha must be more transparent than Tinted");
         Assert.True(tintedAlpha < frostedAlpha, "Tinted alpha must be more transparent than Frosted");
     }

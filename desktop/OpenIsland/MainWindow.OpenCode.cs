@@ -518,7 +518,7 @@ public partial class MainWindow
         {
             Text = session.Title,
             FontSize = 12.5,
-            Foreground = Brushes.White,
+            Foreground = ThemeService.PrimaryBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
         if (detail.Length > 0)
@@ -688,7 +688,7 @@ public partial class MainWindow
         {
             Text = diff.Name,
             FontSize = 12.5,
-            Foreground = Brushes.White,
+            Foreground = ThemeService.PrimaryBrush,
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
         string detail = diff.Folder.Length > 0 ? diff.Folder : diff.StatusLabel;

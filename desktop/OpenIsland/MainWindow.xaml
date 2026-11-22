@@ -264,7 +264,7 @@
         <Style x:Key="StretchButton" TargetType="Button">
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -553,8 +553,8 @@
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="VolStretch"/>
                         </Grid.RenderTransform>
-                        <Border CornerRadius="2.5" Background="#33FFFFFF"/>
-                        <Border x:Name="VolFill" CornerRadius="2.5" Background="White" HorizontalAlignment="Left" Width="0"/>
+                        <Border CornerRadius="2.5" Background="{DynamicResource ChipBackground}"/>
+                        <Border x:Name="VolFill" CornerRadius="2.5" Background="{DynamicResource TextPrimary}" HorizontalAlignment="Left" Width="0"/>
                     </Grid>
                     <local:Digits x:Name="VolText" Grid.Column="2" Text="0" FontSize="12.5" FontWeight="SemiBold"
                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -577,10 +577,10 @@
                         <local:Digits x:Name="ChargeText" Text="100%" FontSize="13" FontWeight="SemiBold" Foreground="#30D158"
                                       VerticalAlignment="Center"/>
                         <Grid Width="27" Height="13" Margin="7,0,0,0" VerticalAlignment="Center">
-                            <Border Width="24" HorizontalAlignment="Left" CornerRadius="4" BorderBrush="{StaticResource Faint}" BorderThickness="1"/>
+                            <Border Width="24" HorizontalAlignment="Left" CornerRadius="4" BorderBrush="{DynamicResource Faint}" BorderThickness="1"/>
                             <Border x:Name="ChargeFill" Width="20" Height="9" Margin="2,0,0,0" CornerRadius="2.5" Background="#30D158"
                                     HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                            <Border Width="2" Height="5" CornerRadius="0,1,1,0" Background="{StaticResource Faint}"
+                            <Border Width="2" Height="5" CornerRadius="0,1,1,0" Background="{DynamicResource Faint}"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
@@ -596,10 +596,10 @@
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,20,0">
                         <local:Digits x:Name="HeadsetPercent" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         <Grid Width="27" Height="13" Margin="7,0,0,0" VerticalAlignment="Center">
-                            <Border Width="24" HorizontalAlignment="Left" CornerRadius="4" BorderBrush="{StaticResource Faint}" BorderThickness="1"/>
+                            <Border Width="24" HorizontalAlignment="Left" CornerRadius="4" BorderBrush="{DynamicResource Faint}" BorderThickness="1"/>
                             <Border x:Name="HeadsetFill" Width="0" Height="9" Margin="2,0,0,0" CornerRadius="2.5"
                                     HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                            <Border Width="2" Height="5" CornerRadius="0,1,1,0" Background="{StaticResource Faint}"
+                            <Border Width="2" Height="5" CornerRadius="0,1,1,0" Background="{DynamicResource Faint}"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"/>
                         </Grid>
                     </StackPanel>
@@ -625,13 +625,13 @@
                 <Grid x:Name="ToastView" Width="340" Height="68" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <StackPanel Margin="68,0,58,0" VerticalAlignment="Center">
                         <TextBlock x:Name="ToastTitle" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock x:Name="ToastArtist" FontSize="12" Foreground="{StaticResource Dim}" Margin="0,1,0,0"
+                        <TextBlock x:Name="ToastArtist" FontSize="12" Foreground="{DynamicResource Dim}" Margin="0,1,0,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Grid>
 
                 <Grid x:Name="NoticeView" Width="320" Height="64" HorizontalAlignment="Center" VerticalAlignment="Top">
-                    <Border x:Name="NoticeBack" Width="40" Height="40" CornerRadius="11" Background="#1FFFFFFF"
+                    <Border x:Name="NoticeBack" Width="40" Height="40" CornerRadius="11" Background="{DynamicResource ChipBackground}"
                             HorizontalAlignment="Left" Margin="12,0,0,0">
                         <local:Icon x:Name="NoticeIcon" Width="22" Height="22" RenderTransformOrigin="0.5,0.5">
                             <local:Icon.RenderTransform>
@@ -645,7 +645,7 @@
                     </Border>
                     <StackPanel Margin="64,0,22,0" VerticalAlignment="Center">
                         <TextBlock x:Name="NoticeTitle" FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock x:Name="NoticeText" FontSize="12" Foreground="{StaticResource Dim}" Margin="0,1,0,0"
+                        <TextBlock x:Name="NoticeText" FontSize="12" Foreground="{DynamicResource Dim}" Margin="0,1,0,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Grid>
@@ -658,7 +658,7 @@
                     <Grid Height="64" Margin="20,20,22,0" VerticalAlignment="Top">
                         <StackPanel Margin="78,0,52,0" VerticalAlignment="Center">
                             <TextBlock x:Name="TitleBig" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock x:Name="ArtistBig" FontSize="13" Foreground="{StaticResource Dim}" Margin="0,2,0,0"
+                            <TextBlock x:Name="ArtistBig" FontSize="13" Foreground="{DynamicResource Dim}" Margin="0,2,0,0"
                                        TextTrimming="CharacterEllipsis"/>
                         </StackPanel>
                     </Grid>
@@ -669,7 +669,7 @@
                             <ColumnDefinition/>
                             <ColumnDefinition Width="40"/>
                         </Grid.ColumnDefinitions>
-                        <local:Digits x:Name="PosText" Text="–:––" FontSize="11" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                        <local:Digits x:Name="PosText" Text="–:––" FontSize="11" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                         <Border x:Name="SeekArea" Grid.Column="1" Background="Transparent" Cursor="Hand"
                                 MouseLeftButtonDown="Seek_MouseLeftButtonDown" MouseMove="Seek_MouseMove"
                                 MouseLeftButtonUp="Seek_MouseLeftButtonUp" LostMouseCapture="Seek_LostMouseCapture">
@@ -677,7 +677,7 @@
                                 <local:LineBar x:Name="SeekPlain" IsHitTestVisible="False"/>
                             </Grid>
                         </Border>
-                        <local:Digits x:Name="RemText" Grid.Column="2" Text="–:––" FontSize="11" Foreground="{StaticResource Dim}"
+                        <local:Digits x:Name="RemText" Grid.Column="2" Text="–:––" FontSize="11" Foreground="{DynamicResource Dim}"
                                       HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
 
@@ -688,9 +688,9 @@
                         </Button>
                         <Button Style="{StaticResource IconButton}" Width="52" Height="52" Margin="16,0" Click="Play_Click">
                             <Grid>
-                                <Path x:Name="PlayIcon" Data="M2,1 L16,10 L2,19 Z" Fill="White" Stroke="White" Margin="4,0,0,0"
+                                <Path x:Name="PlayIcon" Data="M2,1 L16,10 L2,19 Z" Fill="{DynamicResource TextPrimary}" Stroke="{DynamicResource TextPrimary}" Margin="4,0,0,0"
                                       StrokeThickness="2.5" StrokeLineJoin="Round"/>
-                                <Path x:Name="PauseIcon" Data="M1,1 H6 V19 H1 Z M12,1 H17 V19 H12 Z" Fill="White" Stroke="White"
+                                <Path x:Name="PauseIcon" Data="M1,1 H6 V19 H1 Z M12,1 H17 V19 H12 Z" Fill="{DynamicResource TextPrimary}" Stroke="{DynamicResource TextPrimary}"
                                       StrokeThickness="2" StrokeLineJoin="Round" Opacity="0"/>
                             </Grid>
                         </Button>
@@ -704,16 +704,16 @@
                                 HorizontalAlignment="Right" VerticalAlignment="Bottom" IsHitTestVisible="False"
                                 Visibility="Collapsed">
                         <local:Icon x:Name="PlayerHeadsetIcon" Kind="Headphones" Width="14" Height="14"
-                                    Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
-                        <local:Digits x:Name="PlayerHeadsetText" FontSize="11" Foreground="{StaticResource Dim}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    Fill="{DynamicResource Dim}" VerticalAlignment="Center"/>
+                        <local:Digits x:Name="PlayerHeadsetText" FontSize="11" Foreground="{DynamicResource Dim}" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel x:Name="PlayerVolume" Orientation="Horizontal" Height="52" Margin="20,0,0,8"
                                 HorizontalAlignment="Left" VerticalAlignment="Bottom" IsHitTestVisible="False"
                                 Opacity="0">
                         <local:Icon x:Name="PlayerVolumeIcon" Kind="Note" Width="14" Height="14"
-                                    Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
-                        <local:Digits x:Name="PlayerVolumeText" FontSize="11" Foreground="{StaticResource Dim}" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    Fill="{DynamicResource Dim}" VerticalAlignment="Center"/>
+                        <local:Digits x:Name="PlayerVolumeText" FontSize="11" Foreground="{DynamicResource Dim}" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
 
@@ -722,7 +722,7 @@
                         <local:Digits x:Name="BigClock" Text="00:00" FontSize="46" FontWeight="SemiBold"
                                       FontFamily="{StaticResource Display}"/>
                         <StackPanel Orientation="Horizontal" Margin="2,-4,0,0">
-                            <TextBlock x:Name="BigDate" FontSize="13" Foreground="{StaticResource Dim}"/>
+                            <TextBlock x:Name="BigDate" FontSize="13" Foreground="{DynamicResource Dim}"/>
                             <local:Icon x:Name="InfoFocus" Kind="Moon" Width="13" Height="13" Fill="{StaticResource Indigo}"
                                         Margin="6,1,0,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                         </StackPanel>
@@ -736,21 +736,21 @@
                     <StackPanel Margin="0,0,24,0" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <local:Icon x:Name="InfoVolIcon" Kind="Loud" Width="16" Height="16"
-                                        Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                        Fill="{DynamicResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoVol" Text="—" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel x:Name="InfoHeadsetRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
                                     Visibility="Collapsed">
                             <local:Icon x:Name="InfoHeadsetIcon" Kind="Headphones" Width="16" Height="16"
-                                        Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                        Fill="{DynamicResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoHeadset" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel x:Name="InfoBatRow" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0"
                                     Visibility="Collapsed">
                             <local:Icon Kind="Battery" Width="16" Height="16"
-                                        Fill="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                        Fill="{DynamicResource Dim}" VerticalAlignment="Center"/>
                             <local:Digits x:Name="InfoBat" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0"
                                           VerticalAlignment="Center"/>
                         </StackPanel>
@@ -774,8 +774,8 @@
                         </Button>
                         <Button Style="{StaticResource IconButton}" Width="50" Height="50" Margin="10,0,0,0" Click="TimerCancel_Click">
                             <Grid Width="50" Height="50">
-                                <Ellipse Fill="#2EFFFFFF"/>
-                                <Path Data="M1,1 L13,13 M13,1 L1,13" Stroke="White" StrokeThickness="2.4"
+                                <Ellipse Fill="{DynamicResource ChipBackground}"/>
+                                <Path Data="M1,1 L13,13 M13,1 L1,13" Stroke="{DynamicResource TextPrimary}" StrokeThickness="2.4"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>
@@ -994,7 +994,7 @@
                                     <Grid>
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Timer"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Время уведомлений"/>
-                                        <TextBlock x:Name="NoticeTimeValue" Foreground="{StaticResource Dim}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                                        <TextBlock x:Name="NoticeTimeValue" Foreground="{DynamicResource Dim}" VerticalAlignment="Center" HorizontalAlignment="Right"/>
                                     </Grid>
                                 </Button>
                                 <Button Style="{StaticResource RowButton}" Click="Clipboard_Click">
@@ -1037,7 +1037,7 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Update"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Обновление"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <TextBlock x:Name="UpdateText" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="UpdateText" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                             <local:Icon Style="{StaticResource RowChevron}" Margin="8,1,0,0"/>
                                         </StackPanel>
                                     </Grid>
@@ -1053,9 +1053,9 @@
                             <Button Style="{StaticResource BackButton}" Content="ОБНОВЛЕНИЕ" Click="UpdateBack_Click"/>
                         </local:RowList>
                         <StackPanel Orientation="Horizontal" Margin="12,2,12,0">
-                            <TextBlock x:Name="UpdateVersion" FontSize="30" FontWeight="SemiBold" Foreground="White"
+                            <TextBlock x:Name="UpdateVersion" FontSize="30" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
                                        FontFamily="{StaticResource Display}"/>
-                            <TextBlock x:Name="UpdateFrom" FontSize="13.5" Foreground="{StaticResource Dim}"
+                            <TextBlock x:Name="UpdateFrom" FontSize="13.5" Foreground="{DynamicResource Dim}"
                                        Margin="9,0,0,5" VerticalAlignment="Bottom"/>
                         </StackPanel>
                         <StackPanel x:Name="UpdateNotes" Margin="12,10,12,0">
@@ -1070,7 +1070,7 @@
                                     </LinearGradientBrush>
                                 </Border.OpacityMask>
                                 <StackPanel>
-                                    <TextBlock x:Name="UpdateNotesText" FontSize="12.5" Foreground="{StaticResource Dim}"
+                                    <TextBlock x:Name="UpdateNotesText" FontSize="12.5" Foreground="{DynamicResource Dim}"
                                                TextWrapping="Wrap" LineHeight="18" LineStackingStrategy="BlockLineHeight">
                                         <TextBlock.RenderTransform>
                                             <TranslateTransform x:Name="UpdateNotesMove"/>
@@ -1090,8 +1090,8 @@
                                         <ScaleTransform ScaleX="-1"/>
                                     </local:Ring.RenderTransform>
                                 </local:Ring>
-                                <TextBlock Text="Скачиваю" FontSize="13.5" Foreground="White" Margin="34,0,0,0" VerticalAlignment="Center"/>
-                                <TextBlock x:Name="UpdateBytes" FontSize="13.5" Foreground="{StaticResource Dim}"
+                                <TextBlock Text="Скачиваю" FontSize="13.5" Foreground="{DynamicResource TextPrimary}" Margin="34,0,0,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="UpdateBytes" FontSize="13.5" Foreground="{DynamicResource Dim}"
                                            HorizontalAlignment="Right" VerticalAlignment="Center"/>
                             </Grid>
                         </Grid>
@@ -1320,7 +1320,7 @@
                                         <local:Icon Style="{StaticResource RowIcon}" Kind="Pointer"/>
                                         <TextBlock Style="{StaticResource RowLabel}" Text="Наведение"/>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                            <TextBlock x:Name="HoverText" Foreground="{StaticResource Dim}" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="HoverText" Foreground="{DynamicResource Dim}" VerticalAlignment="Center"/>
                                             <local:Icon x:Name="HoverChevron" Style="{StaticResource RowChevron}" Margin="8,1,0,0"
                                                         RenderTransformOrigin="0.5,0.5">
                                                 <local:Icon.RenderTransform>
@@ -1346,7 +1346,7 @@
                                 <Grid Height="40" Margin="12,0">
                                     <local:Icon Style="{StaticResource RowIcon}" Kind="Drop"/>
                                     <TextBlock Style="{StaticResource RowLabel}" Text="Акцентный цвет" FontSize="13.5"/>
-                                    <TextBlock x:Name="AccentText" FontSize="13.5" Foreground="{StaticResource Dim}"
+                                    <TextBlock x:Name="AccentText" FontSize="13.5" Foreground="{DynamicResource Dim}"
                                                HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                 </Grid>
                                 <UniformGrid x:Name="AccentStrip" Rows="1" Height="30" Margin="8,0">
@@ -1401,13 +1401,13 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <local:Icon Grid.Column="0" Kind="Segments" Width="14" Height="14" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <local:Icon Grid.Column="0" Kind="Segments" Width="14" Height="14" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock x:Name="OpenCodeTaskTitle" Text="Нет активной сессии" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock x:Name="OpenCodeSubText" Text="OpenCode офлайн" FontSize="10.5" Foreground="#8E8E93" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                                             </StackPanel>
                                             <TextBlock x:Name="OpenCodeSessionCounter" Grid.Column="2" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="6,0,4,0"/>
-                                            <local:Icon x:Name="OpenCodeSessionChevron" Grid.Column="3" Kind="Chevron" Width="11" Height="11" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,1,0,0" RenderTransformOrigin="0.5,0.5"/>
+                                            <local:Icon x:Name="OpenCodeSessionChevron" Grid.Column="3" Kind="Chevron" Width="11" Height="11" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,1,0,0" RenderTransformOrigin="0.5,0.5"/>
                                         </Grid>
                                     </Button>
                                     <Button x:Name="OpenCodeDeleteSession" Grid.Column="1" Style="{StaticResource ChipButton}" Width="26" Height="26" Padding="0" Margin="2,0,0,0" Content="&#xD7;" Click="OpenCodeDeleteSession_Click" ToolTip="Удалить текущую сессию"/>
@@ -1432,7 +1432,7 @@
                                              KeyDown="OpenCodePromptBox_KeyDown" TextChanged="OpenCodePromptBox_TextChanged"
                                              GotFocus="OpenCodePromptBox_GotFocus" PreviewMouseLeftButtonDown="OpenCodePromptBox_MouseDown"/>
                                     <TextBlock x:Name="OpenCodePromptHint" Text="Дать задачу агенту..." FontSize="12.5"
-                                               Foreground="{StaticResource Dim}" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Dim}" VerticalAlignment="Center"
                                                Margin="0,0,30,0" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
                                     <Button x:Name="OpenCodeSendIcon" Style="{StaticResource PlainButton}" HorizontalAlignment="Right" Width="24" Height="24" Click="OpenCodeSend_Click">
                                         <local:Icon Kind="Sparkle" Width="13" Height="13" Fill="{StaticResource Indigo}"/>
@@ -1445,7 +1445,7 @@
                                     <Button x:Name="OpenCodeOlderButton" Style="{StaticResource PlainButton}" Height="22" Margin="0,0,0,4"
                                             Click="OpenCodeOlder_Click" Visibility="Collapsed" ToolTip="Загрузить более ранние сообщения">
                                         <TextBlock x:Name="OpenCodeOlderText" Text="Показать раньше" FontSize="10.5"
-                                                   Foreground="{StaticResource Dim}" HorizontalAlignment="Center"/>
+                                                   Foreground="{DynamicResource Dim}" HorizontalAlignment="Center"/>
                                     </Button>
                                     <ScrollViewer x:Name="OpenCodeAnswerScroll" MaxHeight="172" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                                                   ScrollChanged="OpenCodeAnswerScroll_ScrollChanged">
@@ -1542,7 +1542,7 @@
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                                     <Button x:Name="OpenCodeDiffButton" Style="{StaticResource ChipButton}" Height="30" Padding="10,0" Margin="0,0,6,0" Click="OpenCodeDiffs_Click" ToolTip="Что агент изменил в файлах">
                                         <StackPanel Orientation="Horizontal">
-                                            <local:Icon x:Name="OpenCodeDiffIcon" Kind="Lines" Width="12" Height="12" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                            <local:Icon x:Name="OpenCodeDiffIcon" Kind="Lines" Width="12" Height="12" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,5,0"/>
                                             <TextBlock x:Name="OpenCodeDiffButtonText" Text="Изменения" FontSize="11" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button>
@@ -1569,11 +1569,11 @@
 
                                 <Grid Grid.Row="0" Height="32" Margin="12,8,8,4">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <local:Icon Kind="Segments" Width="13" Height="13" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <local:Icon Kind="Segments" Width="13" Height="13" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Style="{StaticResource Caption}" Text="СЕССИИ" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <Button Style="{StaticResource PlainButton}" Width="30" Height="30" HorizontalAlignment="Right" Click="OpenCodeSessionClose_Click" ToolTip="Закрыть список">
-                                        <local:Icon Kind="Cross" Width="14" Height="14" Fill="{StaticResource Dim}"/>
+                                        <local:Icon Kind="Cross" Width="14" Height="14" Fill="{DynamicResource Dim}"/>
                                     </Button>
                                 </Grid>
 
@@ -1584,7 +1584,7 @@
                                                  FontSize="12" CaretBrush="{DynamicResource TextPrimary}" VerticalAlignment="Center" Padding="0"
                                                  TextChanged="OpenCodeSessionSearch_TextChanged"/>
                                         <TextBlock x:Name="OpenCodeSessionSearchHint" Text="Поиск по названию или папке" FontSize="12"
-                                                   Foreground="{StaticResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"
+                                                   Foreground="{DynamicResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"
                                                    TextTrimming="CharacterEllipsis"/>
                                     </Grid>
                                 </Border>
@@ -1598,7 +1598,7 @@
                                 </ScrollViewer>
 
                                 <TextBlock x:Name="OpenCodeSessionEmpty" Grid.Row="2" Text="Сессий пока нет" FontSize="12"
-                                           Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                            Margin="0,0,0,8" Visibility="Collapsed"/>
                             </Grid>
                         </Border>
@@ -1616,16 +1616,16 @@
 
                                 <Grid Grid.Row="0" Height="32" Margin="12,8,8,4">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <local:Icon Kind="Lines" Width="13" Height="13" Fill="{StaticResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <local:Icon Kind="Lines" Width="13" Height="13" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Style="{StaticResource Caption}" Text="ИЗМЕНЕНИЯ" VerticalAlignment="Center"/>
                                         <TextBlock x:Name="OpenCodeDiffSummary" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                         <Button x:Name="OpenCodeDiffRefresh" Style="{StaticResource PlainButton}" Width="30" Height="30" Margin="0,0,4,0" Click="OpenCodeDiffRefresh_Click" ToolTip="Обновить">
-                                            <local:Icon Kind="Update" Width="14" Height="14" Fill="{StaticResource Dim}"/>
+                                            <local:Icon Kind="Update" Width="14" Height="14" Fill="{DynamicResource Dim}"/>
                                         </Button>
                                         <Button Style="{StaticResource PlainButton}" Width="30" Height="30" Click="OpenCodeDiffClose_Click" ToolTip="Закрыть">
-                                            <local:Icon Kind="Cross" Width="14" Height="14" Fill="{StaticResource Dim}"/>
+                                            <local:Icon Kind="Cross" Width="14" Height="14" Fill="{DynamicResource Dim}"/>
                                         </Button>
                                     </StackPanel>
                                 </Grid>
@@ -1639,7 +1639,7 @@
                                 </ScrollViewer>
 
                                 <TextBlock x:Name="OpenCodeDiffEmpty" Grid.Row="1" Text="Нет изменений" FontSize="12"
-                                           Foreground="{StaticResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Dim}" HorizontalAlignment="Center" VerticalAlignment="Center"
                                            TextAlignment="Center" TextWrapping="Wrap" Margin="24,0,24,8" Visibility="Collapsed"/>
                             </Grid>
                         </Border>
@@ -1804,13 +1804,13 @@
                                     <UniformGrid Columns="2" Margin="0,0,0,4">
                                         <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ColorPicker_Click" ToolTip="Пипетка цвета на экране (Ctrl+Alt+C)">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <local:Icon Kind="Drop" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
+                                                <local:Icon Kind="Drop" Width="14" Height="14" Fill="{DynamicResource Dim}" Margin="0,0,8,0"/>
                                                 <TextBlock Text="Пипетка" FontSize="12" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
                                         <Button Style="{StaticResource ChipButton}" Height="40" Margin="2" Click="ScreenOcr_Click" ToolTip="Распознавание текста с экрана (Ctrl+Alt+X)">
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                <local:Icon Kind="PointerText" Width="14" Height="14" Fill="{StaticResource Dim}" Margin="0,0,8,0"/>
+                                                <local:Icon Kind="PointerText" Width="14" Height="14" Fill="{DynamicResource Dim}" Margin="0,0,8,0"/>
                                                 <TextBlock Text="Текст (OCR)" FontSize="12" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Button>
@@ -1849,7 +1849,7 @@
                                 <StackPanel x:Name="ClipboardList"/>
                             </ScrollViewer>
                             <TextBlock x:Name="ClipboardEmpty" Grid.Row="1" Text="Скопируйте что-нибудь &#8212; история появится здесь"
-                                       FontSize="12" Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                       FontSize="12" Foreground="{DynamicResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
                                        MaxWidth="240" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
                         </Grid>
                     </Border>
@@ -1888,7 +1888,7 @@
                                                          GotFocus="WeatherCitySearchBox_GotFocus" PreviewMouseLeftButtonDown="WeatherCitySearchBox_MouseDown"
                                                          KeyDown="WeatherCitySearchBox_KeyDown" TextChanged="WeatherCitySearchBox_TextChanged"/>
                                                 <TextBlock x:Name="WeatherCitySearchHint" Text="Поиск города (например: Сочи)..." FontSize="11.5"
-                                                           Foreground="{StaticResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                                                           Foreground="{DynamicResource Dim}" VerticalAlignment="Center" IsHitTestVisible="False"/>
                                             </Grid>
                                         </Border>
                                         <Button Grid.Column="1" Style="{StaticResource ChipButton}" Height="26" Padding="8,0" Content="Найти" Click="WeatherCityFind_Click"/>
@@ -1898,7 +1898,7 @@
                                         <Button Style="{StaticResource ChipButton}" Height="22" Padding="8,0" Content="Закрыть" Click="WeatherCityPanelClose_Click" Margin="6,0,0,0"/>
                                     </StackPanel>
                                     <StackPanel x:Name="WeatherCitySearchResults" Margin="0,2,0,0"/>
-                                    <TextBlock x:Name="WeatherCitySearchStatus" Text="" FontSize="11" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="WeatherCitySearchStatus" Text="" FontSize="11" Foreground="{DynamicResource Dim}" HorizontalAlignment="Center" Margin="0,4,0,0" Visibility="Collapsed"/>
                                 </StackPanel>
                             </Border>
                             <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -1915,7 +1915,7 @@
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
                                                 <TextBlock x:Name="WeatherBigTemp" Text="+0°" FontSize="38" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" Margin="0,0,0,2"/>
                                                 <TextBlock x:Name="WeatherConditionText" Text="Загрузка прогноза..." FontSize="13" FontWeight="Medium" Foreground="{DynamicResource TextPrimary}"/>
-                                                <TextBlock x:Name="WeatherFeelsText" Text="" FontSize="11" Foreground="{StaticResource Dim}" Margin="0,2,0,0"/>
+                                                <TextBlock x:Name="WeatherFeelsText" Text="" FontSize="11" Foreground="{DynamicResource Dim}" Margin="0,2,0,0"/>
                                             </StackPanel>
                                             <local:Icon x:Name="WeatherIcon" Grid.Column="1" Kind="CloudSun" Width="46" Height="46" Fill="{StaticResource Indigo}" VerticalAlignment="Center" Margin="10,0,4,0"/>
                                         </Grid>
@@ -1945,7 +1945,7 @@
                                                   PreviewMouseWheel="WeatherHourlyScroll_PreviewMouseWheel" Margin="0,0,0,10">
                                         <StackPanel x:Name="WeatherHourlyList" Orientation="Horizontal"/>
                                     </ScrollViewer>
-                                    <TextBlock x:Name="WeatherUpdatedText" Text="" FontSize="10" Foreground="{StaticResource Dim}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    <TextBlock x:Name="WeatherUpdatedText" Text="" FontSize="10" Foreground="{DynamicResource Dim}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                     <ProgressBar x:Name="WeatherLoading" IsIndeterminate="True" Height="2" Foreground="{StaticResource Indigo}" Background="Transparent" BorderThickness="0" Margin="0,4,0,0" Visibility="Collapsed"/>
                                 </StackPanel>
                             </ScrollViewer>
@@ -1978,9 +1978,9 @@
                                 <StackPanel x:Name="ShelfList"/>
                             </ScrollViewer>
                             <TextBlock x:Name="ShelfEmpty" Grid.Row="1" Text="Перетащите файлы на остров &#8212; они останутся на полке для быстрого доступа"
-                                       FontSize="12" Foreground="{StaticResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
+                                       FontSize="12" Foreground="{DynamicResource Dim}" TextAlignment="Center" TextWrapping="Wrap"
                                        MaxWidth="250" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="ShelfCountText" Grid.Row="2" FontSize="10.5" Foreground="{StaticResource Dim}" Margin="2,4,2,0"/>
+                            <TextBlock x:Name="ShelfCountText" Grid.Row="2" FontSize="10.5" Foreground="{DynamicResource Dim}" Margin="2,4,2,0"/>
                         </Grid>
                     </Border>
                 </Grid>
@@ -1996,7 +1996,7 @@
                         </TransformGroup>
                     </Grid.RenderTransform>
                     <Border Background="{StaticResource ArtPlaceholder}">
-                        <local:Icon Kind="Note" Width="30" Height="30" Fill="{StaticResource Dim}"/>
+                        <local:Icon Kind="Note" Width="30" Height="30" Fill="{DynamicResource Dim}"/>
                     </Border>
                     <local:Cover x:Name="Art" Radius="16"/>
                 </Grid>

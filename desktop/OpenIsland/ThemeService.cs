@@ -35,6 +35,8 @@ public static class ThemeService
 
     public static Brush PrimaryBrush => StaticPrimaryBrush;
 
+    public static SolidColorBrush PrimarySolidBrush => StaticPrimaryBrush;
+
     public static ThemeMode EffectiveThemeMode =>
         Settings.ThemeMode == ThemeMode.System
             ? (IsWindowsLightMode() ? ThemeMode.Light : ThemeMode.Dark)
@@ -55,7 +57,10 @@ public static class ThemeService
         return false;
     }
 
-    public static byte GetAdjustedGlassAlpha(byte baseAlpha) => Settings.GlassStyle switch
+    public static byte GetAdjustedGlassAlpha(byte baseAlpha) =>
+        GetAdjustedGlassAlpha(baseAlpha, Settings.GlassStyle);
+
+    public static byte GetAdjustedGlassAlpha(byte baseAlpha, GlassStyle style) => style switch
     {
         GlassStyle.Frosted => baseAlpha,
         GlassStyle.Tinted => (byte)Math.Clamp((int)(baseAlpha * 0.65), 20, 255),

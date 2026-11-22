@@ -122,7 +122,7 @@ public partial class MainWindow
         if (!hasBattery) return;
 
         InfoBat.Text = percent + "%";
-        InfoBat.Foreground = plugged ? _green : Brushes.White;
+        InfoBat.Foreground = plugged ? _green : ThemeService.PrimaryBrush;
 
         if (_powerKnown && plugged && !_lastPlugged) ShowCharging(percent);
         _powerKnown = true;
@@ -161,7 +161,7 @@ public partial class MainWindow
         PlayerHeadset.SetVisible(known);
         InfoHeadsetIcon.Kind = PlayerHeadsetIcon.Kind = icon;
         InfoHeadset.Text = PlayerHeadsetText.Text = level + "%";
-        InfoHeadset.Foreground = low ? _red : Brushes.White;
+        InfoHeadset.Foreground = low ? _red : ThemeService.PrimaryBrush;
         PlayerHeadsetIcon.Fill = PlayerHeadsetText.Foreground = low ? _red : _dim;
         if (output == null) return;
 
@@ -170,7 +170,7 @@ public partial class MainWindow
         if (announce && known)
             ShowHeadset(name, HeadsetModel(device), level, low);
         else if (announce)
-            Notify(icon, Brushes.White, device.Kind.Length > 0 ? device.Kind : "Аудиоустройство", name);
+            Notify(icon, ThemeService.PrimarySolidBrush, device.Kind.Length > 0 ? device.Kind : "Аудиоустройство", name);
         else if (known && (Passed(HeadsetLowPercent) || Passed(HeadsetCriticalPercent)))
             ShowHeadset(name, HeadsetModel(device), level, true);
     }

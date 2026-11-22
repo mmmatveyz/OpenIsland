@@ -73,7 +73,7 @@ public partial class MainWindow
         _scrubbing = true;
         _scrubFraction = SeekFraction(e);
         _seekFill.Tune(900, 60);
-        PosText.Foreground = RemText.Foreground = Brushes.White;
+        PosText.Foreground = RemText.Foreground = ThemeService.PrimaryBrush;
         SeekArea.CaptureMouse();
     }
 

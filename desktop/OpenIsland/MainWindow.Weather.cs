@@ -284,7 +284,7 @@ public partial class MainWindow
             {
                 Text = city.DisplayName,
                 FontSize = 12,
-                Foreground = Brushes.White,
+                Foreground = ThemeService.PrimaryBrush,
                 VerticalAlignment = VerticalAlignment.Center,
                 TextTrimming = TextTrimming.CharacterEllipsis,
             };
