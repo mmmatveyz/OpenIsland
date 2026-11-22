@@ -144,7 +144,11 @@ public partial class MainWindow
     {
         Duration time = animate ? TintTime : Ms(0);
         _accentBrush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(AccentColor, time));
-        Color[] palette = Settings.Accent is { } own ? CoverPalette.Around(own) : _media.Palette;
+        Color[] palette = Settings.Accent is { } own
+            ? CoverPalette.Around(own)
+            : (_media.Palette.Length == 1 && _media.Palette[0] == Colors.White && !ThemeService.IsDark
+                ? [Color.FromRgb(0x1C, 0x1C, 0x1E)]
+                : _media.Palette);
         Glow.Tint(palette, time);
         PlayerMatrix.Tint(palette, time);
         foreach (RadioButton tile in BackdropStrip.Children) ((BackdropPreview)tile.Content).Tint(palette);

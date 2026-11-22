@@ -187,7 +187,7 @@ public sealed class Equalizer : FrameworkElement
             var center = new Point(x + BarWidth * presence / 2, y - size / 2);
             Brush shade = _shades.Of(fill, (UnlitOpacity + (LitOpacity - UnlitOpacity) * on + (1 - LitOpacity) * head) * presence * row);
             dc.DrawEllipse(shade, null, center, size / 2, size / 2);
-            if (head > 0.01) dc.DrawEllipse(Shades.White(HeadWhiteness * head * presence * row), null, center, size / 2, size / 2);
+            if (head > 0.01) dc.DrawEllipse(Shades.Auto(ThemeService.IsDark, HeadWhiteness * head * presence * row), null, center, size / 2, size / 2);
             y -= row * (BarWidth + gap);
         }
     }

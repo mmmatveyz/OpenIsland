@@ -19,7 +19,7 @@ public partial class MainWindow
     static readonly Brush ChipBackground = Frozen(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF));
     static readonly Brush AccentBackground = Frozen(Color.FromArgb(0xFF, 0x7D, 0x7A, 0xFF));
     static readonly Brush DangerBackground = Frozen(Color.FromArgb(0xFF, 0xFF, 0x45, 0x3A));
-    static readonly Brush DiffPatchBackground = Frozen(Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1E));
+    static Brush DiffPatchBackground => Application.Current?.FindResource("CardSectionBackground") as Brush ?? Brushes.Transparent;
     static readonly Brush DiffAddedLine = Frozen(Color.FromArgb(0x2E, 0x32, 0xD7, 0x4B));
     static readonly Brush DiffRemovedLine = Frozen(Color.FromArgb(0x2E, 0xFF, 0x45, 0x3A));
 

@@ -64,7 +64,7 @@ public sealed class DotMatrix : FrameworkElement
         double w = ActualWidth, h = ActualHeight;
         if (w <= 0 || h <= 0) return;
 
-        dc.DrawGeometry(Shades.White(UnlitOpacity), null, LayOut(w, h));
+        dc.DrawGeometry(Shades.Auto(ThemeService.IsDark, UnlitOpacity), null, LayOut(w, h));
         if (_levels == null) return;
 
         foreach (Column column in _columns)
@@ -78,7 +78,7 @@ public sealed class DotMatrix : FrameworkElement
                 double on = Math.Clamp(lit - row, 0, 1), head = on * (1 - Math.Clamp(lit - row - 1, 0, 1));
 
                 dc.DrawEllipse(_shades[step].Of(color, LitOpacity * on), null, center, DotRadius, DotRadius);
-                if (head > Absent) dc.DrawEllipse(Shades.White(HeadWhiteness * head), null, center, DotRadius, DotRadius);
+                if (head > Absent) dc.DrawEllipse(Shades.Auto(ThemeService.IsDark, HeadWhiteness * head), null, center, DotRadius, DotRadius);
             }
         }
     }

@@ -1384,7 +1384,7 @@
                                     <Ellipse x:Name="OpenCodeStatusDot" Width="9" Height="9" Fill="{StaticResource Green}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                     <TextBlock Text="OpenCode AI Hub" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
                                 </StackPanel>
-                                <TextBlock x:Name="OpenCodeModelBadge" Text="Модель" FontSize="11" Foreground="#8E8E93" HorizontalAlignment="Right" VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock x:Name="OpenCodeModelBadge" Text="Модель" FontSize="11" Foreground="{DynamicResource Dim}" HorizontalAlignment="Right" VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
                             </Grid>
 
                             <Border Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="4" Margin="0,0,0,8">
@@ -1404,9 +1404,9 @@
                                             <local:Icon Grid.Column="0" Kind="Segments" Width="14" Height="14" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                 <TextBlock x:Name="OpenCodeTaskTitle" Text="Нет активной сессии" FontSize="13" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" TextTrimming="CharacterEllipsis"/>
-                                                <TextBlock x:Name="OpenCodeSubText" Text="OpenCode офлайн" FontSize="10.5" Foreground="#8E8E93" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
+                                                <TextBlock x:Name="OpenCodeSubText" Text="OpenCode офлайн" FontSize="10.5" Foreground="{DynamicResource Dim}" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
                                             </StackPanel>
-                                            <TextBlock x:Name="OpenCodeSessionCounter" Grid.Column="2" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="6,0,4,0"/>
+                                            <TextBlock x:Name="OpenCodeSessionCounter" Grid.Column="2" Text="" FontSize="10.5" Foreground="{DynamicResource Faint}" VerticalAlignment="Center" Margin="6,0,4,0"/>
                                             <local:Icon x:Name="OpenCodeSessionChevron" Grid.Column="3" Kind="Chevron" Width="11" Height="11" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,1,0,0" RenderTransformOrigin="0.5,0.5"/>
                                         </Grid>
                                     </Button>
@@ -1417,9 +1417,9 @@
 
                             <Grid Margin="2,0,2,8">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="МОДЕЛЬ" FontSize="9.5" FontWeight="SemiBold" Foreground="#636366" VerticalAlignment="Center" Margin="2,0,8,0"/>
+                                    <TextBlock Text="МОДЕЛЬ" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource Faint}" VerticalAlignment="Center" Margin="2,0,8,0"/>
                                     <Button x:Name="OpenCodeModelPrev" Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&lt;" Click="OpenCodeModelPrev_Click"/>
-                                    <TextBlock x:Name="OpenCodeModelName" Text="Модель не выбрана" FontSize="11.5" Foreground="#AEAEB2" VerticalAlignment="Center" Margin="6,0" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock x:Name="OpenCodeModelName" Text="Модель не выбрана" FontSize="11.5" Foreground="{DynamicResource Dim}" VerticalAlignment="Center" Margin="6,0" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
                                     <Button x:Name="OpenCodeModelNext" Style="{StaticResource ChipButton}" Width="22" Height="22" Padding="0" Content="&gt;" Click="OpenCodeModelNext_Click"/>
                                 </StackPanel>
                                 <Button x:Name="OpenCodeNewSession" Style="{StaticResource ChipButton}" Height="24" Padding="10,0" HorizontalAlignment="Right" Content="+ Сессия" Click="OpenCodeNewSession_Click"/>
@@ -1440,7 +1440,7 @@
                                 </Grid>
                             </Border>
 
-                            <Border x:Name="OpenCodeAnswerBox" Background="#2C2C2E" BorderBrush="#3A3A3C" BorderThickness="1" CornerRadius="14" Padding="10,8" Margin="0,0,0,8" Visibility="Collapsed">
+                            <Border x:Name="OpenCodeAnswerBox" Background="{DynamicResource CardSubBackground}" BorderBrush="{DynamicResource CardBorder}" BorderThickness="1" CornerRadius="14" Padding="10,8" Margin="0,0,0,8" Visibility="Collapsed">
                                 <StackPanel>
                                     <Button x:Name="OpenCodeOlderButton" Style="{StaticResource PlainButton}" Height="22" Margin="0,0,0,4"
                                             Click="OpenCodeOlder_Click" Visibility="Collapsed" ToolTip="Загрузить более ранние сообщения">
@@ -1467,7 +1467,7 @@
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="FontSize" Value="9.5"/>
                                                                     <Setter Property="FontWeight" Value="SemiBold"/>
-                                                                    <Setter Property="Foreground" Value="#A1A1AA"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource Dim}"/>
                                                                     <Setter Property="Margin" Value="0,0,0,2"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Role}" Value="tool">
@@ -1481,13 +1481,13 @@
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="FontSize" Value="12"/>
-                                                                    <Setter Property="Foreground" Value="#E5E5EA"/>
+                                                                    <Setter Property="Foreground" Value="{DynamicResource TextPrimary}"/>
                                                                     <Setter Property="LineHeight" Value="17"/>
                                                                     <Setter Property="TextWrapping" Value="Wrap"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding Role}" Value="tool">
                                                                             <Setter Property="FontSize" Value="10.5"/>
-                                                                            <Setter Property="Foreground" Value="#8E8E93"/>
+                                                                            <Setter Property="Foreground" Value="{DynamicResource Faint}"/>
                                                                             <Setter Property="FontFamily" Value="Cascadia Mono, Consolas"/>
                                                                             <Setter Property="TextWrapping" Value="NoWrap"/>
                                                                             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
@@ -1501,13 +1501,13 @@
                                                     <Border.Style>
                                                         <Style TargetType="Border">
                                                             <Setter Property="HorizontalAlignment" Value="Left"/>
-                                                            <Setter Property="Background" Value="#38383B"/>
+                                                            <Setter Property="Background" Value="{DynamicResource CardSectionBackground}"/>
                                                             <Setter Property="Padding" Value="8,6"/>
                                                             <Setter Property="Margin" Value="0,3,0,3"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding Role}" Value="user">
                                                                     <Setter Property="HorizontalAlignment" Value="Right"/>
-                                                                    <Setter Property="Background" Value="#403A72"/>
+                                                                    <Setter Property="Background" Value="{DynamicResource ChipBackground}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding Role}" Value="tool">
                                                                     <Setter Property="Background" Value="Transparent"/>
@@ -1525,11 +1525,11 @@
                                 </StackPanel>
                             </Border>
 
-                            <Border x:Name="OpenCodePermissionPanel" Background="#2A2A1F" BorderBrush="#FF9F0A" BorderThickness="1" CornerRadius="14" Padding="10,8" Margin="0,0,0,8" Visibility="Collapsed">
+                            <Border x:Name="OpenCodePermissionPanel" Background="{DynamicResource CardSubBackground}" BorderBrush="#FF9F0A" BorderThickness="1" CornerRadius="14" Padding="10,8" Margin="0,0,0,8" Visibility="Collapsed">
                                 <Grid>
                                     <StackPanel Margin="0,0,130,0">
                                         <TextBlock Text="ТРЕБУЕТСЯ РАЗРЕШЕНИЕ" FontSize="9" FontWeight="SemiBold" Foreground="#FF9F0A"/>
-                                        <TextBlock x:Name="OpenCodePermissionText" FontSize="11" Foreground="#E5E5EA" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="OpenCodePermissionText" FontSize="11" Foreground="{DynamicResource TextPrimary}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                                         <Button Style="{StaticResource ChipButton}" Height="26" Padding="10,0" Margin="0,0,6,0" Content="Разрешить" Click="OpenCodeAllow_Click"/>
@@ -1618,7 +1618,7 @@
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <local:Icon Kind="Lines" Width="13" Height="13" Fill="{DynamicResource Dim}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                                         <TextBlock Style="{StaticResource Caption}" Text="ИЗМЕНЕНИЯ" VerticalAlignment="Center"/>
-                                        <TextBlock x:Name="OpenCodeDiffSummary" Text="" FontSize="10.5" Foreground="#636366" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                        <TextBlock x:Name="OpenCodeDiffSummary" Text="" FontSize="10.5" Foreground="{DynamicResource Dim}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                         <Button x:Name="OpenCodeDiffRefresh" Style="{StaticResource PlainButton}" Width="30" Height="30" Margin="0,0,4,0" Click="OpenCodeDiffRefresh_Click" ToolTip="Обновить">

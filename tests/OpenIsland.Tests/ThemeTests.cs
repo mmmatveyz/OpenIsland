@@ -91,4 +91,45 @@ public class ThemeTests
         Assert.True(Enum.IsDefined(typeof(ThemeMode), Settings.ThemeMode));
         Assert.True(Enum.IsDefined(typeof(ThemePreset), Settings.ThemePreset));
     }
+
+    [Theory]
+    [InlineData(200, GlassStyle.Frosted, 200)]
+    [InlineData(200, GlassStyle.Tinted, 130)] // 200 * 0.65 = 130
+    [InlineData(200, GlassStyle.Crystal, 70)]  // 200 * 0.35 = 70
+    [InlineData(10, GlassStyle.Crystal, 10)]   // Math.Clamp((int)(10*0.35), 10, 255) => 10
+    public void GetAdjustedGlassAlpha_ScalesCorrectly(byte baseAlpha, GlassStyle style, byte expected)
+    {
+        byte actual = ThemeService.GetAdjustedGlassAlpha(baseAlpha, style);
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData(ThemePreset.Default)]
+    [InlineData(ThemePreset.Oled)]
+    [InlineData(ThemePreset.Nord)]
+    [InlineData(ThemePreset.Cyberpunk)]
+    public void Contrast_LightMode_TextIsDark_BackgroundIsLight(ThemePreset preset)
+    {
+        ThemePalette p = ThemeService.Resolve(ThemeMode.Light, preset);
+        double textLum = 0.299 * p.TextPrimary.R + 0.587 * p.TextPrimary.G + 0.114 * p.TextPrimary.B;
+        double bgLum = 0.299 * p.CardBackground.R + 0.587 * p.CardBackground.G + 0.114 * p.CardBackground.B;
+
+        Assert.True(textLum < 100, $"Light mode TextPrimary luminance ({textLum}) should be dark (< 100)");
+        Assert.True(bgLum > 200, $"Light mode CardBackground luminance ({bgLum}) should be light (> 200)");
+    }
+
+    [Theory]
+    [InlineData(ThemePreset.Default)]
+    [InlineData(ThemePreset.Oled)]
+    [InlineData(ThemePreset.Nord)]
+    [InlineData(ThemePreset.Cyberpunk)]
+    public void Contrast_DarkMode_TextIsLight_BackgroundIsDark(ThemePreset preset)
+    {
+        ThemePalette p = ThemeService.Resolve(ThemeMode.Dark, preset);
+        double textLum = 0.299 * p.TextPrimary.R + 0.587 * p.TextPrimary.G + 0.114 * p.TextPrimary.B;
+        double bgLum = 0.299 * p.CardBackground.R + 0.587 * p.CardBackground.G + 0.114 * p.CardBackground.B;
+
+        Assert.True(textLum > 200, $"Dark mode TextPrimary luminance ({textLum}) should be light (> 200)");
+        Assert.True(bgLum < 70, $"Dark mode CardBackground luminance ({bgLum}) should be dark (< 70)");
+    }
 }

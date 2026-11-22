@@ -116,7 +116,7 @@ sealed class BackdropPreview : FrameworkElement
             {
                 var center = new Point(left + i * ColumnPitch, h - MatrixBottom - row * RowPitch);
                 double on = Math.Clamp(lit - row, 0, 1);
-                dc.DrawEllipse(Shades.White(UnlitOpacity), null, center, DotRadius, DotRadius);
+                dc.DrawEllipse(Shades.Auto(ThemeService.IsDark, UnlitOpacity), null, center, DotRadius, DotRadius);
                 if (on > 0) dc.DrawEllipse(_shades[i].Of(color, LitOpacity * on), null, center, DotRadius, DotRadius);
             }
         }
