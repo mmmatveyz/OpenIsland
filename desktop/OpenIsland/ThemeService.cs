@@ -93,6 +93,27 @@ public static class ThemeService
         _ => 0xCE
     };
 
+    /// <summary>
+    /// Фон «карточных» видов (Мониторинг ПК, Погода, Процессы, Полка файлов, Обновление…)
+    /// при включённом стекле. Без этого карточки остаются глухими плитами на фоне
+    /// стеклянного меню и настроек. Чем прозрачнее стиль стекла, тем прозрачнее карточка.
+    /// </summary>
+    public static ThemePalette WithGlassCards(ThemePalette palette) =>
+        WithGlassCards(palette, Settings.Glass, Settings.GlassStyle);
+
+    public static ThemePalette WithGlassCards(ThemePalette palette, bool glass, GlassStyle style) =>
+        glass ? palette with { CardBackground = CardAlpha(palette.CardBackground, GlassCardAlpha(style)) } : palette;
+
+    static Color CardAlpha(Color color, byte alpha) => Color.FromArgb(alpha, color.R, color.G, color.B);
+
+    static byte GlassCardAlpha(GlassStyle style) => style switch
+    {
+        GlassStyle.Frosted => 0xA8,
+        GlassStyle.Tinted => 0x87,
+        GlassStyle.Crystal => 0x66,
+        _ => 0x66
+    };
+
     static ThemePalette ResolveDark(ThemePreset preset) => preset switch
     {
         ThemePreset.Oled => new ThemePalette(
@@ -261,7 +282,7 @@ public static class ThemeService
 
     public static void Apply(MainWindow window, bool animate = true)
     {
-        ThemePalette p = Resolve(Settings.ThemeMode, Settings.ThemePreset);
+        ThemePalette p = WithGlassCards(Resolve(Settings.ThemeMode, Settings.ThemePreset));
         CurrentPalette = p;
         StaticPrimaryBrush.Color = p.TextPrimary;
 

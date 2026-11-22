@@ -127,6 +127,45 @@ public class ThemeTests
     }
 
     [Theory]
+    [InlineData(ThemeMode.Dark, ThemePreset.Default)]
+    [InlineData(ThemeMode.Dark, ThemePreset.Oled)]
+    [InlineData(ThemeMode.Light, ThemePreset.Default)]
+    [InlineData(ThemeMode.Light, ThemePreset.Oled)]
+    public void WithGlassCards_GlassOn_MakesCardTranslucentAndKeepsColor(ThemeMode mode, ThemePreset preset)
+    {
+        ThemePalette basePalette = ThemeService.Resolve(mode, preset);
+        ThemePalette glassy = ThemeService.WithGlassCards(basePalette, glass: true, GlassStyle.Crystal);
+
+        Assert.True(glassy.CardBackground.A < basePalette.CardBackground.A, "glass card must be more transparent");
+        Assert.InRange(glassy.CardBackground.A, 0x50, 0xE6);
+        Assert.Equal(basePalette.CardBackground.R, glassy.CardBackground.R);
+        Assert.Equal(basePalette.CardBackground.G, glassy.CardBackground.G);
+        Assert.Equal(basePalette.CardBackground.B, glassy.CardBackground.B);
+    }
+
+    [Theory]
+    [InlineData(ThemeMode.Dark, ThemePreset.Default)]
+    [InlineData(ThemeMode.Light, ThemePreset.Nord)]
+    public void WithGlassCards_GlassOff_KeepsCardBackground(ThemeMode mode, ThemePreset preset)
+    {
+        ThemePalette basePalette = ThemeService.Resolve(mode, preset);
+        ThemePalette same = ThemeService.WithGlassCards(basePalette, glass: false, GlassStyle.Crystal);
+        Assert.Equal(basePalette.CardBackground, same.CardBackground);
+    }
+
+    [Theory]
+    [InlineData(GlassStyle.Frosted)]
+    [InlineData(GlassStyle.Tinted)]
+    [InlineData(GlassStyle.Crystal)]
+    public void WithGlassCards_MoreTransparentStyleMeansMoreTransparentCard(GlassStyle style)
+    {
+        ThemePalette p = ThemeService.WithGlassCards(ThemeService.Resolve(ThemeMode.Dark, ThemePreset.Default), true, style);
+        byte crystal = ThemeService.WithGlassCards(ThemeService.Resolve(ThemeMode.Dark, ThemePreset.Default), true, GlassStyle.Crystal).CardBackground.A;
+        byte frosted = ThemeService.WithGlassCards(ThemeService.Resolve(ThemeMode.Dark, ThemePreset.Default), true, GlassStyle.Frosted).CardBackground.A;
+        Assert.InRange(p.CardBackground.A, crystal, frosted);
+    }
+
+    [Theory]
     [InlineData(ThemePreset.Default)]
     [InlineData(ThemePreset.Oled)]
     [InlineData(ThemePreset.Nord)]
