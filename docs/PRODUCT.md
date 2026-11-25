@@ -122,7 +122,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 | `Updater.cs` | чужой GitHub-репозиторий и ассет `DynamicIsland.exe` | наш репозиторий `mmmatveyz/OpenIsland`, ассет `OpenIsland.exe`, сверка `sha256`-дайджеста | ✅ |
 | `Settings.cs` | реестр `HKCU\Software\DynamicIsland` | `HKCU\Software\OpenIsland` + авто-миграция значений при первом чтении | ✅ |
 | `Autostart.cs` | Run-значение `DynamicIsland` | `OpenIsland` (+ миграция и удаление старого) | ✅ |
-| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.3.3), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
+| `OpenIsland.csproj` | нет `ApplicationIcon`, нет `Version/Product/Company` | `Version` (1.3.4), `Product/Company/AssemblyTitle/Description/Copyright`, `ApplicationIcon=Assets\OpenIsland.ico` | ✅ |
 | `app.manifest` | `name="DynamicIsland.app"` | `OpenIsland.app` | ✅ |
 | Иконка приложения | отсутствовала | `Assets/OpenIsland.ico` (7 кадров 16–256, тёмная капсула + индиго-циан ободок + искра) | ✅ |
 | Трей | кода не было вообще | `MainWindow.Tray.cs` + `Native.cs`: `Shell_NotifyIcon`, меню (Открыть / Скрыть-Показать / Настройки / Выход), двойной клик — показать | ✅ |
@@ -137,7 +137,7 @@ REST + SSE клиент, список сессий, прокручиваемая
 
 ## 4. Чего ещё нет (актуальный остаток роадмапа)
 
-Все базовые модули (мониторинг ПК, dev-процессы и порты, буфер обмена, быстрый запуск утилит, история и диффы OpenCode, полка файлов, погода, микро-звуки, темы и установщик Inno Setup) полностью реализованы в версиях 1.0–1.3.3. 
+Все базовые модули (мониторинг ПК, dev-процессы и порты, буфер обмена, быстрый запуск утилит, история и диффы OpenCode, полка файлов, погода, микро-звуки, темы и установщик Inno Setup) полностью реализованы в версиях 1.0–1.3.4. 
 
 В открытом роадмапе остаются следующие направления:
 
