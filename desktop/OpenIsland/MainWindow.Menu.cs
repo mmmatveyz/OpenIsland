@@ -262,7 +262,7 @@ public partial class MainWindow
             Updater.Stage.NotConfigured => "обновление не настроено",
             Updater.Stage.Checking => "проверяю…",
             Updater.Stage.Latest => "последняя версия",
-            Updater.Stage.Failed => "не получилось",
+            Updater.Stage.Failed => _updater.RateLimited ? "лимит GitHub, попробуйте позже" : "не получилось",
             _ => found ? "вместо " + Updater.CurrentVersion : "",
         };
         UpdateNotes.SetVisible(found && _updater.Notes.Length > 0);

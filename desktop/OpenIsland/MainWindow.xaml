@@ -1056,7 +1056,7 @@
                             <TextBlock x:Name="UpdateVersion" FontSize="30" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"
                                        FontFamily="{StaticResource Display}"/>
                             <TextBlock x:Name="UpdateFrom" FontSize="13.5" Foreground="{DynamicResource Dim}"
-                                       Margin="9,0,0,5" VerticalAlignment="Bottom"/>
+                                       Margin="9,0,0,5" VerticalAlignment="Bottom" TextWrapping="Wrap" MaxWidth="190"/>
                         </StackPanel>
                         <StackPanel x:Name="UpdateNotes" Margin="12,10,12,0">
                             <TextBlock Style="{StaticResource Caption}" Text="ЧТО НОВОГО"/>
