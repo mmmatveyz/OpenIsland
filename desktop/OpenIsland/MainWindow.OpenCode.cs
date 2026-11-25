@@ -263,7 +263,9 @@ public partial class MainWindow
         TimeSpan sinceDone = _openCodeDoneAtUtc == default
             ? TimeSpan.MaxValue
             : DateTime.UtcNow - _openCodeDoneAtUtc;
-        AgentPillState state = AgentPill.StateOf(_openCode.IsConnected, _openCode.IsBusy, asks, sinceDone);
+        AgentPillState state = !Settings.ShowOpenCode
+            ? AgentPillState.Hidden
+            : AgentPill.StateOf(_openCode.IsConnected, _openCode.IsBusy, asks, sinceDone);
         SyncCompactOpenCodeState(state);
         if (state == _agentPill) return;
         _agentPill = state;
@@ -379,6 +381,7 @@ public partial class MainWindow
 
     void OpenCodeRow_Click(object sender, RoutedEventArgs e)
     {
+        if (!Settings.ShowOpenCode) return;
         ShowPanel(Panel.OpenCode);
     }
 

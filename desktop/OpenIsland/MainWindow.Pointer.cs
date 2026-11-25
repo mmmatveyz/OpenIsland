@@ -127,9 +127,16 @@ public partial class MainWindow
             return;
         }
         if (_ringing || _panel != Panel.None) SelectPanel(Panel.None);
-        // Плеер важнее фоновой задачи агента: пока играет музыка, клик открывает её,
-        // а карточка агента остаётся доступной через Ctrl+Alt+O и меню.
-        else SelectPanel(IsMediaActive ? Panel.Player : _openCode.IsBusy ? Panel.OpenCode : _countdown.IsActive ? Panel.Timer : _openCode.IsConnected ? Panel.OpenCode : Panel.Menu);
+        // Плеер важнее фоновой задачи агента: пока играет музыка, клик открывает её.
+        // Выключенный виджет OpenCode не открывается ни при работе задачи, ни при
+        // живом соединении — клик в этом случае ведёт в меню.
+        else SelectPanel(IslandTap.Target(Settings.ShowOpenCode, IsMediaActive, _openCode.IsBusy, _countdown.IsActive, _openCode.IsConnected) switch
+        {
+            TapTarget.Player => Panel.Player,
+            TapTarget.OpenCode => Panel.OpenCode,
+            TapTarget.Timer => Panel.Timer,
+            _ => Panel.Menu,
+        });
         UpdateView();
     }
 

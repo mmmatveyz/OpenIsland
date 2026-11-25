@@ -457,6 +457,8 @@ public partial class MainWindow : Window
 
     void ToggleOpenCodeFromHotkey()
     {
+        if (!Settings.ShowOpenCode) return;
+
         if (_panel == Panel.OpenCode)
         {
             CollapseNow();
@@ -733,10 +735,10 @@ public partial class MainWindow : Window
             Panel.Weather => View.Weather,
             Panel.Shelf => View.Shelf,
             Panel.Timer when _countdown.IsActive => View.TimerBig,
-            Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (_openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
+            Panel.Timer or Panel.Player => _media.HasTrack ? View.MediaBig : (Settings.ShowOpenCode && _openCode.IsBusy ? View.OpenCodeBig : View.IdleBig),
             _ => _transientView ?? (_updater.State == Updater.Stage.Loading ? View.Loading
                 : _countdown.IsActive ? View.Timer
-                : _openCode.IsBusy ? View.OpenCode
+                : Settings.ShowOpenCode && _openCode.IsBusy ? View.OpenCode
                 : IsMediaActive ? View.Media
                 : _sounding ? View.Sound : View.Idle),
         };

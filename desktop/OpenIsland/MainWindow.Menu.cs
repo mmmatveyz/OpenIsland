@@ -181,6 +181,9 @@ public partial class MainWindow
         Settings.ShowOpenCode = !Settings.ShowOpenCode;
         RefreshWidgetsPage();
         ApplyMenuWidgetVisibility();
+        // Выключенный виджет не должен оставлять свой индикатор в свёрнутой пилюле.
+        SyncAgentPill();
+        UpdateView();
     }
 
     void WidgetPlayer_Click(object sender, RoutedEventArgs e)
