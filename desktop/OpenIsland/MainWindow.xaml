@@ -1971,7 +1971,7 @@
                                     <Button Style="{StaticResource ChipButton}" Height="24" Padding="8,0" Content="Очистить" Click="ShelfClear_Click" ToolTip="Очистить всю полку"/>
                                 </StackPanel>
                             </Grid>
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <ScrollViewer x:Name="ShelfScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <ScrollViewer.Resources>
                                     <Style TargetType="ScrollBar" BasedOn="{StaticResource ThinScrollBar}"/>
                                 </ScrollViewer.Resources>

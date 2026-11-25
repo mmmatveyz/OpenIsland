@@ -91,10 +91,10 @@ public static class FileShelf
                 if (string.IsNullOrEmpty(name)) name = clean;
 
                 // Удаляем существующий дубликат, чтобы поднять его наверх
-                Items.RemoveAll(x => string.Equals(x.Path, clean, StringComparison.OrdinalIgnoreCase));
+                bool wasPresent = Items.RemoveAll(x => string.Equals(x.Path, clean, StringComparison.OrdinalIgnoreCase)) > 0;
 
                 Items.Insert(0, new FileShelfItem(clean, name, size, DateTime.UtcNow));
-                added++;
+                if (!wasPresent) added++;
 
                 if (Items.Count > MaxCapacity)
                 {

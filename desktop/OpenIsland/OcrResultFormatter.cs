@@ -28,7 +28,8 @@ public static class OcrResultFormatter
     {
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
         string singleLine = string.Join(" ", text.Split(new[] { '\r', '\n', '\t' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        if (maxLength <= 0) return string.Empty;
         if (singleLine.Length <= maxLength) return singleLine;
-        return singleLine[..(maxLength - 1)] + "\u2026";
+        return maxLength == 1 ? "\u2026" : singleLine[..(maxLength - 1)] + "\u2026";
     }
 }

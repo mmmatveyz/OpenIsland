@@ -37,6 +37,7 @@ public partial class MainWindow
     {
         _hovered = _pressed = false;
         UpdateTargets();
+        if (_shelfDragOut) return; // drag-out сам перезапустит таймер после завершения
         if (_panel == Panel.OpenCode) _collapseTimeout.Start(LongCollapseDelay);
         else if (_panel != Panel.None) _collapseTimeout.Start(CollapseDelay);
     }

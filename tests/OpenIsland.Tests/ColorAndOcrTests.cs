@@ -96,6 +96,15 @@ public class OcrResultFormatterTests
         Assert.Equal("Short text", OcrResultFormatter.FormatPreview(input, 30));
     }
 
+    [Theory]
+    [InlineData(0, "")]
+    [InlineData(1, "\u2026")]
+    [InlineData(2, "S\u2026")]
+    public void FormatPreview_DegenerateMaxLength_DoesNotThrow(int maxLength, string expected)
+    {
+        Assert.Equal(expected, OcrResultFormatter.FormatPreview("Some long text", maxLength));
+    }
+
     [Fact]
     public void WindowsOcr_IsAvailableInRuntime()
     {

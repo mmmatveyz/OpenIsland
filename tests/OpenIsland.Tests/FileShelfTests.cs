@@ -58,8 +58,8 @@ public class FileShelfTests : IDisposable
             FileShelf.AddFiles([f2]);
             Assert.Equal(f2, FileShelf.All[0].Path);
 
-            // Добавляем f1 повторно — он должен переместиться наверх
-            FileShelf.AddFiles([f1]);
+            // Добавляем f1 повторно — он должен переместиться наверх, но не считаться новым
+            Assert.Equal(0, FileShelf.AddFiles([f1]));
             Assert.Equal(2, FileShelf.Count);
             Assert.Equal(f1, FileShelf.All[0].Path);
             Assert.Equal(f2, FileShelf.All[1].Path);
@@ -87,6 +87,25 @@ public class FileShelfTests : IDisposable
         finally
         {
             if (File.Exists(f1)) File.Delete(f1);
+        }
+    }
+
+    [Fact]
+    public void AddFiles_AcceptsDirectories()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "oi_shelf_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            Assert.Equal(1, FileShelf.AddFiles([dir]));
+
+            FileShelfItem item = Assert.Single(FileShelf.All);
+            Assert.True(item.IsDirectory);
+            Assert.True(item.Exists);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
         }
     }
 

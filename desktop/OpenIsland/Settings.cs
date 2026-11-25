@@ -77,6 +77,7 @@ static class Settings
     static double _weatherLat = ReadDouble(nameof(WeatherLat), 0.0);
     static double _weatherLon = ReadDouble(nameof(WeatherLon), 0.0);
     static string _quickLaunch = Read(nameof(QuickLaunch), "");
+    static string _shelfPaths = Read(nameof(ShelfPaths), "");
     static string _fullscreenExceptions = Read(nameof(FullscreenExceptions), "");
     static int _pillOpacity = Math.Clamp(Read(nameof(PillOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
     static int _openOpacity = Math.Clamp(Read(nameof(OpenOpacity), DefaultOpacity), MinOpacity, MaxOpacity);
@@ -324,6 +325,13 @@ static class Settings
     {
         get => _hideFromCapture;
         set => Write(nameof(HideFromCapture), _hideFromCapture = value);
+    }
+
+    /// <summary>Пути файлов на полке (по одному в строке), чтобы список переживал перезапуск.</summary>
+    public static string ShelfPaths
+    {
+        get => _shelfPaths;
+        set => Write(nameof(ShelfPaths), _shelfPaths = value ?? "");
     }
 
     /// <summary>Сквозной режим: остров не ловит мышь, клики уходят под него. Выключается хоткеем Ctrl+Alt+I или из меню трея.</summary>

@@ -136,6 +136,8 @@ public partial class MainWindow
     void WeatherRow_Click(object sender, RoutedEventArgs e)
     {
         ShowPanel(Panel.Weather);
+        // Данные могли обновиться, пока карточка была закрыта (кэш или смена темы).
+        SyncWeatherUI();
         _ = _weather.GetWeatherAsync();
     }
 

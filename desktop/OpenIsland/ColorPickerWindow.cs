@@ -23,6 +23,27 @@ public sealed class ColorPickerWindow : Window
     [DllImport("gdi32.dll")]
     static extern uint GetPixel(IntPtr hdc, int nXPos, int nYPos);
 
+    [DllImport("gdi32.dll")]
+    static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+    [DllImport("gdi32.dll")]
+    static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int width, int height);
+
+    [DllImport("gdi32.dll")]
+    static extern IntPtr SelectObject(IntPtr hdc, IntPtr hgdiobj);
+
+    [DllImport("gdi32.dll")]
+    static extern bool DeleteObject(IntPtr hObject);
+
+    [DllImport("gdi32.dll")]
+    static extern bool DeleteDC(IntPtr hdc);
+
+    [DllImport("gdi32.dll")]
+    static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, int dwRop);
+
+    const int SrcCopy = 0x00CC0020;
+    const uint ClrInvalid = 0xFFFFFFFF;
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     static extern bool GetCursorPos(out POINT lpPoint);
@@ -192,7 +213,8 @@ public sealed class ColorPickerWindow : Window
 
         try
         {
-            uint colorRef = GetPixel(hdc, pt.X, pt.Y);
+            if (!TryReadPixel(hdc, pt.X, pt.Y, out uint colorRef)) return;
+
             var (r, g, b) = ColorFormat.FromColorRef(colorRef);
 
             _currentColor = Color.FromRgb(r, g, b);
@@ -206,6 +228,40 @@ public sealed class ColorPickerWindow : Window
         finally
         {
             ReleaseDC(IntPtr.Zero, hdc);
+        }
+    }
+
+    /// <summary>
+    /// Читает пиксель с экрана. На мониторах с отрицательными координатами GetPixel
+    /// возвращает CLR_INVALID, поэтому для них используется BitBlt области 1×1.
+    /// </summary>
+    static bool TryReadPixel(IntPtr screenDc, int x, int y, out uint colorRef)
+    {
+        colorRef = GetPixel(screenDc, x, y);
+        if (colorRef != ClrInvalid) return true;
+
+        IntPtr memDc = CreateCompatibleDC(screenDc);
+        if (memDc == IntPtr.Zero) return false;
+
+        IntPtr bitmap = CreateCompatibleBitmap(screenDc, 1, 1);
+        if (bitmap == IntPtr.Zero)
+        {
+            DeleteDC(memDc);
+            return false;
+        }
+
+        IntPtr oldBitmap = SelectObject(memDc, bitmap);
+        try
+        {
+            if (!BitBlt(memDc, 0, 0, 1, 1, screenDc, x, y, SrcCopy)) return false;
+            colorRef = GetPixel(memDc, 0, 0);
+            return colorRef != ClrInvalid;
+        }
+        finally
+        {
+            if (oldBitmap != IntPtr.Zero && oldBitmap != new IntPtr(-1)) SelectObject(memDc, oldBitmap);
+            DeleteObject(bitmap);
+            DeleteDC(memDc);
         }
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -72,6 +73,25 @@ public sealed class ScreenOcrWindow : Window
     }
 
     static ScreenOcrWindow? _activeInstance;
+
+    // Движок OCR создаём один раз: инициализация WinRT заметно дороже самого распознавания.
+    static readonly Lazy<OcrEngine?> Engine = new(CreateEngine, LazyThreadSafetyMode.ExecutionAndPublication);
+
+    static OcrEngine? CreateEngine()
+    {
+        try
+        {
+            return OcrEngine.TryCreateFromUserProfileLanguages()
+                ?? (OcrEngine.AvailableRecognizerLanguages.Count > 0
+                    ? OcrEngine.TryCreateFromLanguage(OcrEngine.AvailableRecognizerLanguages[0])
+                    : null);
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"ScreenOcr: engine init error: {ex.Message}");
+            return null;
+        }
+    }
 
     readonly Action<string, string>? _onRecognized;
     readonly Action? _onNoText;
@@ -264,26 +284,22 @@ public sealed class ScreenOcrWindow : Window
                 byte[]? pixels = CaptureScreenRegionBgra(physX, physY, physW, physH);
                 if (pixels == null || pixels.Length == 0)
                 {
-                    Dispatcher.Invoke(() => _onNoText?.Invoke());
+                    PostToUi(() => _onNoText?.Invoke());
                     return;
                 }
 
                 var buffer = CryptographicBuffer.CreateFromByteArray(pixels);
-                var softwareBitmap = SoftwareBitmap.CreateCopyFromBuffer(
+                using SoftwareBitmap softwareBitmap = SoftwareBitmap.CreateCopyFromBuffer(
                     buffer,
                     BitmapPixelFormat.Bgra8,
                     physW,
                     physH,
                     BitmapAlphaMode.Premultiplied);
 
-                OcrEngine? engine = OcrEngine.TryCreateFromUserProfileLanguages()
-                    ?? (OcrEngine.AvailableRecognizerLanguages.Count > 0
-                        ? OcrEngine.TryCreateFromLanguage(OcrEngine.AvailableRecognizerLanguages[0])
-                        : null);
-
+                OcrEngine? engine = Engine.Value;
                 if (engine == null)
                 {
-                    Dispatcher.Invoke(() => _onNoText?.Invoke());
+                    PostToUi(() => _onNoText?.Invoke());
                     return;
                 }
 
@@ -291,7 +307,7 @@ public sealed class ScreenOcrWindow : Window
                 var lines = result.Lines.Select(l => l.Text);
                 string text = OcrResultFormatter.FormatText(lines);
 
-                Dispatcher.Invoke(() =>
+                PostToUi(() =>
                 {
                     if (string.IsNullOrWhiteSpace(text))
                     {
@@ -315,7 +331,7 @@ public sealed class ScreenOcrWindow : Window
             catch (Exception ex)
             {
                 App.LogDebug($"ScreenOcr: recognize error: {ex.Message}");
-                Dispatcher.Invoke(() => _onNoText?.Invoke());
+                PostToUi(() => _onNoText?.Invoke());
             }
         });
     }
@@ -335,12 +351,18 @@ public sealed class ScreenOcrWindow : Window
         IntPtr screenDc = GetDC(IntPtr.Zero);
         if (screenDc == IntPtr.Zero) return null;
 
-        IntPtr memDc = CreateCompatibleDC(screenDc);
-        IntPtr bitmap = CreateCompatibleBitmap(screenDc, width, height);
-        IntPtr oldBitmap = SelectObject(memDc, bitmap);
-
+        IntPtr memDc = IntPtr.Zero, bitmap = IntPtr.Zero, oldBitmap = IntPtr.Zero;
         try
         {
+            memDc = CreateCompatibleDC(screenDc);
+            if (memDc == IntPtr.Zero) return null;
+
+            bitmap = CreateCompatibleBitmap(screenDc, width, height);
+            if (bitmap == IntPtr.Zero) return null;
+
+            oldBitmap = SelectObject(memDc, bitmap);
+            if (oldBitmap == IntPtr.Zero || oldBitmap == new IntPtr(-1)) return null;
+
             if (!BitBlt(memDc, 0, 0, width, height, screenDc, x, y, SRCCOPY))
                 return null;
 
@@ -367,10 +389,26 @@ public sealed class ScreenOcrWindow : Window
         }
         finally
         {
-            SelectObject(memDc, oldBitmap);
-            DeleteObject(bitmap);
-            DeleteDC(memDc);
+            if (oldBitmap != IntPtr.Zero && oldBitmap != new IntPtr(-1)) SelectObject(memDc, oldBitmap);
+            if (bitmap != IntPtr.Zero) DeleteObject(bitmap);
+            if (memDc != IntPtr.Zero) DeleteDC(memDc);
             ReleaseDC(IntPtr.Zero, screenDc);
+        }
+    }
+
+    /// <summary>
+    /// Безопасно выполняет обновление UI: окно могли закрыть, пока шёл захват и распознавание.
+    /// </summary>
+    void PostToUi(Action action)
+    {
+        try
+        {
+            if (Dispatcher.HasShutdownStarted) return;
+            Dispatcher.Invoke(action);
+        }
+        catch (Exception ex)
+        {
+            App.LogDebug($"ScreenOcr: ui update skipped: {ex.Message}");
         }
     }
 

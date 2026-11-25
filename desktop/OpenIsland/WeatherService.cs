@@ -52,9 +52,11 @@ public sealed class WeatherService : IDisposable
     static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(5);
 
     readonly HttpClient _http;
+    readonly Func<bool> _hasManualLocation;
     CurrentWeather? _cached;
     DateTime _cachedAtUtc;
     bool _isLoading;
+    bool _reloadRequested;
     string? _lastError;
     double _cachedLat = 55.75, _cachedLon = 37.62;
     string _cachedCity = "Москва";
@@ -67,9 +69,11 @@ public sealed class WeatherService : IDisposable
     public string? LastError => _lastError;
     public bool IsManualLocation => Settings.HasManualWeatherLocation;
 
-    public WeatherService(HttpClient? http = null)
+    public WeatherService(HttpClient? http = null, Func<bool>? hasManualLocation = null)
     {
         _http = http ?? new HttpClient { Timeout = RequestTimeout };
+        // В тестах признак ручной локации подменяется, чтобы не читать реальный реестр.
+        _hasManualLocation = hasManualLocation ?? (() => Settings.HasManualWeatherLocation);
     }
 
     public void Dispose()
@@ -127,6 +131,8 @@ public sealed class WeatherService : IDisposable
 
     /// <summary>
     /// Получает текущую погоду. Если в кэше есть свежие данные (до 25 мин), возвращает их сразу.
+    /// Пока запрос выполняется, повторный принудительный запрос не теряется: он ставится
+    /// в очередь и выполняется сразу после текущего, уже с новыми координатами и городом.
     /// </summary>
     public async Task<CurrentWeather?> GetWeatherAsync(bool force = false)
     {
@@ -135,11 +141,37 @@ public sealed class WeatherService : IDisposable
             return _cached;
         }
 
-        if (_isLoading) return _cached;
-        _isLoading = true;
-        _lastError = null;
-        Changed?.Invoke();
+        if (_isLoading)
+        {
+            if (force) _reloadRequested = true;
+            return _cached;
+        }
 
+        _isLoading = true;
+        try
+        {
+            _lastError = null;
+            Changed?.Invoke();
+
+            CurrentWeather? result = _cached;
+            do
+            {
+                _reloadRequested = false;
+                result = await FetchWeatherAsync();
+            }
+            while (_reloadRequested);
+
+            return result;
+        }
+        finally
+        {
+            _isLoading = false;
+            Changed?.Invoke();
+        }
+    }
+
+    async Task<CurrentWeather?> FetchWeatherAsync()
+    {
         try
         {
             if (!_geoResolved)
@@ -147,14 +179,20 @@ public sealed class WeatherService : IDisposable
                 await ResolveLocationAsync();
             }
 
+            // Снимаем координаты и город до запроса: пока идёт сеть, пользователь может
+            // выбрать другой город, и ответ со старыми координатами не должен получить новое имя.
+            double lat = _cachedLat;
+            double lon = _cachedLon;
+            string city = _cachedCity;
+
             string url = string.Create(CultureInfo.InvariantCulture,
-                $"https://api.open-meteo.com/v1/forecast?latitude={_cachedLat:F4}&longitude={_cachedLon:F4}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,is_day&forecast_days=2&timezone=auto");
+                $"https://api.open-meteo.com/v1/forecast?latitude={lat:F4}&longitude={lon:F4}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,weather_code,is_day&forecast_days=2&timezone=auto");
 
             using var response = await _http.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             string json = await response.Content.ReadAsStringAsync();
-            CurrentWeather parsed = ParseOpenMeteoJson(json, _cachedCity);
+            CurrentWeather parsed = ParseOpenMeteoJson(json, city);
 
             _cached = parsed;
             _cachedAtUtc = DateTime.UtcNow;
@@ -167,16 +205,11 @@ public sealed class WeatherService : IDisposable
             _lastError = "Не удалось обновить погоду";
             return _cached;
         }
-        finally
-        {
-            _isLoading = false;
-            Changed?.Invoke();
-        }
     }
 
     async Task ResolveLocationAsync()
     {
-        if (Settings.HasManualWeatherLocation)
+        if (_hasManualLocation())
         {
             _cachedCity = Settings.WeatherCity;
             _cachedLat = Settings.WeatherLat;
@@ -203,10 +236,12 @@ public sealed class WeatherService : IDisposable
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Ошибка гео-поиска: используем дефолтные координаты
-            _geoResolved = true;
+            // Ошибка гео-поиска: остаёмся на дефолтных координатах, но не помечаем локацию
+            // разрешённой — при следующем обновлении попробуем определить город снова.
+            App.LogDebug($"WeatherService: ip location error: {ex.Message}");
+            _geoResolved = false;
         }
     }
 

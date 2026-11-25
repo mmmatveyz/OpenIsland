@@ -26,9 +26,10 @@ public partial class MainWindow
     /// Плитки системных утилит строятся один раз: цели фиксированы, а состояние
     /// читается из реестра только для списка своих программ.
     /// </summary>
-    void BuildQuickLaunchTiles()
+    void BuildQuickLaunchTiles(bool force = false)
     {
-        if (_quickLaunchTilesBuilt) return;
+        if (_quickLaunchTilesBuilt && !force) return;
+        if (force) QuickLaunchTiles.Children.Clear();
         _quickLaunchTilesBuilt = true;
 
         foreach (QuickAction action in QuickActions.SystemActions())

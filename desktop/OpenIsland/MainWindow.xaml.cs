@@ -411,10 +411,9 @@ public partial class MainWindow : Window
             if (e.Data.GetData(DataFormats.FileDrop) is string[] files && files.Length > 0)
             {
                 int added = FileShelf.AddFiles(files);
+                ShowPanel(Panel.Shelf);
                 if (added > 0)
                 {
-                    SoundFx.Play(SoundCue.Pop);
-                    ShowPanel(Panel.Shelf);
                     Notify(Glyph.Folder, _indigo, "Файлы на полке", $"{added} шт. добавлено", seconds: 3);
                 }
             }
@@ -495,6 +494,7 @@ public partial class MainWindow : Window
         if (!duration.HasTimeSpan || duration.TimeSpan <= TimeSpan.Zero)
         {
             ApplyThemePaletteDirect(p);
+            RepaintThemeContent();
             return;
         }
 
@@ -529,6 +529,7 @@ public partial class MainWindow : Window
             {
                 _themeFadeTimer.Stop();
                 ApplyThemePaletteDirect(_themeToPalette!);
+                RepaintThemeContent();
                 return;
             }
 
@@ -562,6 +563,19 @@ public partial class MainWindow : Window
         SetThemeBrush("HoverBackground", p.HoverBackground);
         SetThemeBrush("PressedBackground", p.PressedBackground);
         SetThemeBrush("ShadowBrush", p.ShadowColor);
+    }
+
+    /// <summary>
+    /// Пересобирает элементы, которые создаются в коде и держат конкретные кисти темы
+    /// (плитки «Быстрого запуска», строки полки, почасовой прогноз): после подмены
+    /// ресурсных кистей старые экземпляры остаются в цветах предыдущей темы.
+    /// </summary>
+    void RepaintThemeContent()
+    {
+        BuildQuickLaunchTiles(force: true);
+        RefreshQuickLaunchOwn();
+        SyncWeatherUI();
+        SyncFileShelfUI();
     }
 
     Color GetThemeBrushColor(string key, Color fallback) =>

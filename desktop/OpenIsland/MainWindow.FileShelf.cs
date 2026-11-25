@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Win32;
 
 namespace OpenIsland;
@@ -14,17 +16,39 @@ public partial class MainWindow
 {
     Point _shelfDragStart;
     bool _isShelfDragging;
+    bool _shelfDragOut;
+    bool _shelfRestoreScroll;
 
     void InitFileShelf()
     {
-        FileShelf.Changed += () => Dispatcher.Invoke(SyncFileShelfUI);
+        FileShelf.Changed += OnFileShelfChanged;
+        FileShelf.AddFiles(Settings.ShelfPaths.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries));
+        // Если все сохранённые файлы уже удалены, AddFiles ничего не добавит и не вызовет
+        // Changed — чистим реестр от мёртвых путей вручную.
+        PersistShelf();
         SyncFileShelfUI();
     }
+
+    void OnFileShelfChanged()
+    {
+        PersistShelf();
+        Dispatcher.Invoke(SyncFileShelfUI);
+    }
+
+    void PersistShelf() =>
+        Settings.ShelfPaths = string.Join('\n', FileShelf.All.Select(item => item.Path));
 
     void SyncFileShelfUI()
     {
         IReadOnlyList<FileShelfItem> items = FileShelf.All;
         int count = items.Count;
+
+        double scrollOffset = 0;
+        if (_shelfRestoreScroll && ShelfScroll != null)
+        {
+            scrollOffset = ShelfScroll.VerticalOffset;
+        }
+        _shelfRestoreScroll = false;
 
         if (MenuFileShelfCount != null)
         {
@@ -48,6 +72,12 @@ public partial class MainWindow
         {
             var row = BuildShelfRow(item);
             ShelfList.Children.Add(row);
+        }
+
+        if (scrollOffset > 0 && ShelfScroll != null)
+        {
+            // Даём списку пересчитаться, чтобы восстановить позицию после удаления строки.
+            Dispatcher.InvokeAsync(() => ShelfScroll.ScrollToVerticalOffset(scrollOffset), DispatcherPriority.Background);
         }
     }
 
@@ -84,7 +114,7 @@ public partial class MainWindow
         };
         var sizeBlock = new TextBlock
         {
-            Text = item.Exists ? item.FormattedSize : "Файл удалён или перемещён",
+            Text = item.IsDirectory ? "Папка" : item.Exists ? item.FormattedSize : "Файл удалён или перемещён",
             FontSize = 10,
             Foreground = item.Exists ? _dim : _orange,
         };
@@ -166,7 +196,7 @@ public partial class MainWindow
         removeBtn.Click += (_, e) =>
         {
             e.Handled = true;
-            FileShelf.Remove(item.Path);
+            _shelfRestoreScroll = FileShelf.Remove(item.Path);
             SoundFx.Play(SoundCue.Tuck);
         };
 
@@ -208,14 +238,24 @@ public partial class MainWindow
                 _isShelfDragging = false;
                 if (item.Exists)
                 {
+                    var data = new DataObject(DataFormats.FileDrop, new string[] { item.Path });
                     try
                     {
-                        var data = new DataObject(DataFormats.FileDrop, new string[] { item.Path });
+                        // Пока файл тащат в другую программу, курсор вне островка: не даём
+                        // таймеру свернуть карточку посреди drag-out.
+                        _shelfDragOut = true;
+                        _collapseTimeout.Cancel();
                         DragDrop.DoDragDrop(row, data, DragDropEffects.Copy | DragDropEffects.Move);
                     }
                     catch (Exception ex)
                     {
                         App.LogDebug($"FileShelf: DoDragDrop error: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _shelfDragOut = false;
+                        _collapseTimeout.Cancel();
+                        if (!_hovered && _panel == Panel.Shelf) _collapseTimeout.Start(CollapseDelay);
                     }
                 }
             }
